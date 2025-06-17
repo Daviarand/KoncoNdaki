@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info Gunung - KoncoNdaki</title>
+    <meta name="description"
+        content="Informasi lengkap tentang gunung-gunung di Pulau Jawa untuk pendakian yang aman dan menyenangkan.">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/dashboard-styles.css">
+    <link rel="stylesheet" href="styles/info-gunung.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <img src="images/logo.png" alt="KoncoNdaki Logo">
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="nav-links desktop-nav">
+                    <a href="dashboard.html" class="nav-link">Home</a>
+                    <a href="info-gunung.html" class="nav-link active">Info Gunung</a>
+                    <a href="#" class="nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.html" class="nav-link">Diskusi</a>
+                    <a href="#" class="nav-link">Tentang</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="user-profile desktop-nav">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="profile-name" id="profileName">John Doe</span>
+                            <i class="fas fa-chevron-down profile-arrow"></i>
+                        </button>
+
+                        <div class="profile-menu" id="profileMenu">
+                            <div class="profile-header">
+                                <div class="profile-avatar large">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="profile-info">
+                                    <h4 id="menuProfileName">John Doe</h4>
+                                    <p id="menuProfileEmail">john.doe@email.com</p>
+                                </div>
+                            </div>
+                            <div class="profile-menu-items">
+                                <a href="profile.html" class="profile-menu-item">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Profile Saya</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    <span>Tiket Saya</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-history"></i>
+                                    <span>Riwayat Pemesanan</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Pengaturan</span>
+                                </a>
+                                <div class="profile-menu-divider"></div>
+                                <a href="#" class="profile-menu-item logout" id="logoutBtn">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Keluar</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="mobile-menu-btn">
+                    <i class="fas fa-bars" id="menu-icon"></i>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="mobile-nav" id="mobile-nav">
+                <div class="mobile-nav-content">
+                    <!-- Mobile Profile Header -->
+                    <div class="mobile-profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h4 id="mobileProfileName">John Doe</h4>
+                            <p id="mobileProfileEmail">john.doe@email.com</p>
+                        </div>
+                    </div>
+
+                    <a href="dashboard.html" class="mobile-nav-link">Home</a>
+                    <a href="info-gunung.html" class="mobile-nav-link active">Info Gunung</a>
+                    <a href="#" class="mobile-nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.html" class="mobile-nav-link">Diskusi</a>
+                    <a href="#" class="mobile-nav-link">Tentang</a>
+
+                    <div class="mobile-profile-menu">
+                        <a href="profile.html" class="mobile-nav-link">
+                            <i class="fas fa-user-circle"></i>
+                            Profile Saya
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-ticket-alt"></i>
+                            Tiket Saya
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-history"></i>
+                            Riwayat Pemesanan
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-cog"></i>
+                            Pengaturan
+                        </a>
+                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Keluar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="page-header">
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-mountain"></i> Info Gunung</h1>
+                <p>Temukan informasi lengkap tentang gunung-gunung di Pulau Jawa</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search and Filter Section -->
+    <section class="search-filter-section">
+        <div class="container">
+            <div class="search-filter-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Cari gunung berdasarkan nama atau lokasi...">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">
+                        <i class="fas fa-globe"></i>
+                        Semua
+                    </button>
+                    <button class="filter-btn" data-filter="jawa-timur">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Jawa Timur
+                    </button>
+                    <button class="filter-btn" data-filter="jawa-tengah">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Jawa Tengah
+                    </button>
+                    <button class="filter-btn" data-filter="jawa-barat">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Jawa Barat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mountains Grid Section -->
+    <section class="mountains-grid-section">
+        <div class="container">
+            <div class="mountains-grid" id="mountainsGrid">
+                <!-- Mountain Card 1 -->
+                <div class="mountain-detail-card" data-region="jawa-timur" data-name="gunung bromo">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Bromo">
+                        <div class="difficulty-badge beginner">Pemula</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Bromo</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Timur</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>2.329 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>2-3 jam</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>5-15°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Gunung berapi aktif yang terkenal dengan pemandangan sunrise spektakuler dan lautan pasir
+                            yang menakjubkan.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 35.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('bromo')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Card 2 -->
+                <div class="mountain-detail-card" data-region="jawa-tengah" data-name="gunung merapi">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Merapi">
+                        <div class="difficulty-badge intermediate">Menengah</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Merapi</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Tengah</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>2.930 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>4-6 jam</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>8-18°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Gunung berapi paling aktif di Indonesia dengan pemandangan kota Yogyakarta yang memukau dari
+                            puncaknya.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 25.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('merapi')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Card 3 -->
+                <div class="mountain-detail-card" data-region="jawa-timur" data-name="gunung semeru">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Semeru">
+                        <div class="difficulty-badge advanced">Lanjutan</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Semeru</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Timur</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>3.676 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>2-3 hari</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>0-10°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Puncak tertinggi di Pulau Jawa dengan pemandangan yang sangat menakjubkan dan tantangan
+                            pendakian yang menantang.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 45.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('semeru')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Card 4 -->
+                <div class="mountain-detail-card" data-region="jawa-barat" data-name="gunung gede">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Gede">
+                        <div class="difficulty-badge intermediate">Menengah</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Gede</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Barat</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>2.958 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>5-7 jam</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>10-20°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Gunung dengan keanekaragaman flora dan fauna yang tinggi, terkenal dengan air terjun dan
+                            danau kawahnya.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 30.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('gede')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Card 5 -->
+                <div class="mountain-detail-card" data-region="jawa-barat" data-name="gunung papandayan">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Papandayan">
+                        <div class="difficulty-badge beginner">Pemula</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Papandayan</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Barat</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>2.665 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>3-4 jam</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>12-22°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Gunung dengan kawah aktif yang mengeluarkan gas belerang dan pemandangan savana yang indah.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 20.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('papandayan')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mountain Card 6 -->
+                <div class="mountain-detail-card" data-region="jawa-tengah" data-name="gunung merbabu">
+                    <div class="mountain-image">
+                        <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
+                            alt="Gunung Merbabu">
+                        <div class="difficulty-badge intermediate">Menengah</div>
+                    </div>
+                    <div class="mountain-content">
+                        <div class="mountain-header">
+                            <h3>Gunung Merbabu</h3>
+                        </div>
+                        <div class="mountain-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Jawa Tengah</span>
+                        </div>
+                        <div class="mountain-stats">
+                            <div class="stat">
+                                <i class="fas fa-mountain"></i>
+                                <span>3.145 mdpl</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-clock"></i>
+                                <span>6-8 jam</span>
+                            </div>
+                            <div class="stat">
+                                <i class="fas fa-thermometer-half"></i>
+                                <span>5-15°C</span>
+                            </div>
+                        </div>
+                        <p class="mountain-description">
+                            Gunung dengan padang savana yang luas dan pemandangan Gunung Merapi yang spektakuler.
+                        </p>
+                        <div class="mountain-footer">
+                            <div class="price">
+                                <span class="price-label">Mulai dari</span>
+                                <span class="price-amount">Rp 28.000</span>
+                            </div>
+                            <button class="btn-detail" onclick="openMountainModal('merbabu')">
+                                <i class="fas fa-info-circle"></i>
+                                Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mountain Detail Modal -->
+    <div class="modal-overlay" id="mountainModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Detail Gunung</h2>
+                <button class="modal-close" onclick="closeMountainModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content will be dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-mountain"></i>
+                        <span>KoncoNdaki</span>
+                    </div>
+                    <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Layanan</h3>
+                    <ul>
+                        <li><a href="#">Pemesanan Tiket</a></li>
+                        <li><a href="info-gunung.html">Info Gunung</a></li>
+                        <li><a href="#">Panduan Pendakian</a></li>
+                        <li><a href="#">Peralatan</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Bantuan</h3>
+                    <ul>
+                        <li><a href="#">Cara Pemesanan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Kontak</a></li>
+                        <li><a href="diskusi.html">Diskusi</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Tentang</h3>
+                    <ul>
+                        <li><a href="#">Tentang Kami</a></li>
+                        <li><a href="#">Tim</a></li>
+                        <li><a href="#">Karir</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="scripts/script.js"></script>
+    <script src="scripts/info-gunung.js"></script>
+</body>
+
+</html>
