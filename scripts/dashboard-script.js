@@ -127,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show logout message
       showNotification("Anda telah berhasil keluar", "success")
   
-      // Redirect to home page after delay
+      // Redirect to login page after delay
       setTimeout(() => {
-        window.location.href = "index.html"
+        window.location.href = "login.html"
       }, 1500)
     }
   }
