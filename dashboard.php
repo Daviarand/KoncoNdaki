@@ -50,7 +50,7 @@
                                 </div>
                             </div>
                             <div class="profile-menu-items">
-                                <a href="profile.html" class="profile-menu-item">
+                                <a href="profile.php" class="profile-menu-item">
                                     <i class="fas fa-user-circle"></i>
                                     <span>Profile Saya</span>
                                 </a>
@@ -102,7 +102,7 @@
                     <a href="tentang.php" class="mobile-nav-link">Tentang</a>
                     
                     <div class="mobile-profile-menu">
-                        <a href="profile.html" class="mobile-nav-link">
+                        <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-user-circle"></i>
                             Profile Saya
                         </a>
