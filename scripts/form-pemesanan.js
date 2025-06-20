@@ -390,15 +390,15 @@ class BookingForm {
         return
       }
   
-    const mountain = this.mountainData[this.bookingData.mountain]
-    const basePrice = mountain.price
-    const participants = Number.parseInt(this.bookingData.participants) || 1
-    const servicePrices = this.calculateServicePrices()
-    const subtotalPrice = basePrice * participants + servicePrices.total
-    const taxAmount = subtotalPrice * this.taxRate // Calculate tax
-    const totalPrice = subtotalPrice + taxAmount // Add tax to total
+  const mountain = this.mountainData[this.bookingData.mountain]
+  const basePrice = mountain.price
+  const participants = Number.parseInt(this.bookingData.participants) || 1
+  const servicePrices = this.calculateServicePrices()
+  const subtotalPrice = basePrice * participants + servicePrices.total
+  const taxAmount = subtotalPrice * this.taxRate // Hitung pajak
+  const totalPriceWithTax = subtotalPrice + taxAmount // Tambahkan pajak ke total
 
-    let summaryHTML = `
+  let summaryHTML = `
                 <div class="summary-item">
                     <span class="summary-label">Gunung</span>
                     <span class="summary-value">${mountain.name}</span>
@@ -409,50 +409,59 @@ class BookingForm {
                 </div>
             `
 
-    if (this.bookingData.route) {
-      const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-      if (route) {
-        summaryHTML += `
+  if (this.bookingData.route) {
+    const route = mountain.routes.find((r) => r.id === this.bookingData.route)
+    if (route) {
+      summaryHTML += `
                             <div class="summary-item">
                                 <span class="summary-label">Jalur</span>
                                 <span class="summary-value">${route.name}</span>
                             </div>
                         `
-        }
-      }
-  
-      if (this.bookingData.date) {
-        const date = new Date(this.bookingData.date)
-        summaryHTML += `
-                  <div class="summary-item">
-                      <span class="summary-label">Tanggal</span>
-                      <span class="summary-value">${date.toLocaleDateString("id-ID", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}</span>
-                  </div>
-              `
-      }
-  
-      if (servicePrices.services.length > 0) {
-        servicePrices.services.forEach((service) => {
-          summaryHTML += `
-                      <div class="summary-item">
-                          <span class="summary-label">${service.name}</span>
-                          <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
-                      </div>
-                  `
-        })
-      }
-  
+    }
+  }
+
+  if (this.bookingData.date) {
+    const date = new Date(this.bookingData.date)
+    summaryHTML += `
+                <div class="summary-item">
+                    <span class="summary-label">Tanggal</span>
+                    <span class="summary-value">${date.toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}</span>
+                </div>
+            `
+  }
+
+  if (servicePrices.services.length > 0) {
+    servicePrices.services.forEach((service) => {
       summaryHTML += `
-              <div class="summary-item">
-                  <span class="summary-label">Total</span>
-                  <span class="summary-value">Rp ${totalPrice.toLocaleString("id-ID")}</span>
-              </div>
-          `
+                            <div class="summary-item">
+                                <span class="summary-label">${service.name}</span>
+                                <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
+                            </div>
+                        `
+    })
+  }
+
+  
+  summaryHTML += `
+                <div class="summary-item" style="border-top: 1px dashed #ccc; padding-top: 0.5rem; margin-top: 0.5rem;">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value">Rp ${subtotalPrice.toLocaleString("id-ID")}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Pajak (10%)</span>
+                    <span class="summary-value">Rp ${taxAmount.toLocaleString("id-ID")}</span>
+                </div>
+                <div class="summary-item" style="border-top: 2px solid #16a34a; padding-top: 1rem; margin-top: 1rem;">
+                    <span class="summary-label">Total</span>
+                    <span class="summary-value">Rp ${totalPriceWithTax.toLocaleString("id-ID")}</span>
+                </div>
+            `
   
       sidebarSummary.innerHTML = summaryHTML
     }
@@ -498,17 +507,17 @@ class BookingForm {
       return
     }
 
-    const mountain = this.mountainData[this.bookingData.mountain]
-    const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-    const basePrice = mountain.price
-    const participants = Number.parseInt(this.bookingData.participants) || 1
-    const servicePrices = this.calculateServicePrices()
-    const subtotalPrice = basePrice * participants + servicePrices.total
-    const taxAmount = subtotalPrice * this.taxRate // Calculate tax
-    const totalPrice = subtotalPrice + taxAmount // Add tax to total
-    const date = new Date(this.bookingData.date)
+  const mountain = this.mountainData[this.bookingData.mountain]
+  const route = mountain.routes.find((r) => r.id === this.bookingData.route)
+  const basePrice = mountain.price
+  const participants = Number.parseInt(this.bookingData.participants) || 1
+  const servicePrices = this.calculateServicePrices()
+  const subtotalPrice = basePrice * participants + servicePrices.total
+  const taxAmount = subtotalPrice * this.taxRate // Hitung pajak
+  const totalPriceWithTax = subtotalPrice + taxAmount // Tambahkan pajak ke total
+  const date = new Date(this.bookingData.date)
 
-    let summaryHTML = `
+  let summaryHTML = `
                 <h4>Detail Pemesanan</h4>
                 <div class="summary-item">
                     <span class="summary-label">Gunung</span>
@@ -532,42 +541,51 @@ class BookingForm {
                     <span class="summary-value">${participants} orang</span>
                 </div>
             `
-  
-      if (servicePrices.services.length > 0) {
-        summaryHTML += '<h4 style="margin-top: 1.5rem;">Layanan Tambahan</h4>'
-        servicePrices.services.forEach((service) => {
-          summaryHTML += `
-                      <div class="summary-item">
-                          <span class="summary-label">${service.name}</span>
-                          <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
-                      </div>
-                  `
-        })
-      }
-  
+
+  if (servicePrices.services.length > 0) {
+    summaryHTML += '<h4 style="margin-top: 1.5rem;">Layanan Tambahan</h4>'
+    servicePrices.services.forEach((service) => {
       summaryHTML += `
-              <h4 style="margin-top: 1.5rem;">Rincian Biaya</h4>
-              <div class="summary-item">
-                  <span class="summary-label">Tiket Pendakian (${participants} orang)</span>
-                  <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
-              </div>
-          `
-  
-      if (servicePrices.total > 0) {
-        summaryHTML += `
-                  <div class="summary-item">
-                      <span class="summary-label">Layanan Tambahan</span>
-                      <span class="summary-value">Rp ${servicePrices.total.toLocaleString("id-ID")}</span>
-                  </div>
-              `
-      }
-  
-      summaryHTML += `
-              <div class="summary-item" style="border-top: 2px solid #16a34a; padding-top: 1rem; margin-top: 1rem;">
-                  <span class="summary-label"><strong>Total Pembayaran</strong></span>
-                  <span class="summary-value"><strong>Rp ${totalPrice.toLocaleString("id-ID")}</strong></span>
-              </div>
-          `
+                            <div class="summary-item">
+                                <span class="summary-label">${service.name}</span>
+                                <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
+                            </div>
+                        `
+    })
+  }
+
+  summaryHTML += `
+                <h4 style="margin-top: 1.5rem;">Rincian Biaya</h4>
+                <div class="summary-item">
+                    <span class="summary-label">Tiket Pendakian (${participants} orang)</span>
+                    <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
+                </div>
+            `
+
+  if (servicePrices.total > 0) {
+    summaryHTML += `
+                    <div class="summary-item">
+                        <span class="summary-label">Layanan Tambahan</span>
+                        <span class="summary-value">Rp ${servicePrices.total.toLocaleString("id-ID")}</span>
+                    </div>
+                `
+  }
+
+
+  summaryHTML += `
+                <div class="summary-item" style="border-top: 1px dashed #ccc; padding-top: 1rem; margin-top: 1rem;">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value">Rp ${subtotalPrice.toLocaleString("id-ID")}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Pajak (10%)</span>
+                    <span class="summary-value">Rp ${taxAmount.toLocaleString("id-ID")}</span>
+                </div>
+                <div class="summary-item" style="border-top: 2px solid #16a34a; padding-top: 1rem; margin-top: 1rem;">
+                    <span class="summary-label"><strong>Total Pembayaran</strong></span>
+                    <span class="summary-value"><strong>Rp ${totalPriceWithTax.toLocaleString("id-ID")}</strong></span>
+                </div>
+            `
   
       bookingSummary.innerHTML = summaryHTML
     }
