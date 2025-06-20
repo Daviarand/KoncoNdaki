@@ -12,6 +12,7 @@ class BookingForm {
         paymentMethod: null,
       }
       this.mountainData = this.initializeMountainData()
+      this.taxRate = 0.10
       this.init()
     }
   
@@ -389,32 +390,34 @@ class BookingForm {
         return
       }
   
-      const mountain = this.mountainData[this.bookingData.mountain]
-      const basePrice = mountain.price
-      const participants = Number.parseInt(this.bookingData.participants) || 1
-      const servicePrices = this.calculateServicePrices()
-      const totalPrice = basePrice * participants + servicePrices.total
-  
-      let summaryHTML = `
-              <div class="summary-item">
-                  <span class="summary-label">Gunung</span>
-                  <span class="summary-value">${mountain.name}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Tiket (${participants} orang)</span>
-                  <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
-              </div>
-          `
-  
-      if (this.bookingData.route) {
-        const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-        if (route) {
-          summaryHTML += `
-                      <div class="summary-item">
-                          <span class="summary-label">Jalur</span>
-                          <span class="summary-value">${route.name}</span>
-                      </div>
-                  `
+    const mountain = this.mountainData[this.bookingData.mountain]
+    const basePrice = mountain.price
+    const participants = Number.parseInt(this.bookingData.participants) || 1
+    const servicePrices = this.calculateServicePrices()
+    const subtotalPrice = basePrice * participants + servicePrices.total
+    const taxAmount = subtotalPrice * this.taxRate // Calculate tax
+    const totalPrice = subtotalPrice + taxAmount // Add tax to total
+
+    let summaryHTML = `
+                <div class="summary-item">
+                    <span class="summary-label">Gunung</span>
+                    <span class="summary-value">${mountain.name}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Tiket (${participants} orang)</span>
+                    <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
+                </div>
+            `
+
+    if (this.bookingData.route) {
+      const route = mountain.routes.find((r) => r.id === this.bookingData.route)
+      if (route) {
+        summaryHTML += `
+                            <div class="summary-item">
+                                <span class="summary-label">Jalur</span>
+                                <span class="summary-value">${route.name}</span>
+                            </div>
+                        `
         }
       }
   
@@ -489,44 +492,46 @@ class BookingForm {
   
     updateBookingSummary() {
       const bookingSummary = document.getElementById("bookingSummary")
-  
-      if (!this.bookingData.mountain) {
-        bookingSummary.innerHTML = "<p>Data pemesanan tidak lengkap.</p>"
-        return
-      }
-  
-      const mountain = this.mountainData[this.bookingData.mountain]
-      const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-      const basePrice = mountain.price
-      const participants = Number.parseInt(this.bookingData.participants) || 1
-      const servicePrices = this.calculateServicePrices()
-      const totalPrice = basePrice * participants + servicePrices.total
-      const date = new Date(this.bookingData.date)
-  
-      let summaryHTML = `
-              <h4>Detail Pemesanan</h4>
-              <div class="summary-item">
-                  <span class="summary-label">Gunung</span>
-                  <span class="summary-value">${mountain.name}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Jalur</span>
-                  <span class="summary-value">${route ? route.name : "Tidak dipilih"}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Tanggal</span>
-                  <span class="summary-value">${date.toLocaleDateString("id-ID", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Jumlah Pendaki</span>
-                  <span class="summary-value">${participants} orang</span>
-              </div>
-          `
+
+    if (!this.bookingData.mountain) {
+      bookingSummary.innerHTML = "<p>Data pemesanan tidak lengkap.</p>"
+      return
+    }
+
+    const mountain = this.mountainData[this.bookingData.mountain]
+    const route = mountain.routes.find((r) => r.id === this.bookingData.route)
+    const basePrice = mountain.price
+    const participants = Number.parseInt(this.bookingData.participants) || 1
+    const servicePrices = this.calculateServicePrices()
+    const subtotalPrice = basePrice * participants + servicePrices.total
+    const taxAmount = subtotalPrice * this.taxRate // Calculate tax
+    const totalPrice = subtotalPrice + taxAmount // Add tax to total
+    const date = new Date(this.bookingData.date)
+
+    let summaryHTML = `
+                <h4>Detail Pemesanan</h4>
+                <div class="summary-item">
+                    <span class="summary-label">Gunung</span>
+                    <span class="summary-value">${mountain.name}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Jalur</span>
+                    <span class="summary-value">${route ? route.name : "Tidak dipilih"}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Tanggal</span>
+                    <span class="summary-value">${date.toLocaleDateString("id-ID", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Jumlah Pendaki</span>
+                    <span class="summary-value">${participants} orang</span>
+                </div>
+            `
   
       if (servicePrices.services.length > 0) {
         summaryHTML += '<h4 style="margin-top: 1.5rem;">Layanan Tambahan</h4>'
