@@ -74,7 +74,7 @@
                                 <a href="#" class="forgot-password">Lupa password?</a>
                             </div>
 
-                            <button type="submit" class="btn-submit">
+                            <button type="submit" class="btn-submit" onclick="window.location.href='dashboard.php';">
                                 <span class="btn-text">Masuk</span>
                                 <i class="fas fa-arrow-right btn-icon"></i>
                             </button>
