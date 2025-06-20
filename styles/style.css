@@ -607,3 +607,96 @@ body {
         font-size: 1rem;
     }
 }
+
+/* Page Header Konsisten */
+.page-header {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: white;
+    padding: 4rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 2rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.page-header .header-content {
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.page-header h1 i {
+    font-size: 2rem;
+}
+
+.page-header p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+}
+
+/* Untuk statistik dan gambar di tentang.html agar tetap rapi */
+.page-header .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+.page-header .stat-item {
+    background: rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    padding: 1rem 2rem;
+    color: #fff;
+    text-align: center;
+}
+.page-header .hero-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
+}
+.page-header .hero-image img {
+    border-radius: 1rem;
+    max-width: 350px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.page-header .hero-badge {
+    margin-top: 1rem;
+    background: rgba(255,255,255,0.15);
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+@media (max-width: 768px) {
+    .page-header {
+        padding: 2.5rem 0 1.5rem;
+        border-radius: 0 0 1rem 1rem;
+    }
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    .page-header .hero-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .page-header .hero-image img {
+        max-width: 100%;
+    }
+}
