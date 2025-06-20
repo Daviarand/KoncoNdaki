@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loginButtons = document.querySelectorAll('.btn-login');
     loginButtons.forEach(button => {
         button.addEventListener('click', function() {
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
         });
     });
 
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const registerButtons = document.querySelectorAll('.btn-register');
     registerButtons.forEach(button => {
         button.addEventListener('click', function() {
-            window.location.href = 'register.html';
+            window.location.href = 'register.php';
         });
     });
 
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const primaryButtons = document.querySelectorAll('.btn-primary, .btn-cta');
     primaryButtons.forEach(button => {
         button.addEventListener('click', function() {
-            window.location.href = 'form-pemesanan.html';
+            window.location.href = 'form-pemesanan.php';
         });
     });
 
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const secondaryButtons = document.querySelectorAll('.btn-secondary');
     secondaryButtons.forEach(button => {
         button.addEventListener('click', function() {
-            window.location.href = 'info-gunung.html';
+            window.location.href = 'info-gunung.php';
         });
     });
 });

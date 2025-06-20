@@ -257,7 +257,7 @@ function handleLoginSubmit(e) {
         
         // Redirect to dashboard after delay
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'dashboard.php';
         }, 1500);
     }, 2000);
 }
@@ -326,7 +326,7 @@ function handleRegisterSubmit(e) {
         
         // Redirect to login page after delay
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
         }, 2000);
     }, 2000);
 }

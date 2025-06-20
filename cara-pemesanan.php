@@ -22,11 +22,11 @@
 
                 <!-- Desktop Navigation -->
                 <div class="nav-links desktop-nav">
-                    <a href="dashboard.html" class="nav-link">Home</a>
-                    <a href="info-gunung.html" class="nav-link">Info Gunung</a>
-                    <a href="cara-pemesanan.html" class="nav-link active">Cara Pemesanan</a>
-                    <a href="diskusi.html" class="nav-link">Diskusi</a>
-                    <a href="tentang.html" class="nav-link">Tentang</a>
+                    <a href="dashboard.php" class="nav-link">Home</a>
+                    <a href="info-gunung.php" class="nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="nav-link active">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="nav-link">Diskusi</a>
+                    <a href="tentang.php" class="nav-link">Tentang</a>
                 </div>
 
                 <!-- User Profile -->
@@ -97,11 +97,11 @@
                         </div>
                     </div>
                     
-                    <a href="dashboard.html" class="mobile-nav-link">Home</a>
-                    <a href="info-gunung.html" class="mobile-nav-link">Info Gunung</a>
-                    <a href="cara-pemesanan.html" class="mobile-nav-link active">Cara Pemesanan</a>
-                    <a href="diskusi.html" class="mobile-nav-link">Diskusi</a>
-                    <a href="tentang.html" class="mobile-nav-link">Tentang</a>
+                    <a href="dashboard.php" class="mobile-nav-link">Home</a>
+                    <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="mobile-nav-link active">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
+                    <a href="tentang.php" class="mobile-nav-link">Tentang</a>
                     
                     <div class="mobile-profile-menu">
                         <a href="profile.html" class="mobile-nav-link">
@@ -247,25 +247,25 @@
                 <div class="footer-section">
                     <h3>Layanan</h3>
                     <ul>
-                        <li><a href="cara-pemesanan.html" class="nav-link">Pemesanan Tiket</a></li>
-                        <li><a href="info-gunung.html" class="nav-link">Info Gunung</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">Pemesanan Tiket</a></li>
+                        <li><a href="info-gunung.php" class="nav-link">Info Gunung</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Bantuan</h3>
                     <ul>
-                        <li><a href="cara-pemesanan.html" class="nav-link">Cara Pemesanan</a></li>
-                        <li><a href="cara-pemesanan.html" class="nav-link">FAQ</a></li>
-                        <li><a href="tentang.html" class="nav-link">Kontak</a></li>
-                        <li><a href="diskusi.html" class="nav-link">Diskusi</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">FAQ</a></li>
+                        <li><a href="tentang.php" class="nav-link">Kontak</a></li>
+                        <li><a href="diskusi.php" class="nav-link">Diskusi</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Tentang</h3>
                     <ul>
-                        <li><a href="tentang.html" class="nav-link">Tentang Kami</a></li>
+                        <li><a href="tentang.php" class="nav-link">Tentang Kami</a></li>
                     </ul>
                 </div>
             </div>

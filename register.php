@@ -156,7 +156,7 @@
                         </div>
 
                         <div class="form-footer">
-                            <p>Sudah punya akun? <a href="login.html">Masuk sekarang</a></p>
+                            <p>Sudah punya akun? <a href="login.php">Masuk sekarang</a></p>
                         </div>
                     </div>
                 </div>

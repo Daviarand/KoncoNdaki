@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
       // Redirect to login page after delay
       setTimeout(() => {
-        window.location.href = "login.html"
+        window.location.href = "login.php"
       }, 1500)
     }
   }

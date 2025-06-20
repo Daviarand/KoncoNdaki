@@ -347,7 +347,7 @@ function closeMountainModal() {
 function bookMountain(mountainId) {
     // Redirect ke halaman form pemesanan dengan parameter gunung
     if (mountainId) {
-        window.location.href = `form-pemesanan.html?gunung=${mountainId}`;
+        window.location.href = `form-pemesanan.php?gunung=${mountainId}`;
     }
 }
 
@@ -482,7 +482,7 @@ function handleLogout(e) {
 
         // Redirect to login page after delay
         setTimeout(() => {
-            window.location.href = "login.html"
+            window.location.href = "login.php"
         }, 1500)
     }
 }

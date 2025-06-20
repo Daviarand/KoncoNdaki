@@ -751,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showNotification("Anda telah berhasil keluar", "success")
   
       setTimeout(() => {
-        window.location.href = "login.html"
+        window.location.href = "login.php"
       }, 1500)
     }
   }

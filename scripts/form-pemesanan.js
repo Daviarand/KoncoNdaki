@@ -593,7 +593,7 @@ class BookingForm {
         submitButton.innerHTML = originalText
         submitButton.disabled = false
         document.getElementById("bookingForm").reset()
-        window.location.href = "dashboard.html"
+        window.location.href = "dashboard.php"
       }, 2000)
     }
   

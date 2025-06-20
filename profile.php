@@ -24,11 +24,11 @@
 
                 <!-- Desktop Navigation -->
                 <div class="nav-links desktop-nav">
-                    <a href="dashboard.html" class="nav-link">Home</a>
-                    <a href="info-gunung.html" class="nav-link">Info Gunung</a>
-                    <a href="cara-pemesanan.html" class="nav-link">Cara Pemesanan</a>
-                    <a href="diskusi.html" class="nav-link">Diskusi</a>
-                    <a href="tentang.html" class="nav-link">Tentang</a>
+                    <a href="dashboard.php" class="nav-link">Home</a>
+                    <a href="info-gunung.php" class="nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="nav-link">Diskusi</a>
+                    <a href="tentang.php" class="nav-link">Tentang</a>
                 </div>
 
                 <!-- User Profile -->
@@ -53,7 +53,7 @@
                                 </div>
                             </div>
                             <div class="profile-menu-items">
-                                <a href="profile.html" class="profile-menu-item active">
+                                <a href="profile.php" class="profile-menu-item active">
                                     <i class="fas fa-user-circle"></i>
                                     <span>Profile Saya</span>
                                 </a>
@@ -99,14 +99,14 @@
                         </div>
                     </div>
 
-                    <a href="dashboard.html" class="mobile-nav-link">Home</a>
-                    <a href="info-gunung.html" class="mobile-nav-link">Info Gunung</a>
-                    <a href="cara-pemesanan.html" class="mobile-nav-link">Cara Pemesanan</a>
-                    <a href="diskusi.html" class="mobile-nav-link">Diskusi</a>
-                    <a href="tentang.html" class="mobile-nav-link">Tentang</a>
+                    <a href="dashboard.php" class="mobile-nav-link">Home</a>
+                    <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
+                    <a href="tentang.php" class="mobile-nav-link">Tentang</a>
 
                     <div class="mobile-profile-menu">
-                        <a href="profile.html" class="mobile-nav-link active">
+                        <a href="profile.php" class="mobile-nav-link active">
                             <i class="fas fa-user-circle"></i>
                             Profile Saya
                         </a>
