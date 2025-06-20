@@ -165,6 +165,10 @@ class BookingForm {
     document.getElementById("nextStep2").addEventListener("click", () => this.nextStep())
     document.getElementById("nextStep3").addEventListener("click", () => this.nextStep())
 
+    document.getElementById("backStep1").addEventListener("click", () => {
+      window.location.href = "dashboard.php" // Mengarahkan ke dashboard.html
+    })
+
     document.getElementById("backStep2").addEventListener("click", () => this.prevStep())
     document.getElementById("backStep3").addEventListener("click", () => this.prevStep())
     document.getElementById("backStep4").addEventListener("click", () => this.prevStep())

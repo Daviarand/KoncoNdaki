@@ -77,6 +77,9 @@
                                 </div>
                             </div>
                             <div class="form-actions">
+                                <button type="button" class="btn-back" id="backStep1">
+                                    <i class="fas fa-arrow-left"></i> Kembali
+                                </button>
                                 <button type="button" class="btn-next" id="nextStep1" disabled>
                                     Lanjutkan <i class="fas fa-arrow-right"></i>
                                 </button>

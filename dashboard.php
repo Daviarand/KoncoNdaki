@@ -222,7 +222,7 @@
                         </div>
                         <div class="mountain-footer">
                             <span class="price">Rp 35.000</span>
-                            <button class="btn-book">Pesan Sekarang</button>
+                            <button class="btn-book" onclick="location.href='form-pemesanan.php'">Pesan Sekarang</button>
                         </div>
                     </div>
                 </div>
@@ -237,7 +237,7 @@
                         </div>
                         <div class="mountain-footer">
                             <span class="price">Rp 25.000</span>
-                            <button class="btn-book">Pesan Sekarang</button>
+                            <button class="btn-book" onclick="location.href='form-pemesanan.php'">Pesan Sekarang</button>
                         </div>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
                         </div>
                         <div class="mountain-footer">
                             <span class="price">Rp 45.000</span>
-                            <button class="btn-book">Pesan Sekarang</button>
+                            <button class="btn-book" onclick="location.href='form-pemesanan.php'">Pesan Sekarang</button>
                         </div>
                     </div>
                 </div>

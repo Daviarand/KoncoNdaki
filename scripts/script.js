@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const mountainCard = button.closest('.mountain-card');
             const mountainName = mountainCard.querySelector('h3').textContent;
-            alert(`Pemesanan tiket ${mountainName} akan segera hadir!`);
         });
     });
 
