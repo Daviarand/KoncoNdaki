@@ -345,9 +345,10 @@ function closeMountainModal() {
 
 // Book mountain ticket
 function bookMountain(mountainId) {
-    const mountain = mountainData[mountainId];
-    showNotification(`Pemesanan tiket ${mountain.name} akan segera tersedia!`, 'info');
-    closeMountainModal();
+    // Redirect ke halaman form pemesanan dengan parameter gunung
+    if (mountainId) {
+        window.location.href = `form-pemesanan.html?gunung=${mountainId}`;
+    }
 }
 
 // Close modal when clicking outside
