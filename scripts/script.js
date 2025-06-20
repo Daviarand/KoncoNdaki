@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const primaryButtons = document.querySelectorAll('.btn-primary, .btn-cta');
     primaryButtons.forEach(button => {
         button.addEventListener('click', function() {
-            alert('Fitur pemesanan tiket akan segera hadir!');
+            window.location.href = 'form-pemesanan.html';
         });
     });
 
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const secondaryButtons = document.querySelectorAll('.btn-secondary');
     secondaryButtons.forEach(button => {
         button.addEventListener('click', function() {
-            alert('Halaman info gunung akan segera hadir!');
+            window.location.href = 'info-gunung.html';
         });
     });
 });
