@@ -1,25 +1,4 @@
 <?php
-session_start();
-
-// Check if user is already logged in
-if (isset($_SESSION['user_id'])) {
-    $role = $_SESSION['role'];
-    switch ($role) {
-        case 'pendaki':
-            header('Location: dashboard.php');
-            exit;
-        case 'layanan':
-            header('Location: dashboard-layanan.php');
-            exit;
-        case 'admin':
-        case 'pengelola':
-            header('Location: dashboard.php');
-            exit;
-        default:
-            header('Location: dashboard.php');
-            exit;
-    }
-}
 
 // Process registration form
 $error_message = '';

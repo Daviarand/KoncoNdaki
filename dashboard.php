@@ -1,8 +1,4 @@
 <?php
-session_start();
-require_once 'auth/check_auth.php';
-requireRole('pendaki');
-$currentUser = getCurrentUser();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -41,7 +37,7 @@ $currentUser = getCurrentUser();
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>
+                            <span class="profile-name" id="profileName">Guest</span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
                         
@@ -51,8 +47,8 @@ $currentUser = getCurrentUser();
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
-                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
+                                    <h4 id="menuProfileName">Guest</h4>
+                                    <p id="menuProfileEmail">-</p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -97,8 +93,8 @@ $currentUser = getCurrentUser();
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
-                            <p id="mobileProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
+                            <h4 id="mobileProfileName">Guest</h4>
+                            <p id="mobileProfileEmail">-</p>
                         </div>
                     </div>
                     
@@ -138,7 +134,7 @@ $currentUser = getCurrentUser();
     <section class="welcome-banner">
         <div class="container">
             <div class="welcome-content">
-                <h2>Selamat Datang Kembali, <span id="welcomeName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>! 🏔️</h2>
+                <h2>Selamat Datang Kembali, <span id="welcomeName">Guest</span>! 🏔️</h2>
                 <p>Siap untuk petualangan pendakian berikutnya?</p>
             </div>
         </div>

@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -27,13 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$user || !password_verify($password, $user['password'])) {
             throw new Exception('Email atau password salah');
         }
-        
-        // Set session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_email'] = $user['email'];
-        $_SESSION['user_nama'] = $user['nama_lengkap'];
-        $_SESSION['user_role'] = $user['role'];
-        $_SESSION['logged_in'] = true;
         
         // Redirect based on role
         switch ($user['role']) {

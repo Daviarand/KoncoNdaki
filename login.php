@@ -1,21 +1,6 @@
 <?php
-// Selalu di baris pertama!
-session_start();
-
 // Cegah output sebelum header
 ob_start();
-
-// Jika sudah login, redirect ke dashboard sesuai role
-if (isset($_SESSION['user_id'])) {
-    switch ($_SESSION['role']) {
-        case 'layanan':
-            header('Location: dashboard-layanan.php');
-            exit;
-        default:
-            header('Location: dashboard.php');
-            exit;
-    }
-}
 
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,13 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password'])) {
-                // Set session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role'];
-                $_SESSION['first_name'] = $user['first_name'];
-                $_SESSION['last_name'] = $user['last_name'];
-
                 // Redirect sesuai role
                 switch ($user['role']) {
                     case 'layanan':

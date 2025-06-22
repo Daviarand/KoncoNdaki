@@ -1,13 +1,5 @@
 <?php
 require_once 'auth/check_auth.php';
-
-$currentUser = null;
-$isLoggedIn = false;
-
-if (isLoggedIn()) {
-    $currentUser = getCurrentUser();
-    $isLoggedIn = true;
-}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -138,7 +130,7 @@ if (isLoggedIn()) {
 
                 <!-- Desktop Navigation -->
                 <div class="nav-links desktop-nav">
-                    <a href="<?php echo $isLoggedIn ? 'dashboard.php' : 'login.php'; ?>" class="nav-link">Home</a>
+                    <a href="<?php echo 'login.php'; ?>" class="nav-link">Home</a>
                     <a href="info-gunung.php" class="nav-link">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="nav-link">Diskusi</a>
@@ -223,7 +215,7 @@ if (isLoggedIn()) {
                     </div>
                     <?php endif; ?>
                     
-                    <a href="<?php echo $isLoggedIn ? 'dashboard.php' : 'login.php'; ?>" class="mobile-nav-link">Home</a>
+                    <a href="<?php echo 'login.php'; ?>" class="mobile-nav-link">Home</a>
                     <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
@@ -275,7 +267,7 @@ if (isLoggedIn()) {
                 Halaman yang Anda cari tidak ditemukan.
             </p>
             <div class="error-actions">
-                <a href="<?php echo $isLoggedIn ? 'dashboard.php' : 'login.php'; ?>" class="btn-error btn-primary">
+                <a href="<?php echo 'login.php'; ?>" class="btn-error btn-primary">
                     <i class="fas fa-home"></i>
                     Kembali ke Beranda
                 </a>

@@ -1,9 +1,8 @@
 <?php
 require_once 'auth/check_auth.php';
-requireRole('layanan');
 
-$currentUser = getCurrentUser();
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>

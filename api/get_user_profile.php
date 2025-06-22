@@ -1,12 +1,5 @@
 <?php
-session_start();
 require_once '../config/database.php';
-
-if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized']);
-    exit;
-}
 
 try {
     $user_id = $_SESSION['user_id'];

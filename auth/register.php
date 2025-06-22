@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once '../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -63,13 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         
         $user_id = $pdo->lastInsertId();
-        
-        // Set session
-        $_SESSION['user_id'] = $user_id;
-        $_SESSION['user_email'] = $email;
-        $_SESSION['user_nama'] = $nama_lengkap;
-        $_SESSION['user_role'] = $role;
-        $_SESSION['logged_in'] = true;
         
         $response['success'] = true;
         $response['message'] = 'Registrasi berhasil!';
