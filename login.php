@@ -1,19 +1,15 @@
 <?php
+// Selalu di baris pertama!
 session_start();
 
-// Check if user is already logged in
+// Cegah output sebelum header
+ob_start();
+
+// Jika sudah login, redirect ke dashboard sesuai role
 if (isset($_SESSION['user_id'])) {
-    $role = $_SESSION['role'];
-    switch ($role) {
-        case 'pendaki':
-            header('Location: dashboard.php');
-            exit;
+    switch ($_SESSION['role']) {
         case 'layanan':
             header('Location: dashboard-layanan.php');
-            exit;
-        case 'admin':
-        case 'pengelola':
-            header('Location: dashboard.php');
             exit;
         default:
             header('Location: dashboard.php');
@@ -21,41 +17,33 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// Process login form
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once 'config/database.php';
-    
+
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    
+
     if (empty($email) || empty($password)) {
         $error_message = 'Email dan password harus diisi';
     } else {
         try {
             $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name FROM users WHERE email = ?");
             $stmt->execute([$email]);
-            $user = $stmt->fetch();
-            
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
             if ($user && password_verify($password, $user['password'])) {
-                // Login successful
+                // Set session
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['first_name'] = $user['first_name'];
                 $_SESSION['last_name'] = $user['last_name'];
-                
-                // Redirect based on role
+
+                // Redirect sesuai role
                 switch ($user['role']) {
-                    case 'pendaki':
-                        header('Location: dashboard.php');
-                        exit;
                     case 'layanan':
                         header('Location: dashboard-layanan.php');
-                        exit;
-                    case 'admin':
-                    case 'pengelola':
-                        header('Location: dashboard.php');
                         exit;
                     default:
                         header('Location: dashboard.php');
@@ -69,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+ob_end_flush();
 ?>
 <!DOCTYPE html>
 <html lang="id">

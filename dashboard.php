@@ -1,7 +1,7 @@
 <?php
+session_start();
 require_once 'auth/check_auth.php';
 requireRole('pendaki');
-
 $currentUser = getCurrentUser();
 ?>
 <!DOCTYPE html>
