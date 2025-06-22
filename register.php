@@ -1,3 +1,75 @@
+<?php
+session_start();
+
+// Check if user is already logged in
+if (isset($_SESSION['user_id'])) {
+    $role = $_SESSION['role'];
+    switch ($role) {
+        case 'pendaki':
+            header('Location: dashboard.php');
+            exit;
+        case 'layanan':
+            header('Location: dashboard-layanan.php');
+            exit;
+        case 'admin':
+        case 'pengelola':
+            header('Location: dashboard.php');
+            exit;
+        default:
+            header('Location: dashboard.php');
+            exit;
+    }
+}
+
+// Process registration form
+$error_message = '';
+$success_message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once 'config/database.php';
+    
+    $firstName = trim($_POST['firstName'] ?? '');
+    $lastName = trim($_POST['lastName'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirmPassword'] ?? '';
+    
+    // Validation
+    if (empty($firstName) || empty($lastName) || empty($email) || empty($phone) || empty($password) || empty($confirmPassword)) {
+        $error_message = 'Semua field harus diisi';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = 'Format email tidak valid';
+    } elseif (strlen($password) < 6) {
+        $error_message = 'Password minimal 6 karakter';
+    } elseif ($password !== $confirmPassword) {
+        $error_message = 'Konfirmasi password tidak cocok';
+    } else {
+        try {
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            
+            if ($stmt->fetch()) {
+                $error_message = 'Email sudah terdaftar';
+            } else {
+                // Hash password
+                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                
+                // Insert new user
+                $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password, role, created_at) VALUES (?, ?, ?, ?, ?, 'pendaki', NOW())");
+                $stmt->execute([$firstName, $lastName, $email, $phone, $hashedPassword]);
+                
+                $success_message = 'Registrasi berhasil! Silakan login dengan akun Anda.';
+                
+                // Clear form data
+                $_POST = array();
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -48,14 +120,28 @@
                             <p>Daftar untuk memulai petualangan pendakian Anda</p>
                         </div>
 
-                        <form id="registerForm" class="register-form">
+                        <?php if (!empty($error_message)): ?>
+                        <div class="error-message" style="background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <?php echo htmlspecialchars($error_message); ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($success_message)): ?>
+                        <div class="success-message" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-check-circle"></i>
+                            <?php echo htmlspecialchars($success_message); ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="" class="register-form">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="firstName">Nama Depan</label>
                                     <div class="input-group">
                                         <i class="fas fa-user"></i>
                                         <input type="text" id="firstName" name="firstName" placeholder="Nama depan"
-                                            required>
+                                            required value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">
                                     </div>
                                 </div>
 
@@ -64,7 +150,7 @@
                                     <div class="input-group">
                                         <i class="fas fa-user"></i>
                                         <input type="text" id="lastName" name="lastName" placeholder="Nama belakang"
-                                            required>
+                                            required value="<?php echo htmlspecialchars($_POST['lastName'] ?? ''); ?>">
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +160,7 @@
                                 <div class="input-group">
                                     <i class="fas fa-envelope"></i>
                                     <input type="email" id="registerEmail" name="email"
-                                        placeholder="Masukkan email Anda" required>
+                                        placeholder="Masukkan email Anda" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                                 </div>
                             </div>
 
@@ -83,7 +169,7 @@
                                 <div class="input-group">
                                     <i class="fas fa-phone"></i>
                                     <input type="tel" id="phone" name="phone" placeholder="Masukkan nomor telepon"
-                                        required>
+                                        required value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
                                 </div>
                             </div>
 

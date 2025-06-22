@@ -1,3 +1,14 @@
+<?php
+require_once 'auth/check_auth.php';
+
+$currentUser = null;
+$isLoggedIn = false;
+
+if (isLoggedIn()) {
+    $currentUser = getCurrentUser();
+    $isLoggedIn = true;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -25,13 +36,14 @@
 
                 <!-- Desktop Navigation -->
                 <div class="nav-links desktop-nav">
-                    <a href="dashboard.php" class="nav-link">Home</a>
+                    <a href="<?php echo $isLoggedIn ? 'dashboard.php' : 'login.php'; ?>" class="nav-link">Home</a>
                     <a href="info-gunung.php" class="nav-link active">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="nav-link">Diskusi</a>
                     <a href="tentang.php" class="nav-link">Tentang</a>
                 </div>
 
+                <?php if ($isLoggedIn): ?>
                 <!-- User Profile -->
                 <div class="user-profile desktop-nav">
                     <div class="profile-dropdown">
@@ -39,7 +51,7 @@
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName">John Doe</span>
+                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
 
@@ -49,8 +61,8 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName">John Doe</h4>
-                                    <p id="menuProfileEmail">john.doe@email.com</p>
+                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -71,7 +83,7 @@
                                     <span>Pengaturan</span>
                                 </a>
                                 <div class="profile-menu-divider"></div>
-                                <a href="#" class="profile-menu-item logout" id="logoutBtn">
+                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt"></i>
                                     <span>Keluar</span>
                                 </a>
@@ -79,6 +91,13 @@
                         </div>
                     </div>
                 </div>
+                <?php else: ?>
+                <!-- Auth Buttons -->
+                <div class="auth-buttons desktop-nav">
+                    <a href="login.php" class="btn-login">Masuk</a>
+                    <a href="register.php" class="btn-register">Daftar</a>
+                </div>
+                <?php endif; ?>
 
                 <!-- Mobile menu button -->
                 <div class="mobile-menu-btn">
@@ -89,23 +108,26 @@
             <!-- Mobile Navigation -->
             <div class="mobile-nav" id="mobile-nav">
                 <div class="mobile-nav-content">
+                    <?php if ($isLoggedIn): ?>
                     <!-- Mobile Profile Header -->
                     <div class="mobile-profile-header">
                         <div class="profile-avatar">
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName">John Doe</h4>
-                            <p id="mobileProfileEmail">john.doe@email.com</p>
+                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                            <p id="mobileProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
                         </div>
                     </div>
+                    <?php endif; ?>
 
-                    <a href="dashboard.php" class="mobile-nav-link">Home</a>
+                    <a href="<?php echo $isLoggedIn ? 'dashboard.php' : 'login.php'; ?>" class="mobile-nav-link">Home</a>
                     <a href="info-gunung.php" class="mobile-nav-link active">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
                     <a href="tentang.php" class="mobile-nav-link">Tentang</a>
 
+                    <?php if ($isLoggedIn): ?>
                     <div class="mobile-profile-menu">
                         <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-user-circle"></i>
@@ -123,11 +145,17 @@
                             <i class="fas fa-cog"></i>
                             Pengaturan
                         </a>
-                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                        <a href="auth/logout.php" class="mobile-nav-link logout" id="mobileLogoutBtn">
                             <i class="fas fa-sign-out-alt"></i>
                             Keluar
                         </a>
                     </div>
+                    <?php else: ?>
+                    <div class="mobile-auth-buttons">
+                        <a href="login.php" class="mobile-nav-link">Masuk</a>
+                        <a href="register.php" class="mobile-nav-link">Daftar</a>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

@@ -1,3 +1,75 @@
+<?php
+session_start();
+
+// Check if user is already logged in
+if (isset($_SESSION['user_id'])) {
+    $role = $_SESSION['role'];
+    switch ($role) {
+        case 'pendaki':
+            header('Location: dashboard.php');
+            exit;
+        case 'layanan':
+            header('Location: dashboard-layanan.php');
+            exit;
+        case 'admin':
+        case 'pengelola':
+            header('Location: dashboard.php');
+            exit;
+        default:
+            header('Location: dashboard.php');
+            exit;
+    }
+}
+
+// Process login form
+$error_message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once 'config/database.php';
+    
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    
+    if (empty($email) || empty($password)) {
+        $error_message = 'Email dan password harus diisi';
+    } else {
+        try {
+            $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            
+            if ($user && password_verify($password, $user['password'])) {
+                // Login successful
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['email'] = $user['email'];
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['first_name'] = $user['first_name'];
+                $_SESSION['last_name'] = $user['last_name'];
+                
+                // Redirect based on role
+                switch ($user['role']) {
+                    case 'pendaki':
+                        header('Location: dashboard.php');
+                        exit;
+                    case 'layanan':
+                        header('Location: dashboard-layanan.php');
+                        exit;
+                    case 'admin':
+                    case 'pengelola':
+                        header('Location: dashboard.php');
+                        exit;
+                    default:
+                        header('Location: dashboard.php');
+                        exit;
+                }
+            } else {
+                $error_message = 'Email atau password salah';
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Terjadi kesalahan sistem. Silakan coba lagi.';
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -45,12 +117,19 @@
                             <p>Masukkan email dan password untuk melanjutkan</p>
                         </div>
 
-                        <form id="loginForm" class="login-form">
+                        <?php if (!empty($error_message)): ?>
+                        <div class="error-message" style="background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <?php echo htmlspecialchars($error_message); ?>
+                        </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="" class="login-form">
                             <div class="form-group">
                                 <label for="email">Email</label>
                                 <div class="input-group">
                                     <i class="fas fa-envelope"></i>
-                                    <input type="email" id="email" name="email" placeholder="Masukkan email Anda" required>
+                                    <input type="email" id="email" name="email" placeholder="Masukkan email Anda" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                                 </div>
                             </div>
 
@@ -74,7 +153,7 @@
                                 <a href="#" class="forgot-password">Lupa password?</a>
                             </div>
 
-                            <button type="submit" class="btn-submit" onclick="window.location.href='dashboard.php';">
+                            <button type="submit" class="btn-submit">
                                 <span class="btn-text">Masuk</span>
                                 <i class="fas fa-arrow-right btn-icon"></i>
                             </button>

@@ -1,3 +1,9 @@
+<?php
+require_once 'auth/check_auth.php';
+requireRole('pendaki');
+
+$currentUser = getCurrentUser();
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -35,7 +41,7 @@
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName">John Doe</span>
+                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
                         
@@ -45,8 +51,8 @@
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName">John Doe</h4>
-                                    <p id="menuProfileEmail">john.doe@email.com</p>
+                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -67,7 +73,7 @@
                                     <span>Pengaturan</span>
                                 </a>
                                 <div class="profile-menu-divider"></div>
-                                <a href="#" class="profile-menu-item logout" id="logoutBtn">
+                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt"></i>
                                     <span>Keluar</span>
                                 </a>
@@ -91,8 +97,8 @@
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName">John Doe</h4>
-                            <p id="mobileProfileEmail">john.doe@email.com</p>
+                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                            <p id="mobileProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
                         </div>
                     </div>
                     
@@ -118,7 +124,7 @@
                             <i class="fas fa-cog"></i>
                             Pengaturan
                         </a>
-                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                        <a href="auth/logout.php" class="mobile-nav-link logout" id="mobileLogoutBtn">
                             <i class="fas fa-sign-out-alt"></i>
                             Keluar
                         </a>
@@ -132,7 +138,7 @@
     <section class="welcome-banner">
         <div class="container">
             <div class="welcome-content">
-                <h2>Selamat Datang Kembali, <span id="welcomeName">John</span>! 🏔️</h2>
+                <h2>Selamat Datang Kembali, <span id="welcomeName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>! 🏔️</h2>
                 <p>Siap untuk petualangan pendakian berikutnya?</p>
             </div>
         </div>
@@ -146,7 +152,7 @@
                     <h1>Jelajahi Keindahan <span class="text-green">Gunung di Jawa</span></h1>
                     <p>Pesan tiket pendakian gunung dengan mudah dan aman. Nikmati petualangan tak terlupakan di puncak-puncak tertinggi Pulau Jawa bersama KoncoNdaki.</p>
                     <div class="hero-buttons">
-                        <button class="btn btn-primary btn-large" onclick="location.href='cara-pemesanan.php'">
+                        <button class="btn btn-primary btn-large" onclick="location.href='form-pemesanan.php'">
                             <i class="fas fa-ticket-alt"></i>
                             Pesan Tiket Sekarang
                         </button>
@@ -266,7 +272,7 @@
             <div class="cta-content">
                 <h2>Siap Memulai Petualangan?</h2>
                 <p>Bergabunglah dengan ribuan pendaki lainnya dan rasakan pengalaman tak terlupakan di puncak gunung Jawa</p>
-                <button class="btn-cta">Mulai Petualangan Sekarang</button>
+                <button class="btn-cta" onclick="location.href='form-pemesanan.php'">Mulai Petualangan Sekarang</button>
             </div>
         </div>
     </section>
@@ -286,25 +292,30 @@
                 <div class="footer-section">
                     <h3>Layanan</h3>
                     <ul>
-                        <li><a href="cara-pemesanan.php" class="nav-link">Pemesanan Tiket</a></li>
-                        <li><a href="info-gunung.php" class="nav-link">Info Gunung</a></li>
+                        <li><a href="form-pemesanan.php">Pemesanan Tiket</a></li>
+                        <li><a href="info-gunung.php">Info Gunung</a></li>
+                        <li><a href="cara-pemesanan.php">Panduan Pendakian</a></li>
+                        <li><a href="#">Peralatan</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Bantuan</h3>
                     <ul>
-                        <li><a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a></li>
-                        <li><a href="cara-pemesanan.php" class="nav-link">FAQ</a></li>
-                        <li><a href="tentang.php" class="nav-link">Kontak</a></li>
-                        <li><a href="diskusi.php" class="nav-link">Diskusi</a></li>
+                        <li><a href="cara-pemesanan.php">Cara Pemesanan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Kontak</a></li>
+                        <li><a href="diskusi.php">Diskusi</a></li>
                     </ul>
                 </div>
                 
                 <div class="footer-section">
                     <h3>Tentang</h3>
                     <ul>
-                        <li><a href="tentang.php" class="nav-link">Tentang Kami</a></li>
+                        <li><a href="tentang.php">Tentang Kami</a></li>
+                        <li><a href="#">Tim</a></li>
+                        <li><a href="#">Karir</a></li>
+                        <li><a href="#">Blog</a></li>
                     </ul>
                 </div>
             </div>

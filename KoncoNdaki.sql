@@ -5,14 +5,13 @@ USE koncondaki;
 -- Table users
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nama_lengkap VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    no_telp VARCHAR(20) NOT NULL,
-    alamat TEXT,
-    jenis_kelamin ENUM('Laki-laki', 'Perempuan'),
-    tanggal_lahir DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    role VARCHAR(50) NOT NULL DEFAULT 'pendaki',
+    created_at DATETIME NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 

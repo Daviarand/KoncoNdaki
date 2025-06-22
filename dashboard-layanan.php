@@ -1,3 +1,9 @@
+<?php
+require_once 'auth/check_auth.php';
+requireRole('layanan');
+
+$currentUser = getCurrentUser();
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -11,134 +17,307 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Page Header -->
-    <section class="page-header">
-        <div class="container">
-            <div class="header-content">
-                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Layanan</h1>
-                <p>Kelola pesanan dan notifikasi untuk semua layanan pendakian Anda</p>
-            </div>
-        </div>
-    </section>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <img src="images/logo.png" alt="KoncoNdaki Logo">
+                </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <div class="dashboard-layout">
-                <!-- Sidebar -->
-                <aside class="dashboard-sidebar">
-                    <div class="sidebar-header">
-                        <h3><i class="fas fa-filter"></i> Filter Layanan</h3>
-                        <div class="notification-count" id="totalNotifications">
-                            <span>24</span> notifikasi
-                        </div>
-                    </div>
+                <!-- Desktop Navigation -->
+                <div class="nav-links desktop-nav">
+                    <a href="dashboard-layanan.php" class="nav-link active">Dashboard</a>
+                    <a href="info-gunung.php" class="nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="nav-link">Diskusi</a>
+                    <a href="tentang.php" class="nav-link">Tentang</a>
+                </div>
 
-                    <!-- Service Categories -->
-                    <div class="sidebar-section">
-                        <h4>Kategori Layanan</h4>
-                        <ul class="category-list">
-                            <li class="category-item active" data-category="all">
-                                <i class="fas fa-list"></i>
-                                <span>Semua Layanan</span>
-                                <span class="count">24</span>
-                            </li>
-                            <li class="category-item" data-category="ojek">
-                                <i class="fas fa-motorcycle"></i>
-                                <span>Pemesanan Ojek</span>
-                                <span class="count">8</span>
-                            </li>
-                            <li class="category-item" data-category="porter">
-                                <i class="fas fa-hiking"></i>
-                                <span>Pemesanan Porter</span>
-                                <span class="count">6</span>
-                            </li>
-                            <li class="category-item" data-category="guide">
-                                <i class="fas fa-user-tie"></i>
-                                <span>Pemesanan Guide</span>
-                                <span class="count">5</span>
-                            </li>
-                            <li class="category-item" data-category="basecamp">
-                                <i class="fas fa-campground"></i>
-                                <span>Pemesanan Basecamp</span>
-                                <span class="count">5</span>
-                            </li>
-                        </ul>
-                    </div>
-                </aside>
-
-                <!-- Main Dashboard Content -->
-                <div class="dashboard-content">
-                    <!-- Dashboard Header -->
-                    <div class="content-header">
-                        <div class="header-left">
-                            <h2 id="currentCategory">Semua Layanan</h2>
-                            <p id="categoryDescription">Menampilkan semua notifikasi pesanan dari berbagai layanan</p>
-                        </div>
-                        <div class="header-actions">
-                            <div class="search-box">
-                                <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Cari pesanan..." id="searchInput">
+                <!-- User Profile -->
+                <div class="user-profile desktop-nav">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user"></i>
                             </div>
-                            <div class="sort-dropdown">
-                                <select id="sortSelect">
-                                    <option value="newest">Terbaru</option>
-                                    <option value="oldest">Terlama</option>
-                                    <option value="priority">Prioritas</option>
-                                    <option value="amount">Nilai Pesanan</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notifications Grid -->
-                    <div class="notifications-grid" id="notificationsGrid">
-                        <!-- Notification cards will be populated by JavaScript -->
-                    </div>
-
-                    <!-- Load More Button -->
-                    <div class="load-more-container">
-                        <button class="btn-load-more" id="loadMoreBtn">
-                            <i class="fas fa-plus"></i>
-                            Muat Lebih Banyak
+                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>
+                            <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
+                        
+                        <div class="profile-menu" id="profileMenu">
+                            <div class="profile-header">
+                                <div class="profile-avatar large">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="profile-info">
+                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
+                                </div>
+                            </div>
+                            <div class="profile-menu-items">
+                                <a href="profile.php" class="profile-menu-item">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Profile Saya</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    <span>Kelola Layanan</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-history"></i>
+                                    <span>Riwayat Layanan</span>
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class="fas fa-cog"></i>
+                                    <span>Pengaturan</span>
+                                </a>
+                                <div class="profile-menu-divider"></div>
+                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Keluar</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="mobile-menu-btn">
+                    <i class="fas fa-bars" id="menu-icon"></i>
+                </div>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="mobile-nav" id="mobile-nav">
+                <div class="mobile-nav-content">
+                    <!-- Mobile Profile Header -->
+                    <div class="mobile-profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($currentUser['nama']); ?></h4>
+                            <p id="mobileProfileEmail"><?php echo htmlspecialchars($currentUser['email']); ?></p>
+                        </div>
+                    </div>
+                    
+                    <a href="dashboard-layanan.php" class="mobile-nav-link active">Dashboard</a>
+                    <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
+                    <a href="tentang.php" class="mobile-nav-link">Tentang</a>
+                    
+                    <div class="mobile-profile-menu">
+                        <a href="profile.php" class="mobile-nav-link">
+                            <i class="fas fa-user-circle"></i>
+                            Profile Saya
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-ticket-alt"></i>
+                            Kelola Layanan
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-history"></i>
+                            Riwayat Layanan
+                        </a>
+                        <a href="#" class="mobile-nav-link">
+                            <i class="fas fa-cog"></i>
+                            Pengaturan
+                        </a>
+                        <a href="auth/logout.php" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Keluar
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </main>
+    </nav>
 
-    <!-- Notification Detail Modal -->
-    <div class="modal-overlay" id="notificationModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="modalTitle">Detail Pesanan</h3>
-                <button class="modal-close" id="modalClose">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Modal content will be populated by JavaScript -->
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="modalCancel">Tutup</button>
-                <button class="btn-primary" id="modalAction">Terima Pesanan</button>
+    <!-- Welcome Banner -->
+    <section class="welcome-banner">
+        <div class="container">
+            <div class="welcome-content">
+                <h2>Selamat Datang, <span id="welcomeName"><?php echo htmlspecialchars($currentUser['nama']); ?></span>! 🏔️</h2>
+                <p>Dashboard layanan pendakian gunung KoncoNdaki</p>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Dashboard Content -->
+    <section class="dashboard-content">
+        <div class="container">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>150</h3>
+                        <p>Total Pendaki</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>45</h3>
+                        <p>Tiket Aktif</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Rp 2.5M</h3>
+                        <p>Pendapatan Bulan Ini</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>4.8</h3>
+                        <p>Rating Layanan</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Layanan Cepat</h3>
+                <div class="actions-grid">
+                    <div class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <h4>Tambah Layanan</h4>
+                        <p>Buat layanan baru untuk pendaki</p>
+                        <button class="btn-action">Tambah</button>
+                    </div>
+                    
+                    <div class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <h4>Edit Layanan</h4>
+                        <p>Perbarui informasi layanan</p>
+                        <button class="btn-action">Edit</button>
+                    </div>
+                    
+                    <div class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4>Laporan</h4>
+                        <p>Lihat laporan kinerja layanan</p>
+                        <button class="btn-action">Lihat</button>
+                    </div>
+                    
+                    <div class="action-card">
+                        <div class="action-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <h4>Pengaturan</h4>
+                        <p>Atur preferensi layanan</p>
+                        <button class="btn-action">Atur</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="recent-activities">
+                <h3>Aktivitas Terbaru</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Pendaki Baru Terdaftar</h4>
+                            <p>Ahmad Fauzi mendaftar untuk pendakian Gunung Bromo</p>
+                            <span class="activity-time">2 jam yang lalu</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Tiket Dipesan</h4>
+                            <p>Tiket pendakian Gunung Merapi untuk 3 orang</p>
+                            <span class="activity-time">4 jam yang lalu</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <h4>Pendakian Selesai</h4>
+                            <p>Tim pendakian Gunung Semeru berhasil mencapai puncak</p>
+                            <span class="activity-time">1 hari yang lalu</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content" style="justify-content: center; text-align: center;">
-                <div class="footer-section" style="margin: 0 auto;">
-                    <div class="footer-logo" style="justify-content: center;">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
                         <i class="fas fa-mountain"></i>
                         <span>KoncoNdaki</span>
                     </div>
                     <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
                 </div>
+                
+                <div class="footer-section">
+                    <h3>Layanan</h3>
+                    <ul>
+                        <li><a href="form-pemesanan.php">Pemesanan Tiket</a></li>
+                        <li><a href="info-gunung.php">Info Gunung</a></li>
+                        <li><a href="cara-pemesanan.php">Panduan Pendakian</a></li>
+                        <li><a href="#">Peralatan</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Bantuan</h3>
+                    <ul>
+                        <li><a href="cara-pemesanan.php">Cara Pemesanan</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Kontak</a></li>
+                        <li><a href="diskusi.php">Diskusi</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Tentang</h3>
+                    <ul>
+                        <li><a href="tentang.php">Tentang Kami</a></li>
+                        <li><a href="#">Tim</a></li>
+                        <li><a href="#">Karir</a></li>
+                        <li><a href="#">Blog</a></li>
+                    </ul>
+                </div>
             </div>
+            
             <div class="footer-bottom">
                 <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
             </div>
