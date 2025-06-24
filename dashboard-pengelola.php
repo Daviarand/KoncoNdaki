@@ -11,7 +11,6 @@ if (!isset($_SESSION['admin_name'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Pengelola Gunung</title>
-    <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="styles/dashboard-pengelola.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
