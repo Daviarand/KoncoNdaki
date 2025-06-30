@@ -269,24 +269,35 @@ class ChatboxApp {
   }
 
   addMessage(message, type) {
-    const messageDiv = document.createElement("div")
-    messageDiv.classList.add("message", type)
+  const messageDiv = document.createElement("div")
+  messageDiv.classList.add("message", type)
+  
+  // TAMBAHAN: Format message untuk bot dengan line breaks
+  if (type === "bot") {
+    // Replace \n\n dengan <br><br> untuk double line break
+    // Replace \n dengan <br> untuk single line break
+    const formattedMessage = message
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>')
+    messageDiv.innerHTML = formattedMessage
+  } else {
     messageDiv.textContent = message
-
-    // Add message with animation
-    messageDiv.style.opacity = "0"
-    messageDiv.style.transform = "translateY(20px)"
-
-    this.messagesContainer.appendChild(messageDiv)
-
-    // Trigger animation
-    setTimeout(() => {
-      messageDiv.style.opacity = "1"
-      messageDiv.style.transform = "translateY(0)"
-    }, 50)
-
-    this.scrollToBottom()
   }
+
+  // Add message with animation
+  messageDiv.style.opacity = "0"
+  messageDiv.style.transform = "translateY(20px)"
+
+  this.messagesContainer.appendChild(messageDiv)
+
+  // Trigger animation
+  setTimeout(() => {
+    messageDiv.style.opacity = "1"
+    messageDiv.style.transform = "translateY(0)"
+  }, 50)
+
+  this.scrollToBottom()
+}
 
   showTypingIndicator() {
     this.isTyping = true
