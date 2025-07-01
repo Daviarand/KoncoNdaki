@@ -159,6 +159,7 @@ session_start();
             <div class="forum-layout">
                 <!-- Sidebar -->
                 <div class="forum-sidebar">
+                    <!-- HAPUS sidebar-card anggota aktif -->
                     <div class="sidebar-card">
                         <h3><i class="fas fa-fire"></i> Topik Populer</h3>
                         <div class="popular-topics">
@@ -188,7 +189,8 @@ session_start();
                             </div>
                         </div>
                     </div>
-
+                    <!-- HAPUS mulai dari sini -->
+                    <!--
                     <div class="sidebar-card">
                         <h3><i class="fas fa-users"></i> Anggota Aktif</h3>
                         <div class="active-members">
@@ -221,6 +223,7 @@ session_start();
                             </div>
                         </div>
                     </div>
+                    -->
                 </div>
 
                 <!-- Main Content -->
