@@ -76,7 +76,9 @@ $_SESSION['role'] = $user['role'];
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
+                            <span class="profile-name" id="profileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
 
@@ -86,12 +88,16 @@ $_SESSION['role'] = $user['role'];
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
-                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($_SESSION['email']); ?></p>
+                                    <h4 id="menuProfileName">
+                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                    </h4>
+                                    <p id="menuProfileEmail">
+                                        <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                    </p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
-                                <a href="profile.php" class="profile-menu-item active">
+                                <a href="profile.php" class="profile-menu-item">
                                     <i class="fas fa-user-circle"></i>
                                     <span>Profile Saya</span>
                                 </a>

@@ -45,7 +45,7 @@ require_once 'auth/check_auth.php';
                             </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
-                        
+
                         <div class="profile-menu" id="profileMenu">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
@@ -521,6 +521,5 @@ require_once 'auth/check_auth.php';
 
     <script src="scripts/script.js"></script>
     <script src="scripts/tentang.js"></script>
-    <script src="scripts/profile-script.js"></script>
 </body>
 </html>

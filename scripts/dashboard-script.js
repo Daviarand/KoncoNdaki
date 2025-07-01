@@ -1,28 +1,21 @@
-
-
 // Initialize profile dropdown
 function initProfileDropdown() {
-  const profileBtn = document.getElementById("profileBtn")
-  const profileMenu = document.getElementById("profileMenu")
-  const profileDropdown = document.querySelector(".profile-dropdown")
+  const profileBtn = document.getElementById("profileBtn");
+  const profileMenu = document.getElementById("profileMenu");
 
   if (profileBtn && profileMenu) {
-    profileBtn.addEventListener("click", (e) => {
-      e.stopPropagation()
-      toggleProfileMenu()
-    })
+    profileBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      profileMenu.classList.toggle("active");
+    });
 
-    // Close dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!profileDropdown.contains(e.target)) {
-        closeProfileMenu()
-      }
-    })
+    document.addEventListener("click", function() {
+      profileMenu.classList.remove("active");
+    });
 
-    // Prevent dropdown from closing when clicking inside menu
-    profileMenu.addEventListener("click", (e) => {
-      e.stopPropagation()
-    })
+    profileMenu.addEventListener("click", function(e) {
+      e.stopPropagation();
+    });
   }
 }
 
@@ -263,3 +256,12 @@ window.addEventListener("load", () => {
     }, 200)
   }
 })
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof initProfileDropdown === "function") {
+    initProfileDropdown();
+  }
+  if (typeof initMobileMenu === "function") {
+    initMobileMenu();
+  }
+});

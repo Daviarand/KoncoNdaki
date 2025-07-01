@@ -1,9 +1,3 @@
-
-
-
-
-
-
 // Update element value safely
 function updateElementValue(elementId, value) {
   const element = document.getElementById(elementId)
@@ -448,18 +442,17 @@ function showNotification(message, type = "info", duration = 5000) {
 function initProfileDropdown() {
   const profileBtn = document.getElementById("profileBtn")
   const profileMenu = document.getElementById("profileMenu")
-  const profileDropdown = document.querySelector(".profile-dropdown")
 
   if (profileBtn && profileMenu) {
     profileBtn.addEventListener("click", (e) => {
       e.stopPropagation()
-      toggleProfileMenu()
+      profileMenu.classList.toggle("active")
     })
 
     // Close dropdown when clicking outside
     document.addEventListener("click", (e) => {
-      if (!profileDropdown.contains(e.target)) {
-        closeProfileMenu()
+      if (!profileMenu.contains(e.target) && e.target !== profileBtn) {
+        profileMenu.classList.remove("active")
       }
     })
 
@@ -485,19 +478,13 @@ function toggleProfileMenu() {
 // Open profile menu
 function openProfileMenu() {
   const profileMenu = document.getElementById("profileMenu")
-  const profileDropdown = document.querySelector(".profile-dropdown")
-
   profileMenu.classList.add("active")
-  profileDropdown.classList.add("active")
 }
 
 // Close profile menu
 function closeProfileMenu() {
   const profileMenu = document.getElementById("profileMenu")
-  const profileDropdown = document.querySelector(".profile-dropdown")
-
   profileMenu.classList.remove("active")
-  profileDropdown.classList.remove("active")
 }
 
 // Initialize logout handlers
@@ -580,3 +567,45 @@ function initMobileMenu() {
     })
   }
 }
+
+// DOMContentLoaded event
+document.addEventListener("DOMContentLoaded", function() {
+  // Inisialisasi dropdown profile
+  initProfileDropdown();
+
+  // Inisialisasi mobile menu
+  initMobileMenu();
+
+  // Inisialisasi tombol logout (jika ada)
+  initLogoutHandlers();
+
+  // Inisialisasi tab profile (jika ada)
+  if (typeof initProfileTabs === "function") {
+    initProfileTabs();
+  }
+
+  // Inisialisasi form profile (jika ada)
+  if (typeof initProfileForm === "function") {
+    initProfileForm();
+  }
+
+  // Inisialisasi form password (jika ada)
+  if (typeof initPasswordForm === "function") {
+    initPasswordForm();
+  }
+
+  // Inisialisasi password requirements (jika ada)
+  if (typeof initPasswordRequirements === "function") {
+    initPasswordRequirements();
+  }
+
+  // Inisialisasi toggle button (jika ada)
+  if (typeof initToggleButtons === "function") {
+    initToggleButtons();
+  }
+
+  // Inisialisasi animasi (jika ada)
+  if (typeof initAnimations === "function") {
+    initAnimations();
+  }
+});

@@ -32,6 +32,7 @@ session_start();
                 </div>
 
                 <!-- User Profile -->
+                <!-- User Profile -->
                 <div class="user-profile desktop-nav">
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
@@ -43,7 +44,7 @@ session_start();
                             </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
-                        
+
                         <div class="profile-menu" id="profileMenu">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
@@ -76,7 +77,7 @@ session_start();
                                     <span>Pengaturan</span>
                                 </a>
                                 <div class="profile-menu-divider"></div>
-                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn">
+                                <a href="#" class="profile-menu-item logout" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt"></i>
                                     <span>Keluar</span>
                                 </a>
