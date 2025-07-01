@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="input-group">
                                         <i class="fas fa-user"></i>
                                         <input type="text" id="firstName" name="firstName" placeholder="Nama depan"
-                                            required value="<?php echo htmlspecialchars($_POST['firstName'] ?? ''); ?>">
+                                            required value="<?php echo htmlspecialchars($users['firstName'] ?? ''); ?>">
                                     </div>
                                 </div>
 
@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div class="input-group">
                                         <i class="fas fa-user"></i>
                                         <input type="text" id="lastName" name="lastName" placeholder="Nama belakang"
-                                            required value="<?php echo htmlspecialchars($_POST['lastName'] ?? ''); ?>">
+                                            required value="<?php echo htmlspecialchars($users['lastName'] ?? ''); ?>">
                                     </div>
                                 </div>
                             </div>
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="input-group">
                                     <i class="fas fa-envelope"></i>
                                     <input type="email" id="registerEmail" name="email"
-                                        placeholder="Masukkan email Anda" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                                        placeholder="Masukkan email Anda" required value="<?php echo htmlspecialchars($users['email'] ?? ''); ?>">
                                 </div>
                             </div>
 
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <div class="input-group">
                                     <i class="fas fa-phone"></i>
                                     <input type="tel" id="phone" name="phone" placeholder="Masukkan nomor telepon"
-                                        required value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+                                        required value="<?php echo htmlspecialchars($users['phone'] ?? ''); ?>">
                                 </div>
                             </div>
 

@@ -38,7 +38,9 @@ session_start();
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName">Guest</span>
+                            <span class="profile-name" id="profileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
                         
@@ -48,8 +50,12 @@ session_start();
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName">Guest</h4>
-                                    <p id="menuProfileEmail">-</p>
+                                    <h4 id="menuProfileName">
+                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                    </h4>
+                                    <p id="menuProfileEmail">
+                                        <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                    </p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -94,8 +100,12 @@ session_start();
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName">Guest</h4>
-                            <p id="mobileProfileEmail">-</p>
+                            <h4 id="mobileProfileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </h4>
+                            <p id="mobileProfileEmail">
+                                <?php echo htmlspecialchars($_SESSION['email']); ?>
+                            </p>
                         </div>
                     </div>
                     
@@ -135,7 +145,7 @@ session_start();
     <section class="welcome-banner">
         <div class="container">
             <div class="welcome-content">
-                <h2>Selamat Datang Kembali, <span id="welcomeName">Guest</span>! 🏔️</h2>
+                <h2>Selamat Datang Kembali, <span id="welcomeName"><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>! 🏔️</h2>
                 <p>Siap untuk petualangan pendakian berikutnya?</p>
             </div>
         </div>

@@ -3,9 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize forum functionality
     initForumFeatures();
     
-    // Load user data for profile
-    loadUserData();
-    
     // Initialize profile dropdown
     initProfileDropdown();
     
@@ -496,36 +493,7 @@ function getCategoryInfo(category) {
     return categoryDisplay[category] || categoryDisplay['pengalaman'];
 }
 
-// Load user data from localStorage
-function loadUserData() {
-    // Get user data from localStorage (set during registration/login)
-    const userData = JSON.parse(localStorage.getItem("userData")) || {
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@email.com",
-        phone: "+62 812-3456-7890",
-    }
 
-    // Update profile name displays
-    const fullName = `${userData.firstName} ${userData.lastName}`
-    const firstName = userData.firstName
-
-    // Update all profile name elements
-    updateElementText("profileName", fullName)
-    updateElementText("menuProfileName", fullName)
-    updateElementText("menuProfileEmail", userData.email)
-    updateElementText("mobileProfileName", fullName)
-    updateElementText("mobileProfileEmail", userData.email)
-    updateElementText("welcomeName", firstName)
-}
-
-// Update element text safely
-function updateElementText(elementId, text) {
-    const element = document.getElementById(elementId)
-    if (element) {
-        element.textContent = text
-    }
-}
 
 // Initialize profile dropdown
 function initProfileDropdown() {

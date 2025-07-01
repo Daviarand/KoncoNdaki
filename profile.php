@@ -76,7 +76,7 @@ $_SESSION['role'] = $user['role'];
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></span>
+                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
 
@@ -86,8 +86,8 @@ $_SESSION['role'] = $user['role'];
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h4>
-                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($user['email']); ?></p>
+                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
+                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($_SESSION['email']); ?></p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -132,7 +132,7 @@ $_SESSION['role'] = $user['role'];
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h4>
+                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
                             <p id="mobileProfileEmail"><?php echo htmlspecialchars($user['email']); ?></p>
                         </div>
                     </div>
@@ -183,7 +183,7 @@ $_SESSION['role'] = $user['role'];
                         </button>
                     </div>
                     <div class="profile-header-info">
-                        <h1 id="profilePageName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h1>
+                        <h1 id="profilePageName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h1>
                         <p id="profilePageEmail"><?php echo htmlspecialchars($user['email']); ?></p>
                         <div class="profile-badges">
                             <span class="badge badge-verified">
@@ -236,14 +236,14 @@ $_SESSION['role'] = $user['role'];
                                                 <i class="fas fa-user"></i>
                                                 Nama Depan
                                             </label>
-                                            <input type="text" id="firstName" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
+                                            <input type="text" id="firstName" name="first_name" value="<?php echo htmlspecialchars($_SESSION['first_name']); ?>" required>
                                         </div>
                                         <div class="form-group">
                                             <label for="lastName">
                                                 <i class="fas fa-user"></i>
                                                 Nama Belakang
                                             </label>
-                                            <input type="text" id="lastName" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
+                                            <input type="text" id="lastName" name="last_name" value="<?php echo htmlspecialchars($_SESSION['last_name']); ?>" required>
                                         </div>
                                     </div>
                                     <div class="form-group">

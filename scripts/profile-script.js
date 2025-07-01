@@ -1,70 +1,8 @@
-// Enhanced Profile Script
-document.addEventListener("DOMContentLoaded", () => {
-  // Load user data
-  loadUserData()
 
-  // Initialize profile functionality
-  initProfileTabs()
-  initProfileForm()
-  initPasswordForm()
-  initToggleButtons()
-  initPasswordRequirements()
 
-  // Initialize animations
-  initAnimations()
 
-  // Initialize profile dropdown
-  initProfileDropdown()
 
-  // Initialize logout handlers
-  initLogoutHandlers()
 
-  // Initialize mobile menu
-  initMobileMenu()
-})
-
-// Load user data from localStorage
-function loadUserData() {
-  const userData = JSON.parse(localStorage.getItem("userData")) || {
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    phone: "+62 812-3456-7890",
-    birthDate: "1990-01-15",
-    gender: "male",
-    address: "Jl. Contoh No. 123, Jakarta Selatan, DKI Jakarta",
-  }
-
-  // Update profile header
-  const fullName = `${userData.firstName} ${userData.lastName}`
-  updateElementText("profilePageName", fullName)
-  updateElementText("profilePageEmail", userData.email)
-
-  // Update form fields
-  updateElementValue("firstName", userData.firstName)
-  updateElementValue("lastName", userData.lastName)
-  updateElementValue("email", userData.email)
-  updateElementValue("phone", userData.phone)
-  updateElementValue("birthDate", userData.birthDate)
-  updateElementValue("gender", userData.gender)
-  updateElementValue("address", userData.address)
-
-  // Update all profile name elements
-  updateElementText("profileName", fullName)
-  updateElementText("menuProfileName", fullName)
-  updateElementText("menuProfileEmail", userData.email)
-  updateElementText("mobileProfileName", fullName)
-  updateElementText("mobileProfileEmail", userData.email)
-  updateElementText("welcomeName", userData.firstName)
-}
-
-// Update element text safely
-function updateElementText(elementId, text) {
-  const element = document.getElementById(elementId)
-  if (element) {
-    element.textContent = text
-  }
-}
 
 // Update element value safely
 function updateElementValue(elementId, value) {
@@ -124,13 +62,6 @@ function initProfileForm() {
       toggleEditMode(true)
       this.innerHTML = '<i class="fas fa-times"></i> Batal Edit'
       this.classList.add("btn-cancel")
-    })
-  }
-
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => {
-      toggleEditMode(false)
-      loadUserData() // Reload original data
     })
   }
 
@@ -206,9 +137,6 @@ function handlePersonalFormSubmit(e) {
   setTimeout(() => {
     // Save to localStorage
     localStorage.setItem("userData", JSON.stringify(userData))
-
-    // Update display
-    loadUserData()
 
     // Exit edit mode
     toggleEditMode(false)

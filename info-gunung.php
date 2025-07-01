@@ -44,7 +44,9 @@ require_once 'auth/check_auth.php';
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName">John Doe</span>
+                            <span class="profile-name" id="profileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
 
@@ -54,8 +56,12 @@ require_once 'auth/check_auth.php';
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName">John Doe</h4>
-                                    <p id="menuProfileEmail">john.doe@email.com</p>
+                                    <h4 id="menuProfileName">
+                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                    </h4>
+                                    <p id="menuProfileEmail">
+                                        <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                    </p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -100,8 +106,12 @@ require_once 'auth/check_auth.php';
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName">John Doe</h4>
-                            <p id="mobileProfileEmail">john.doe@email.com</p>
+                            <h4 id="mobileProfileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </h4>
+                            <p id="mobileProfileEmail">
+                                <?php echo htmlspecialchars($_SESSION['email']); ?>
+                            </p>
                         </div>
                     </div>
 

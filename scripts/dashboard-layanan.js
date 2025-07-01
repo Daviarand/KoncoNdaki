@@ -169,37 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSort = "newest"
   let filteredNotifications = [...notificationsData]
   
-  // Initialize dashboard
-  function initDashboard() {
-    updateCategoryCounts()
-    loadUserData()
-  }
-  
-  // Load user data
-  function loadUserData() {
-    const userData = JSON.parse(localStorage.getItem("userData")) || {
-      firstName: "Mitra",
-      lastName: "Layanan",
-      email: "mitra@konco-ndaki.com",
-    }
-  
-    const fullName = `${userData.firstName} ${userData.lastName}`
-  
-    updateElementText("profileName", fullName)
-    updateElementText("menuProfileName", fullName)
-    updateElementText("menuProfileEmail", userData.email)
-    updateElementText("mobileProfileName", fullName)
-    updateElementText("mobileProfileEmail", userData.email)
-  }
-  
-  // Update element text safely
-  function updateElementText(elementId, text) {
-    const element = document.getElementById(elementId)
-    if (element) {
-      element.textContent = text
-    }
-  }
-  
   // Update category counts
   function updateCategoryCounts() {
     const counts = {
