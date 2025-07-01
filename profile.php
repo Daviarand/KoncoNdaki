@@ -1,7 +1,41 @@
 <?php
-require_once 'auth/check_auth.php';
-?>
+session_start();
+require_once 'config/database.php'; // Tambahkan baris ini!
+$user_id = $_SESSION['user_id'];
+$success_message = '';
+$error_message = '';
+// Proses update data jika form disubmit
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $first_name = trim($_POST['first_name'] ?? '');
+    $last_name = trim($_POST['last_name'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
 
+    if (empty($first_name) || empty($last_name) || empty($phone)) {
+        $error_message = 'Semua field harus diisi.';
+    } else {
+        $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?");
+        if ($stmt->execute([$first_name, $last_name, $phone, $user_id])) {
+            $success_message = 'Profil berhasil diperbarui.';
+        } else {
+            $error_message = 'Gagal memperbarui profil.';
+        }
+    }
+}
+// Ambil data user terbaru dari database (ambil id & role juga!)
+$stmt = $pdo->prepare("SELECT id, first_name, last_name, email, phone, role FROM users WHERE id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch();
+if (!$user) {
+    echo "User tidak ditemukan.";
+    exit;
+}
+// Update session dengan data terbaru
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['first_name'] = $user['first_name'];
+$_SESSION['last_name'] = $user['last_name'];
+$_SESSION['email'] = $user['email'];
+$_SESSION['role'] = $user['role'];
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -42,7 +76,7 @@ require_once 'auth/check_auth.php';
                             <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <span class="profile-name" id="profileName">John Doe</span>
+                            <span class="profile-name" id="profileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
 
@@ -52,8 +86,8 @@ require_once 'auth/check_auth.php';
                                     <i class="fas fa-user"></i>
                                 </div>
                                 <div class="profile-info">
-                                    <h4 id="menuProfileName">John Doe</h4>
-                                    <p id="menuProfileEmail">john.doe@email.com</p>
+                                    <h4 id="menuProfileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h4>
+                                    <p id="menuProfileEmail"><?php echo htmlspecialchars($user['email']); ?></p>
                                 </div>
                             </div>
                             <div class="profile-menu-items">
@@ -98,8 +132,8 @@ require_once 'auth/check_auth.php';
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="profile-info">
-                            <h4 id="mobileProfileName">John Doe</h4>
-                            <p id="mobileProfileEmail">john.doe@email.com</p>
+                            <h4 id="mobileProfileName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h4>
+                            <p id="mobileProfileEmail"><?php echo htmlspecialchars($user['email']); ?></p>
                         </div>
                     </div>
 
@@ -149,8 +183,8 @@ require_once 'auth/check_auth.php';
                         </button>
                     </div>
                     <div class="profile-header-info">
-                        <h1 id="profilePageName">John Doe</h1>
-                        <p id="profilePageEmail">john.doe@email.com</p>
+                        <h1 id="profilePageName"><?php echo htmlspecialchars($user['first_name']) . ' ' . htmlspecialchars($user['last_name']); ?></h1>
+                        <p id="profilePageEmail"><?php echo htmlspecialchars($user['email']); ?></p>
                         <div class="profile-badges">
                             <span class="badge badge-verified">
                                 <i class="fas fa-check-circle"></i>
@@ -195,21 +229,21 @@ require_once 'auth/check_auth.php';
                                 </button>
                             </div>
                             <div class="card-content">
-                                <form id="personalForm" class="profile-form">
+                                <form id="personalForm" class="profile-form" method="post">
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label for="firstName">
                                                 <i class="fas fa-user"></i>
                                                 Nama Depan
                                             </label>
-                                            <input type="text" id="firstName" name="firstName" value="John" readonly>
+                                            <input type="text" id="firstName" name="first_name" value="<?php echo htmlspecialchars($user['first_name']); ?>" required>
                                         </div>
                                         <div class="form-group">
                                             <label for="lastName">
                                                 <i class="fas fa-user"></i>
                                                 Nama Belakang
                                             </label>
-                                            <input type="text" id="lastName" name="lastName" value="Doe" readonly>
+                                            <input type="text" id="lastName" name="last_name" value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
                                         </div>
                                     </div>
                                     <div class="form-group">
@@ -217,7 +251,7 @@ require_once 'auth/check_auth.php';
                                             <i class="fas fa-envelope"></i>
                                             Email
                                         </label>
-                                        <input type="email" id="email" name="email" value="john.doe@email.com" readonly>
+                                        <input type="email" id="email" value="<?php echo htmlspecialchars($user['email']); ?>" readonly>
                                         <small class="form-help">Email tidak dapat diubah untuk keamanan akun</small>
                                     </div>
                                     <div class="form-group">
@@ -225,7 +259,7 @@ require_once 'auth/check_auth.php';
                                             <i class="fas fa-phone"></i>
                                             Nomor Telepon
                                         </label>
-                                        <input type="tel" id="phone" name="phone" value="+62 812-3456-7890" readonly>
+                                        <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
                                     </div>
                                     <div class="form-row">
                                         <div class="form-group">
@@ -233,8 +267,7 @@ require_once 'auth/check_auth.php';
                                                 <i class="fas fa-calendar"></i>
                                                 Tanggal Lahir
                                             </label>
-                                            <input type="date" id="birthDate" name="birthDate" value="1990-01-15"
-                                                readonly>
+                                            <input type="date" id="birthDate" name="birthDate" value="1990-01-15" readonly>
                                         </div>
                                         <div class="form-group">
                                             <label for="gender">
@@ -253,8 +286,7 @@ require_once 'auth/check_auth.php';
                                             <i class="fas fa-map-marker-alt"></i>
                                             Alamat
                                         </label>
-                                        <textarea id="address" name="address" rows="3"
-                                            readonly>Jl. Contoh No. 123, Jakarta Selatan, DKI Jakarta</textarea>
+                                        <textarea id="address" name="address" rows="3" readonly>Jl. Contoh No. 123, Jakarta Selatan, DKI Jakarta</textarea>
                                     </div>
                                     <div class="form-actions" id="personalActions" style="display: none;">
                                         <button type="button" class="btn-cancel" id="cancelPersonalBtn">

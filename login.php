@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Cegah output sebelum header
 ob_start();
 
