@@ -173,3 +173,18 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(el);
     });
 });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const logoutBtn = document.getElementById("logoutBtn");
+    const mobileLogoutBtn = document.getElementById("mobileLogoutBtn");
+
+    function handleLogout(e) {
+        e.preventDefault();
+        if (confirm("Apakah Anda yakin ingin keluar?")) {
+            window.location.href = "auth/logout.php";
+        }
+    }
+
+    if (logoutBtn) logoutBtn.addEventListener("click", handleLogout);
+    if (mobileLogoutBtn) mobileLogoutBtn.addEventListener("click", handleLogout);
+});
