@@ -1,4 +1,7 @@
 <?php
+// Include file konfigurasi GROQ
+require_once 'config/groq-config.php';
+
 // Handle API requests ONLY when it's a POST request with message
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     // Set JSON header only for API responses
@@ -6,11 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
     
     // Fungsi untuk mengambil respons dari GROQ API
     function getGroqResponse($message, $category = '') {
-        // API key GROQ
-        $api_key = 'blm diisi';
-        
-        // URL endpoint GROQ
-        $url = 'https://api.groq.com/openai/v1/chat/completions';
+        // Menggunakan konstanta dari config.php
+        $api_key = GROQ_API_KEY;
+        $url = GROQ_API_URL;
         
         // Instruksi sistem berdasarkan kategori
         $system_prompts = [
@@ -88,7 +89,7 @@ Jawab dalam bahasa Indonesia yang ramah dan informatif dengan struktur yang rapi
         
         // Data untuk dikirim ke API
         $data = [
-            'model' => 'llama3-8b-8192',
+            'model' => GROQ_MODEL,
             'messages' => [
                 [
                     'role' => 'system',
@@ -99,8 +100,8 @@ Jawab dalam bahasa Indonesia yang ramah dan informatif dengan struktur yang rapi
                     'content' => $message
                 ]
             ],
-            'temperature' => 0.7,
-            'max_tokens' => 1000
+            'temperature' => TEMPERATURE,
+            'max_tokens' => MAX_TOKENS
         ];    
         
         // Set up cURL request
