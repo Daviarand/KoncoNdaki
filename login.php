@@ -31,6 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     case 'layanan':
                         header('Location: dashboard-layanan.php');
                         exit;
+
+                    case 'admin':
+                        // Jika rolenya admin, arahkan ke dashboard admin (contoh)
+                        header('Location: dashboard-pengelola.php');
+                        exit;
+
+                    case 'pendaki':
                     default:
                         header('Location: dashboard.php');
                         exit;

@@ -1,7 +1,7 @@
 --
 -- File: KoncoNdaki.sql
 -- Deskripsi: Skema database lengkap untuk aplikasi KoncoNdaki.
--- Revisi: 2.0 (Integrasi Role, Notifikasi, dan Manajemen Gunung)
+-- Revisi: 3.1 (Role 'basecamp' ditambahkan, tabel basecamp disesuaikan)
 --
 
 -- Membuat database jika belum ada
@@ -11,7 +11,8 @@ USE koncondaki;
 --
 -- Struktur tabel untuk `users`
 -- Keterangan: Tabel utama untuk semua pengguna aplikasi.
--- Revisi: Kolom 'role' diperluas untuk semua jenis pengguna.
+-- Revisi: Role 'pengelola' dihapus dan menjadi bagian dari 'admin'.
+-- Revisi 3.1: Role 'basecamp' ditambahkan.
 --
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -20,7 +21,8 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(20) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role ENUM('pendaki', 'porter', 'guide', 'ojek', 'pengelola', 'admin') NOT NULL DEFAULT 'pendaki',
+    -- UPDATED: Menambahkan 'basecamp' ke dalam ENUM
+    role ENUM('pendaki', 'porter', 'guide', 'ojek', 'admin', 'basecamp') NOT NULL DEFAULT 'pendaki',
     created_at DATETIME NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -28,7 +30,7 @@ CREATE TABLE users (
 --
 -- Struktur tabel untuk `gunung`
 -- Keterangan: Menyimpan data master gunung.
--- Revisi: Tambah 'foto_gunung' dan 'pengelola_id' untuk dihubungkan ke pengelola.
+-- Revisi: Kolom 'pengelola_id' diubah menjadi 'admin_id'.
 --
 CREATE TABLE gunung (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -39,10 +41,10 @@ CREATE TABLE gunung (
     deskripsi TEXT,
     status ENUM('buka', 'tutup') DEFAULT 'buka',
     kuota_pendaki_harian INT NOT NULL,
-    pengelola_id INT NULL COMMENT 'User ID dari pengelola gunung',
+    admin_id INT NULL COMMENT 'User ID dari admin yang mengelola gunung',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (pengelola_id) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 --
@@ -113,7 +115,6 @@ CREATE TABLE detail_pendaki (
 
 --
 -- Struktur tabel untuk layanan `porter`
--- Revisi: Dihubungkan ke tabel 'users' via 'user_id'. Nama diambil dari tabel 'users'.
 --
 CREATE TABLE porter (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,7 +131,6 @@ CREATE TABLE porter (
 
 --
 -- Struktur tabel untuk layanan `guide`
--- Revisi: Dihubungkan ke tabel 'users' via 'user_id'.
 --
 CREATE TABLE guide (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -147,7 +147,6 @@ CREATE TABLE guide (
 
 --
 -- Struktur tabel untuk layanan `ojek`
--- Revisi: Dihubungkan ke tabel 'users' via 'user_id'.
 --
 CREATE TABLE ojek (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -166,10 +165,13 @@ CREATE TABLE ojek (
 
 --
 -- Struktur tabel untuk `basecamp`
+-- Revisi 3.1: Menambahkan user_id untuk pengelola basecamp.
 --
 CREATE TABLE basecamp (
     id INT AUTO_INCREMENT PRIMARY KEY,
     gunung_id INT NOT NULL,
+    -- UPDATED: Menambahkan user_id untuk menautkan ke pengelola
+    user_id INT NULL UNIQUE COMMENT 'User ID dari pengelola basecamp',
     nama_basecamp VARCHAR(100) NOT NULL,
     lokasi VARCHAR(255) NOT NULL,
     kapasitas INT NOT NULL,
@@ -179,7 +181,9 @@ CREATE TABLE basecamp (
     status ENUM('tersedia', 'tidak tersedia') DEFAULT 'tersedia',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (gunung_id) REFERENCES gunung(id) ON DELETE CASCADE
+    FOREIGN KEY (gunung_id) REFERENCES gunung(id) ON DELETE CASCADE,
+    -- UPDATED: Menambahkan Foreign Key Constraint untuk user_id
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 --
@@ -290,12 +294,12 @@ CREATE TABLE pembayaran (
 
 --
 -- BARU: Struktur tabel untuk `notifikasi`
--- Keterangan: Digunakan oleh 'pengelola' untuk mengirim pesan ke penyedia layanan.
+-- Keterangan: Digunakan oleh admin untuk mengirim pesan ke penyedia layanan.
 --
 CREATE TABLE notifikasi (
     id INT AUTO_INCREMENT PRIMARY KEY,
     penerima_id INT NOT NULL COMMENT 'User ID porter, guide, atau ojek',
-    pengirim_id INT NOT NULL COMMENT 'User ID pengelola gunung',
+    pengirim_id INT NOT NULL COMMENT 'User ID pengirim (admin)',
     judul VARCHAR(255) NOT NULL,
     pesan TEXT NOT NULL,
     tipe ENUM('info', 'penting', 'promo') DEFAULT 'info',
@@ -308,7 +312,7 @@ CREATE TABLE notifikasi (
 
 --
 -- BARU: Struktur tabel untuk `log_aktivitas`
--- Keterangan: (Opsional) Mencatat aktivitas penting yang dilakukan admin/pengelola.
+-- Keterangan: (Opsional) Mencatat aktivitas penting yang dilakukan admin.
 --
 CREATE TABLE log_aktivitas (
     id INT AUTO_INCREMENT PRIMARY KEY,
