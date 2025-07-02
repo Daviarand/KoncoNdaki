@@ -70,26 +70,35 @@ function initPostCreation() {
     const createPostInput = document.getElementById('createPostInput');
     const submitPostBtn = document.getElementById('submitPostBtn');
     const categorySelect = document.getElementById('categorySelect');
-    
+
     if (createPostInput && submitPostBtn) {
-        // Enable/disable submit button based on input
+        // Langkah 1: Atur kondisi awal tombol menjadi nonaktif
+        submitPostBtn.disabled = true;
+        submitPostBtn.style.opacity = '0.5';
+
+        // Langkah 2: Tambahkan event listener pada kotak input teks
         createPostInput.addEventListener('input', function() {
+            // Jika ada teks di dalam input, aktifkan tombol
             if (this.value.trim().length > 0) {
                 submitPostBtn.disabled = false;
                 submitPostBtn.style.opacity = '1';
             } else {
+                // Jika input kosong, nonaktifkan lagi tombolnya
                 submitPostBtn.disabled = true;
                 submitPostBtn.style.opacity = '0.5';
             }
         });
-        
-        // Handle post submission
+
+        // Langkah 3: Tambahkan event listener untuk saat tombol "Posting" diklik
         submitPostBtn.addEventListener('click', function() {
             const content = createPostInput.value.trim();
             const category = categorySelect.value;
-            
+
             if (content.length > 0) {
+                // Panggil fungsi untuk membuat post baru
                 createNewPost(content, category);
+
+                // Kosongkan input dan nonaktifkan kembali tombolnya setelah berhasil
                 createPostInput.value = '';
                 submitPostBtn.disabled = true;
                 submitPostBtn.style.opacity = '0.5';
@@ -126,16 +135,16 @@ function initPostCreation() {
 
 // Create new post
 function createNewPost(content, category) {
-    const userData = JSON.parse(localStorage.getItem('userData')) || {
-        firstName: 'John',
-        lastName: 'Doe'
-    };
-    
-    const fullName = `${userData.firstName} ${userData.lastName}`;
+    // 1. Ambil nama pengguna dari variabel global yang di-set oleh PHP
+    let fullName = ''; // Default name if not found
+    if (typeof LOGGED_IN_USER !== 'undefined' && LOGGED_IN_USER.firstName) {
+        fullName = `${LOGGED_IN_USER.firstName} ${LOGGED_IN_USER.lastName}`.trim();
+    }
+
     const postsFeed = document.getElementById('postsFeed');
     const postId = Date.now();
-    
-    // Category display mapping
+
+    // Mapping untuk info kategori
     const categoryDisplay = {
         'pengalaman': { name: 'Pengalaman Pendakian', icon: 'fa-mountain', class: 'pengalaman' },
         'tips': { name: 'Tips & Trik', icon: 'fa-lightbulb', class: 'tips' },
@@ -143,13 +152,14 @@ function createNewPost(content, category) {
         'cuaca': { name: 'Info Cuaca', icon: 'fa-cloud-sun', class: 'cuaca' },
         'tanya-jawab': { name: 'Tanya Jawab', icon: 'fa-question-circle', class: 'tanya-jawab' }
     };
-    
-    const categoryInfo = categoryDisplay[category];
-    
+    const categoryInfo = categoryDisplay[category] || categoryDisplay['pengalaman'];
+
+    // 2. Buat elemen postingan baru
     const newPost = document.createElement('div');
     newPost.className = 'post-card new';
     newPost.setAttribute('data-category', category);
-    
+
+    // 3. Isi HTML untuk postingan baru, pastikan ${fullName} ada di dalam .author-name
     newPost.innerHTML = `
         <div class="post-header">
             <div class="post-author">
@@ -171,42 +181,27 @@ function createNewPost(content, category) {
         </div>
         <div class="post-footer">
             <div class="post-stats">
-                <button class="stat-btn like-btn" data-post="${postId}">
-                    <i class="far fa-heart"></i>
-                    <span>0</span>
-                </button>
-                <button class="stat-btn comment-btn" data-post="${postId}">
-                    <i class="far fa-comment"></i>
-                    <span>0</span>
-                </button>
-                <button class="stat-btn share-btn">
-                    <i class="fas fa-share"></i>
-                    <span>0</span>
-                </button>
+                <button class="stat-btn like-btn" data-post="${postId}"><i class="far fa-heart"></i><span>0</span></button>
+                <button class="stat-btn comment-btn" data-post="${postId}"><i class="far fa-comment"></i><span>0</span></button>
+                <button class="stat-btn share-btn"><i class="fas fa-share"></i><span>0</span></button>
             </div>
-            <button class="btn-read-more" onclick="expandPost(${postId})">
-                Lihat Komentar
-            </button>
+            <button class="btn-read-more" onclick="expandPost(${postId})">Lihat Komentar</button>
         </div>
         <div class="comments-section" id="comments-${postId}" style="display: none;">
             <div class="comment-input">
-                <div class="user-avatar small">
-                    <i class="fas fa-user"></i>
-                </div>
+                <div class="user-avatar small"><i class="fas fa-user"></i></div>
                 <input type="text" placeholder="Tulis komentar...">
-                <button class="btn-comment">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+                <button class="btn-comment"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
     `;
-    
-    // Insert at the beginning of posts feed
+
+    // 4. Masukkan postingan baru ke paling atas
     postsFeed.insertBefore(newPost, postsFeed.firstChild);
-    
-    // Initialize interactions for the new post
+
+    // Inisialisasi lagi tombol-tombol di post baru
     initPostInteractionsForElement(newPost);
-    
+
     showNotification('Post berhasil dibuat!', 'success');
 }
 

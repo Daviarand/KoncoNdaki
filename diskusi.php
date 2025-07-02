@@ -529,7 +529,16 @@ session_start();
         </div>
     </footer>
 
-    <script src="scripts/script.js"></script>
-    <script src="scripts/diskusi.js"></script>
+<script>
+  // Variabel ini akan menampung data pengguna dari session PHP
+  // dan akan dibaca oleh file diskusi.js
+  const LOGGED_IN_USER = {
+    firstName: "<?php echo isset($_SESSION['first_name']) ? htmlspecialchars($_SESSION['first_name']) : 'Pengguna'; ?>",
+    lastName: "<?php echo isset($_SESSION['last_name']) ? htmlspecialchars($_SESSION['last_name']) : ''; ?>"
+  };
+</script>
+
+<script src="scripts/script.js"></script>
+<script src="scripts/diskusi.js"></script>
 </body>
 </html>
