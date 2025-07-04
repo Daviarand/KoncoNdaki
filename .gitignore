@@ -1,2 +1,3 @@
 # Konfigurasi sensitif - API Keys
 config/groq-config.php
+.env
