@@ -8,8 +8,6 @@ session_start();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Layanan - KoncoNdaki</title>
     <meta name="description" content="Dashboard untuk pengelola layanan ojek, porter, guide, dan basecamp di KoncoNdaki.">
-    <link rel="stylesheet" href="styles/style.css">
-    <link rel="stylesheet" href="styles/dashboard-styles.css">
     <link rel="stylesheet" href="styles/dashboard-layanan.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -18,7 +16,7 @@ session_start();
     <section class="page-header">
         <div class="container">
             <div class="header-content">
-                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Layanan</h1>
+                <h1><i class="fas fa-mountain"></i> Dashboard Layanan</h1>
                 <p>Kelola pesanan dan notifikasi untuk semua layanan pendakian Anda</p>
             </div>
         </div>
@@ -31,9 +29,15 @@ session_start();
                 <!-- Sidebar -->
                 <aside class="dashboard-sidebar">
                     <div class="sidebar-header">
-                        <h3><i class="fas fa-filter"></i> Filter Layanan</h3>
-                        <div class="notification-count" id="totalNotifications">
-                            <span>24</span> notifikasi
+                        <h3><i class="fas fa-cogs"></i> Menu Layanan</h3>
+                        <div class="admin-info">
+                            <span class="admin-name">Layanan: <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name'] ?? 'Partner'); ?></span>
+                            <div class="admin-actions">
+                                <span class="notification-icon"><i class="fas fa-bell"></i></span>
+                                <a href="auth/logout.php" title="Logout" class="logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -139,7 +143,7 @@ session_start();
                         <i class="fas fa-mountain"></i>
                         <span>KoncoNdaki</span>
                     </div>
-                    <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
+                    <p>Platform terpercaya untuk pengelolaan pendakian gunung di seluruh Pulau Jawa.</p>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -148,7 +152,6 @@ session_start();
         </div>
     </footer>
 
-    <script src="scripts/script.js"></script>
     <script src="scripts/dashboard-layanan.js"></script>
 </body>
 </html>

@@ -1,863 +1,503 @@
-// Dashboard Layanan Script
-document.addEventListener("DOMContentLoaded", () => {
+// Dashboard Layanan JavaScript
+
+document.addEventListener('DOMContentLoaded', function() {
     // Initialize dashboard
-    initDashboard()
-  
-    // Load notifications
-    loadNotifications()
-  
-    // Setup event listeners
-    setupEventListeners()
-  
-    // Setup filters
-    setupFilters()
-  
-    // Setup modal
-    setupModal()
-  })
-  
-  // Sample notification data
-  const notificationsData = [
-    {
-      id: 1,
-      category: "ojek",
-      type: "new",
-      title: "Pesanan Ojek Baru",
-      description: "Permintaan antar jemput dari Basecamp Selo ke Pos 1 Gunung Merapi",
-      customer: {
-        name: "Ahmad Ridwan",
-        phone: "0812-3456-7890",
-        date: "21 Juni 2025",
-        time: "05:30 WIB",
-      },
-      location: "Basecamp Selo → Pos 1 Merapi",
-      amount: "Rp 25.000",
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      priority: "high",
-      status: "new",
-    },
-    {
-      id: 2,
-      category: "porter",
-      type: "confirmed",
-      title: "Pesanan Porter Dikonfirmasi",
-      description: "Bantuan membawa barang 15kg untuk pendakian 2 hari 1 malam",
-      customer: {
-        name: "Siti Marlina",
-        phone: "0856-7890-1234",
-        date: "22 Juni 2025",
-        time: "04:00 WIB",
-      },
-      location: "Gunung Semeru - Jalur Ranu Pani",
-      amount: "Rp 200.000",
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      priority: "medium",
-      status: "confirmed",
-    },
-    {
-      id: 3,
-      category: "guide",
-      type: "ongoing",
-      title: "Perjalanan Guide Berlangsung",
-      description: "Sedang memandu grup 6 orang pendakian Gunung Bromo sunrise",
-      customer: {
-        name: "Budi Santoso",
-        phone: "0878-9012-3456",
-        date: "21 Juni 2025",
-        time: "02:00 WIB",
-      },
-      location: "Gunung Bromo - Jalur Cemoro Lawang",
-      amount: "Rp 300.000",
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-      priority: "high",
-      status: "ongoing",
-    },
-    {
-      id: 4,
-      category: "basecamp",
-      type: "completed",
-      title: "Sewa Basecamp Selesai",
-      description: "Penyewaan basecamp untuk 8 orang selama 1 malam telah selesai",
-      customer: {
-        name: "Dewi Kartika",
-        phone: "0851-2345-6789",
-        date: "20 Juni 2025",
-        time: "18:00 WIB",
-      },
-      location: "Basecamp Gunung Gede Pangrango",
-      amount: "Rp 150.000",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      priority: "low",
-      status: "completed",
-    },
-    {
-      id: 5,
-      category: "ojek",
-      type: "cancelled",
-      title: "Pesanan Ojek Dibatalkan",
-      description: "Pesanan antar jemput dibatalkan karena cuaca buruk",
-      customer: {
-        name: "Rina Kusuma",
-        phone: "0812-9876-5432",
-        date: "21 Juni 2025",
-        time: "06:00 WIB",
-      },
-      location: "Basecamp Tawangmangu → Pos 2",
-      amount: "Rp 30.000",
-      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-      priority: "low",
-      status: "cancelled",
-    },
-    {
-      id: 6,
-      category: "porter",
-      type: "urgent",
-      title: "Permintaan Porter Darurat",
-      description: "Dibutuhkan porter untuk evakuasi pendaki yang mengalami cedera ringan",
-      customer: {
-        name: "Agus Prasetyo",
-        phone: "0819-1234-5678",
-        date: "21 Juni 2025",
-        time: "14:30 WIB",
-      },
-      location: "Gunung Lawu - Pos 3",
-      amount: "Rp 250.000",
-      timestamp: new Date(Date.now() - 30 * 60 * 1000),
-      priority: "urgent",
-      status: "new",
-    },
-    {
-      id: 7,
-      category: "guide",
-      type: "new",
-      title: "Pesanan Guide Baru",
-      description: "Permintaan guide untuk pendakian keluarga dengan 2 anak",
-      customer: {
-        name: "Maya Sari",
-        phone: "0857-3456-7890",
-        date: "23 Juni 2025",
-        time: "05:00 WIB",
-      },
-      location: "Gunung Papandayan - Jalur Cisurupan",
-      amount: "Rp 180.000",
-      timestamp: new Date(Date.now() - 45 * 60 * 1000),
-      priority: "medium",
-      status: "new",
-    },
-    {
-      id: 8,
-      category: "basecamp",
-      type: "confirmed",
-      title: "Reservasi Basecamp Dikonfirmasi",
-      description: "Penyewaan basecamp untuk grup 12 orang selama 2 malam",
-      customer: {
-        name: "Rudi Hermawan",
-        phone: "0813-5678-9012",
-        date: "24 Juni 2025",
-        time: "16:00 WIB",
-      },
-      location: "Basecamp Gunung Sindoro",
-      amount: "Rp 300.000",
-      timestamp: new Date(Date.now() - 1.5 * 60 * 60 * 1000),
-      priority: "medium",
-      status: "confirmed",
-    },
-  ]
-  
-  // Global variables
-  let currentFilter = "all"
-  let currentSort = "newest"
-  let filteredNotifications = [...notificationsData]
-  
-  // Update category counts
-  function updateCategoryCounts() {
-    const counts = {
-      all: notificationsData.length,
-      ojek: notificationsData.filter((n) => n.category === "ojek").length,
-      porter: notificationsData.filter((n) => n.category === "porter").length,
-      guide: notificationsData.filter((n) => n.category === "guide").length,
-      basecamp: notificationsData.filter((n) => n.category === "basecamp").length,
+    initializeDashboard();
+    initializeEventListeners();
+    loadNotifications();
+});
+
+function initializeDashboard() {
+    // Set active category based on hash or default to all
+    const hash = window.location.hash.substring(1) || 'all';
+    showCategory(hash);
+    
+    // Update active menu item
+    const activeMenuItem = document.querySelector(`[data-category="${hash}"]`);
+    if (activeMenuItem) {
+        updateActiveMenuItem(activeMenuItem);
     }
-  
-    Object.keys(counts).forEach((category) => {
-      const countElement = document.querySelector(`[data-category="${category}"] .count`)
-      if (countElement) {
-        countElement.textContent = counts[category]
-      }
-    })
-  
-    // Update total notifications
-    const totalElement = document.getElementById("totalNotifications")
-    if (totalElement) {
-      totalElement.innerHTML = `<span>${counts.all}</span> notifikasi`
-    }
-  }
-  
-  // Load notifications
-  function loadNotifications() {
-    // Placeholder for loading notifications logic
-  }
-  
-  // Setup event listeners
-  function setupEventListeners() {
+}
+
+function initializeEventListeners() {
+    // Category item clicks
+    const categoryItems = document.querySelectorAll('.category-item');
+    categoryItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            showCategory(category);
+            updateActiveMenuItem(this);
+            
+            // Update URL hash
+            window.location.hash = category;
+        });
+    });
+
     // Search functionality
-    const searchInput = document.getElementById("searchInput")
+    const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-      searchInput.addEventListener("input", handleSearch)
+        searchInput.addEventListener('input', function() {
+            handleSearch(this.value);
+        });
     }
-  
+
     // Sort functionality
-    const sortSelect = document.getElementById("sortSelect")
+    const sortSelect = document.getElementById('sortSelect');
     if (sortSelect) {
-      sortSelect.addEventListener("change", handleSort)
+        sortSelect.addEventListener('change', function() {
+            handleSort(this.value);
+        });
     }
-  
+
     // Load more button
-    const loadMoreBtn = document.getElementById("loadMoreBtn")
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
     if (loadMoreBtn) {
-      loadMoreBtn.addEventListener("click", handleLoadMore)
+        loadMoreBtn.addEventListener('click', function() {
+            loadMoreNotifications();
+        });
     }
-  
-    // Profile dropdown (inherited from dashboard script)
-    initProfileDropdown()
-    initLogoutHandlers()
-    initMobileMenu()
-  }
-  
-  // Handle search
-  function handleSearch(event) {
-    const searchTerm = event.target.value.toLowerCase()
-    filteredNotifications = notificationsData.filter((notification) => {
-      const categoryMatch = currentFilter === "all" || notification.category === currentFilter
-      const titleMatch = notification.title.toLowerCase().includes(searchTerm)
-      const descriptionMatch = notification.description.toLowerCase().includes(searchTerm)
-      const customerNameMatch = notification.customer.name.toLowerCase().includes(searchTerm)
-      return categoryMatch && (titleMatch || descriptionMatch || customerNameMatch)
-    })
-  
-    sortNotifications()
-    renderNotifications()
-  }
-  
-  // Handle sort
-  function handleSort(event) {
-    currentSort = event.target.value
-    sortNotifications()
-    renderNotifications()
-  }
-  
-  // Sort notifications
-  function sortNotifications() {
-    filteredNotifications.sort((a, b) => {
-      if (currentSort === "newest") {
-        return b.timestamp - a.timestamp
-      } else if (currentSort === "oldest") {
-        return a.timestamp - b.timestamp
-      } else if (currentSort === "priority") {
-        const priorityOrder = { urgent: 3, high: 2, medium: 1, low: 0 }
-        return priorityOrder[b.priority] - priorityOrder[a.priority]
-      }
-      return 0
-    })
-  }
-  
-  // Setup filters
-  function setupFilters() {
-    // Category filters
-    const categoryItems = document.querySelectorAll(".category-item")
-    categoryItems.forEach((item) => {
-      item.addEventListener("click", () => {
-        const category = item.dataset.category
-        setActiveCategory(category)
-        filterNotifications()
-      })
-    })
-  }
-  
-  // Set active category
-  function setActiveCategory(category) {
-    currentFilter = category
-  
-    // Update active state
-    document.querySelectorAll(".category-item").forEach((item) => {
-      item.classList.remove("active")
-    })
-    document.querySelector(`[data-category="${category}"]`).classList.add("active")
-  
-    // Update header
-    updateCategoryHeader(category)
-  }
-  
-  // Update category header
-  function updateCategoryHeader(category) {
-    const headerElement = document.getElementById("categoryHeader")
-    if (headerElement) {
-      headerElement.textContent = getCategoryName(category)
+
+    // Modal functionality
+    initializeModal();
+}
+
+function showCategory(category) {
+    // Update category title and description
+    const categoryTitles = {
+        'all': 'Semua Layanan',
+        'ojek': 'Pemesanan Ojek',
+        'porter': 'Pemesanan Porter',
+        'guide': 'Pemesanan Guide',
+        'basecamp': 'Pemesanan Basecamp'
+    };
+
+    const categoryDescriptions = {
+        'all': 'Menampilkan semua notifikasi pesanan dari berbagai layanan',
+        'ojek': 'Menampilkan pesanan layanan ojek gunung',
+        'porter': 'Menampilkan pesanan layanan porter',
+        'guide': 'Menampilkan pesanan layanan guide pendakian',
+        'basecamp': 'Menampilkan pesanan layanan basecamp'
+    };
+
+    const currentCategoryEl = document.getElementById('currentCategory');
+    const categoryDescriptionEl = document.getElementById('categoryDescription');
+
+    if (currentCategoryEl) {
+        currentCategoryEl.textContent = categoryTitles[category] || 'Semua Layanan';
     }
-  }
-  
-  // Filter notifications
-  function filterNotifications() {
-    filteredNotifications = notificationsData.filter((notification) => {
-      const categoryMatch = currentFilter === "all" || notification.category === currentFilter
-      return categoryMatch
-    })
-  
-    sortNotifications()
-    renderNotifications()
-  }
-  
-  // Render notifications
-  function renderNotifications() {
-    const grid = document.getElementById("notificationsGrid")
-    if (!grid) return
-  
-    grid.innerHTML = ""
-  
-    if (filteredNotifications.length === 0) {
-      grid.innerHTML = `
-        <div class="no-notifications">
-          <i class="fas fa-inbox"></i>
-          <h3>Tidak ada notifikasi</h3>
-          <p>Belum ada notifikasi untuk kategori yang dipilih</p>
-        </div>
-      `
-      return
+    if (categoryDescriptionEl) {
+        categoryDescriptionEl.textContent = categoryDescriptions[category] || 'Menampilkan semua notifikasi pesanan';
     }
-  
-    filteredNotifications.forEach((notification) => {
-      const card = createNotificationCard(notification)
-      grid.appendChild(card)
-    })
-  }
-  
-  // Create notification card
-  function createNotificationCard(notification) {
-    const card = document.createElement("div")
-    card.className = "notification-card"
-    card.dataset.id = notification.id
-  
-    const timeAgo = getTimeAgo(notification.timestamp)
-    const serviceIcon = getServiceIcon(notification.category)
-  
+
+    // Filter notifications
+    filterNotifications(category);
+}
+
+function updateActiveMenuItem(clickedItem) {
+    // Remove active class from all menu items
+    const menuItems = document.querySelectorAll('.category-item');
+    menuItems.forEach(item => {
+        item.classList.remove('active');
+    });
+
+    // Add active class to clicked item
+    clickedItem.classList.add('active');
+}
+
+function handleSearch(query) {
+    const notifications = document.querySelectorAll('.notification-card');
+    
+    notifications.forEach(notification => {
+        const text = notification.textContent.toLowerCase();
+        const isVisible = text.includes(query.toLowerCase());
+        notification.style.display = isVisible ? 'block' : 'none';
+    });
+}
+
+function handleSort(sortType) {
+    const grid = document.getElementById('notificationsGrid');
+    const notifications = Array.from(grid.children);
+
+    notifications.sort((a, b) => {
+        switch(sortType) {
+            case 'newest':
+                return new Date(b.dataset.time) - new Date(a.dataset.time);
+            case 'oldest':
+                return new Date(a.dataset.time) - new Date(b.dataset.time);
+            case 'priority':
+                return getPriorityValue(b.dataset.priority) - getPriorityValue(a.dataset.priority);
+            case 'amount':
+                return parseFloat(b.dataset.amount) - parseFloat(a.dataset.amount);
+            default:
+                return 0;
+        }
+    });
+
+    // Re-append sorted notifications
+    notifications.forEach(notification => {
+        grid.appendChild(notification);
+    });
+}
+
+function getPriorityValue(priority) {
+    const priorities = { 'urgent': 3, 'high': 2, 'medium': 1, 'low': 0 };
+    return priorities[priority] || 0;
+}
+
+function filterNotifications(category) {
+    const notifications = document.querySelectorAll('.notification-card');
+    
+    notifications.forEach(notification => {
+        const notificationCategory = notification.dataset.category;
+        const isVisible = category === 'all' || notificationCategory === category;
+        notification.style.display = isVisible ? 'block' : 'none';
+    });
+}
+
+function loadNotifications() {
+    const grid = document.getElementById('notificationsGrid');
+    if (!grid) return;
+
+    // Sample notification data
+    const notifications = [
+        {
+            id: 1,
+            category: 'ojek',
+            type: 'new',
+            title: 'Pesanan Ojek Baru - Gunung Merapi',
+            description: 'Permintaan ojek dari Basecamp Selo ke Pos 1 untuk 3 orang pendaki.',
+            customer: 'Ahmad Rizki',
+            phone: '081234567890',
+            amount: 150000,
+            location: 'Basecamp Selo - Pos 1',
+            time: '2024-01-15T10:30:00',
+            priority: 'high'
+        },
+        {
+            id: 2,
+            category: 'porter',
+            type: 'confirmed',
+            title: 'Pesanan Porter Dikonfirmasi',
+            description: 'Porter untuk membawa peralatan camping 2 hari 1 malam.',
+            customer: 'Sari Dewi',
+            phone: '081234567891',
+            amount: 300000,
+            location: 'Jalur Babadan',
+            time: '2024-01-15T09:15:00',
+            priority: 'medium'
+        },
+        {
+            id: 3,
+            category: 'guide',
+            type: 'ongoing',
+            title: 'Guide Sedang Bertugas',
+            description: 'Memandu grup 5 orang pendaki menuju puncak Gunung Lawu.',
+            customer: 'Budi Santoso',
+            phone: '081234567892',
+            amount: 500000,
+            location: 'Gunung Lawu',
+            time: '2024-01-15T06:00:00',
+            priority: 'high'
+        },
+        {
+            id: 4,
+            category: 'basecamp',
+            type: 'completed',
+            title: 'Pemesanan Basecamp Selesai',
+            description: 'Sewa basecamp untuk 1 malam telah selesai dengan rating 5 bintang.',
+            customer: 'Rina Maharani',
+            phone: '081234567893',
+            amount: 200000,
+            location: 'Basecamp Kaliurang',
+            time: '2024-01-14T18:00:00',
+            priority: 'low'
+        },
+        {
+            id: 5,
+            category: 'ojek',
+            type: 'urgent',
+            title: 'Ojek Darurat Diperlukan',
+            description: 'Pendaki memerlukan evakuasi darurat dari Pos 2 ke basecamp.',
+            customer: 'Emergency Call',
+            phone: '081234567894',
+            amount: 250000,
+            location: 'Pos 2 - Basecamp',
+            time: '2024-01-15T11:45:00',
+            priority: 'urgent'
+        },
+        {
+            id: 6,
+            category: 'porter',
+            type: 'new',
+            title: 'Porter untuk Ekspedisi 3 Hari',
+            description: 'Membutuhkan porter berpengalaman untuk ekspedisi 3 hari 2 malam.',
+            customer: 'Expedition Team',
+            phone: '081234567895',
+            amount: 750000,
+            location: 'Jalur Kinahrejo',
+            time: '2024-01-15T08:20:00',
+            priority: 'high'
+        }
+    ];
+
+    // Clear existing notifications
+    grid.innerHTML = '';
+
+    // Create notification cards
+    notifications.forEach(notification => {
+        const card = createNotificationCard(notification);
+        grid.appendChild(card);
+    });
+}
+
+function createNotificationCard(notification) {
+    const card = document.createElement('div');
+    card.className = 'notification-card';
+    card.dataset.category = notification.category;
+    card.dataset.time = notification.time;
+    card.dataset.priority = notification.priority;
+    card.dataset.amount = notification.amount;
+
+    const serviceIcons = {
+        'ojek': 'fas fa-motorcycle',
+        'porter': 'fas fa-hiking',
+        'guide': 'fas fa-user-tie',
+        'basecamp': 'fas fa-campground'
+    };
+
     card.innerHTML = `
-      <div class="notification-header">
-        <span class="notification-type type-${notification.type}">${getTypeLabel(notification.type)}</span>
-        <h3 class="notification-title">${notification.title}</h3>
-        <div class="notification-time">
-          <i class="fas fa-clock"></i> ${timeAgo}
+        <div class="notification-header">
+            <span class="notification-type type-${notification.type}">${notification.type}</span>
+            <h3 class="notification-title">${notification.title}</h3>
+            <div class="notification-time">
+                <i class="fas fa-clock"></i>
+                ${formatTime(notification.time)}
+            </div>
         </div>
-      </div>
-      <div class="notification-body">
-        <div class="service-icon ${notification.category}">
-          <i class="${serviceIcon}"></i>
+        <div class="notification-body">
+            <div class="service-icon ${notification.category}">
+                <i class="${serviceIcons[notification.category]}"></i>
+            </div>
+            <p class="notification-description">${notification.description}</p>
+            
+            <div class="customer-info">
+                <h4><i class="fas fa-user"></i> Informasi Pelanggan</h4>
+                <div class="info-row">
+                    <span class="info-label">Nama:</span>
+                    <span class="info-value">${notification.customer}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Telepon:</span>
+                    <a href="tel:${notification.phone}" class="info-value phone-number">${notification.phone}</a>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Nilai Pesanan:</span>
+                    <span class="info-value">${formatCurrency(notification.amount)}</span>
+                </div>
+            </div>
+            
+            <div class="notification-meta">
+                <div class="notification-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${notification.location}
+                </div>
+                <button class="action-button" onclick="openNotificationModal(${notification.id})">
+                    <i class="fas fa-eye"></i>
+                    Lihat Detail
+                </button>
+            </div>
         </div>
-        <p class="notification-description">${notification.description}</p>
-        <div class="customer-info">
-          <h4><i class="fas fa-user"></i> Informasi Pemesan</h4>
-          <div class="info-row">
-            <span class="info-label">Nama:</span>
-            <span class="info-value">${notification.customer.name}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Telepon:</span>
-            <a href="tel:${notification.customer.phone}" class="info-value phone-number">${notification.customer.phone}</a>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Tanggal:</span>
-            <span class="info-value">${notification.customer.date}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Jam:</span>
-            <span class="info-value">${notification.customer.time}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Nilai:</span>
-            <span class="info-value">${notification.amount}</span>
-          </div>
-        </div>
-        <div class="notification-meta">
-          <div class="notification-location">
-            <i class="fas fa-map-marker-alt"></i> ${notification.location}
-          </div>
-        </div>
-      </div>
-    `
-  
+    `;
+
     // Add click event to open modal
-    card.addEventListener("click", () => {
-      openNotificationModal(notification)
-    })
-  
-    return card
-  }
-  
-  // Get service icon
-  function getServiceIcon(category) {
-    const icons = {
-      ojek: "fas fa-motorcycle",
-      porter: "fas fa-hiking",
-      guide: "fas fa-user-tie",
-      basecamp: "fas fa-campground",
-    }
-    return icons[category] || "fas fa-bell"
-  }
-  
-  // Get type label
-  function getTypeLabel(type) {
-    const labels = {
-      new: "PESANAN BARU",
-      confirmed: "DIKONFIRMASI",
-      ongoing: "BERLANGSUNG",
-      completed: "SELESAI",
-      cancelled: "DIBATALKAN",
-      urgent: "DARURAT",
-    }
-    return labels[type] || type.toUpperCase()
-  }
-  
-  // Get time ago
-  function getTimeAgo(timestamp) {
-    const now = new Date()
-    const diff = now - timestamp
-    const minutes = Math.floor(diff / (1000 * 60))
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-    if (minutes < 1) return "Baru saja"
-    if (minutes < 60) return `${minutes} menit yang lalu`
-    if (hours < 24) return `${hours} jam yang lalu`
-    return `${days} hari yang lalu`
-  }
-  
-  // Handle load more
-  function handleLoadMore() {
-    // Simulate loading more data
-    const loadMoreBtn = document.getElementById("loadMoreBtn")
+    card.addEventListener('click', () => openNotificationModal(notification.id));
+
+    return card;
+}
+
+function formatTime(timeString) {
+    const date = new Date(timeString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Baru saja';
+    if (diffMins < 60) return `${diffMins} menit yang lalu`;
+    if (diffHours < 24) return `${diffHours} jam yang lalu`;
+    if (diffDays < 7) return `${diffDays} hari yang lalu`;
+    
+    return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
+
+function loadMoreNotifications() {
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
     if (loadMoreBtn) {
-      loadMoreBtn.classList.add("loading")
-      loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...'
-  
-      setTimeout(() => {
-        loadMoreBtn.classList.remove("loading")
-        loadMoreBtn.innerHTML = '<i class="fas fa-plus"></i> Muat Lebih Banyak'
-        showNotification("Tidak ada notifikasi lagi untuk dimuat", "info")
-      }, 1500)
-    }
-  }
-  
-  // Setup modal
-  function setupModal() {
-    const modal = document.getElementById("notificationModal")
-    const modalClose = document.getElementById("modalClose")
-    const modalCancel = document.getElementById("modalCancel")
-  
-    if (modalClose) {
-      modalClose.addEventListener("click", closeNotificationModal)
-    }
-  
-    if (modalCancel) {
-      modalCancel.addEventListener("click", closeNotificationModal)
-    }
-  
-    if (modal) {
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          closeNotificationModal()
-        }
-      })
-    }
-  }
-  
-  // Open notification modal
-  function openNotificationModal(notification) {
-    const modal = document.getElementById("notificationModal")
-    const modalTitle = document.getElementById("modalTitle")
-    const modalBody = document.getElementById("modalBody")
-    const modalAction = document.getElementById("modalAction")
-  
-    if (!modal || !modalTitle || !modalBody || !modalAction) return
-  
-    modalTitle.textContent = notification.title
-  
-    modalBody.innerHTML = `
-      <div class="modal-notification-details">
-        <div class="service-header">
-          <div class="service-icon ${notification.category}">
-            <i class="${getServiceIcon(notification.category)}"></i>
-          </div>
-          <div class="service-info">
-            <h4>${getCategoryName(notification.category)}</h4>
-            <span class="notification-type type-${notification.type}">${getTypeLabel(notification.type)}</span>
-          </div>
-        </div>
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memuat...';
         
-        <div class="detail-section">
-          <h5><i class="fas fa-info-circle"></i> Deskripsi Layanan</h5>
-          <p>${notification.description}</p>
-        </div>
-  
-        <div class="detail-section">
-          <h5><i class="fas fa-user"></i> Informasi Pemesan</h5>
-          <div class="detail-grid">
-            <div class="detail-item">
-              <span class="detail-label">Nama Lengkap</span>
-              <span class="detail-value">${notification.customer.name}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Nomor Telepon</span>
-              <span class="detail-value">
-                <a href="tel:${notification.customer.phone}" class="phone-number">${notification.customer.phone}</a>
-              </span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Tanggal Layanan</span>
-              <span class="detail-value">${notification.customer.date}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Waktu Layanan</span>
-              <span class="detail-value">${notification.customer.time}</span>
-            </div>
-          </div>
-        </div>
-  
-        <div class="detail-section">
-          <h5><i class="fas fa-map-marker-alt"></i> Lokasi & Rute</h5>
-          <p class="location-detail">${notification.location}</p>
-        </div>
-  
-        <div class="detail-section">
-          <h5><i class="fas fa-money-bill-wave"></i> Informasi Pembayaran</h5>
-          <div class="payment-info">
-            <div class="payment-item">
-              <span class="payment-label">Nilai Layanan</span>
-              <span class="payment-value">${notification.amount}</span>
-            </div>
-            <div class="payment-item">
-              <span class="payment-label">Status Pembayaran</span>
-              <span class="payment-value ${notification.status === "completed" ? "paid" : "pending"}">
-                ${notification.status === "completed" ? "Lunas" : "Menunggu"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `
-  
-    // Update modal action button
-    updateModalActionButton(notification, modalAction)
-  
-    modal.classList.add("active")
-    document.body.style.overflow = "hidden"
-  }
-  
-  // Close notification modal
-  function closeNotificationModal() {
-    const modal = document.getElementById("notificationModal")
+        // Simulate loading delay
+        setTimeout(() => {
+            loadMoreBtn.innerHTML = '<i class="fas fa-plus"></i> Muat Lebih Banyak';
+            showNotification('Tidak ada notifikasi tambahan untuk dimuat', 'info');
+        }, 1500);
+    }
+}
+
+function initializeModal() {
+    const modal = document.getElementById('notificationModal');
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel = document.getElementById('modalCancel');
+
+    if (modalClose) {
+        modalClose.addEventListener('click', closeNotificationModal);
+    }
+    
+    if (modalCancel) {
+        modalCancel.addEventListener('click', closeNotificationModal);
+    }
+
+    // Close modal when clicking outside
     if (modal) {
-      modal.classList.remove("active")
-      document.body.style.overflow = ""
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeNotificationModal();
+            }
+        });
     }
-  }
-  
-  // Update modal action button
-  function updateModalActionButton(notification, button) {
-    switch (notification.status) {
-      case "new":
-        button.innerHTML = '<i class="fas fa-check"></i> Terima Pesanan'
-        button.onclick = () => handleAcceptOrder(notification.id)
-        break
-      case "confirmed":
-        button.innerHTML = '<i class="fas fa-play"></i> Mulai Layanan'
-        button.onclick = () => handleStartService(notification.id)
-        break
-      case "ongoing":
-        button.innerHTML = '<i class="fas fa-flag-checkered"></i> Selesaikan'
-        button.onclick = () => handleCompleteService(notification.id)
-        break
-      case "completed":
-        button.innerHTML = '<i class="fas fa-star"></i> Lihat Rating'
-        button.onclick = () => handleViewRating(notification.id)
-        break
-      case "cancelled":
-        button.style.display = "none"
-        break
-      default:
-        button.innerHTML = '<i class="fas fa-info"></i> Detail'
-    }
-  }
-  
-  // Get category name
-  function getCategoryName(category) {
-    const names = {
-      ojek: "Layanan Ojek",
-      porter: "Layanan Porter",
-      guide: "Layanan Guide",
-      basecamp: "Sewa Basecamp",
-    }
-    return names[category] || category
-  }
-  
-  // Action handlers
-  function handleAcceptOrder(id) {
-    const notification = notificationsData.find((n) => n.id === id)
-    if (notification) {
-      notification.status = "confirmed"
-      notification.type = "confirmed"
-  
-      showNotification(`Pesanan ${notification.title} berhasil diterima!`, "success")
-      closeNotificationModal()
-      filterNotifications()
-      updateCategoryCounts()
-    }
-  }
-  
-  function handleStartService(id) {
-    const notification = notificationsData.find((n) => n.id === id)
-    if (notification) {
-      notification.status = "ongoing"
-      notification.type = "ongoing"
-  
-      showNotification(`Layanan ${notification.title} telah dimulai!`, "success")
-      closeNotificationModal()
-      filterNotifications()
-    }
-  }
-  
-  function handleCompleteService(id) {
-    const notification = notificationsData.find((n) => n.id === id)
-    if (notification) {
-      notification.status = "completed"
-      notification.type = "completed"
-  
-      showNotification(`Layanan ${notification.title} telah selesai!`, "success")
-      closeNotificationModal()
-      filterNotifications()
-    }
-  }
-  
-  function handleViewRating(id) {
-    const notification = notificationsData.find((n) => n.id === id)
-    if (notification) {
-      showNotification(`Menampilkan rating untuk ${notification.title}`, "info")
-      closeNotificationModal()
-    }
-  }
-  
-  // Profile dropdown functionality (inherited from dashboard script)
-  function initProfileDropdown() {
-    const profileBtn = document.getElementById("profileBtn")
-    const profileMenu = document.getElementById("profileMenu")
-    const profileDropdown = document.querySelector(".profile-dropdown")
-  
-    if (profileBtn && profileMenu) {
-      profileBtn.addEventListener("click", (e) => {
-        e.stopPropagation()
-        toggleProfileMenu()
-      })
-  
-      document.addEventListener("click", (e) => {
-        if (!profileDropdown.contains(e.target)) {
-          closeProfileMenu()
+}
+
+function openNotificationModal(notificationId) {
+    const modal = document.getElementById('notificationModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalAction = document.getElementById('modalAction');
+
+    if (modal && modalBody) {
+        // Sample detailed notification data
+        modalBody.innerHTML = `
+            <div class="customer-info">
+                <h4><i class="fas fa-user"></i> Detail Lengkap Pesanan</h4>
+                <div class="info-row">
+                    <span class="info-label">ID Pesanan:</span>
+                    <span class="info-value">#ORD-${notificationId.toString().padStart(6, '0')}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tanggal Pesanan:</span>
+                    <span class="info-value">15 Januari 2024, 10:30 WIB</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">Menunggu Konfirmasi</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Catatan Khusus:</span>
+                    <span class="info-value">Mohon datang tepat waktu, grup sudah menunggu di basecamp.</span>
+                </div>
+            </div>
+        `;
+
+        if (modalAction) {
+            modalAction.onclick = () => {
+                acceptOrder(notificationId);
+                closeNotificationModal();
+            };
         }
-      })
-  
-      profileMenu.addEventListener("click", (e) => {
-        e.stopPropagation()
-      })
+
+        modal.classList.add('active');
     }
-  }
-  
-  function toggleProfileMenu() {
-    const profileMenu = document.getElementById("profileMenu")
-    const profileDropdown = document.querySelector(".profile-dropdown")
-  
-    if (profileMenu.classList.contains("active")) {
-      closeProfileMenu()
-    } else {
-      openProfileMenu()
+}
+
+function closeNotificationModal() {
+    const modal = document.getElementById('notificationModal');
+    if (modal) {
+        modal.classList.remove('active');
     }
-  }
-  
-  function openProfileMenu() {
-    const profileMenu = document.getElementById("profileMenu")
-    const profileDropdown = document.querySelector(".profile-dropdown")
-  
-    profileMenu.classList.add("active")
-    profileDropdown.classList.add("active")
-  }
-  
-  function closeProfileMenu() {
-    const profileMenu = document.getElementById("profileMenu")
-    const profileDropdown = document.querySelector(".profile-dropdown")
-  
-    profileMenu.classList.remove("active")
-    profileDropdown.classList.remove("active")
-  }
-  
-  // Initialize logout handlers
-  function initLogoutHandlers() {
-    const logoutBtn = document.getElementById("logoutBtn")
-    const mobileLogoutBtn = document.getElementById("mobileLogoutBtn")
-  
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", handleLogout)
-    }
-  
-    if (mobileLogoutBtn) {
-      mobileLogoutBtn.addEventListener("click", handleLogout)
-    }
-  }
-  
-  // Handle logout
-  function handleLogout(e) {
-    e.preventDefault()
-  
-    if (confirm("Apakah Anda yakin ingin keluar?")) {
-      localStorage.removeItem("userData")
-      localStorage.removeItem("userLoggedIn")
-  
-      showNotification("Anda telah berhasil keluar", "success")
-  
-      setTimeout(() => {
-        window.location.href = "login.php"
-      }, 1500)
-    }
-  }
-  
-  // Initialize mobile menu
-  function initMobileMenu() {
-    const menuBtn = document.querySelector(".mobile-menu-btn")
-    const mobileNav = document.getElementById("mobile-nav")
-    const menuIcon = document.getElementById("menu-icon")
-  
-    if (menuBtn && mobileNav && menuIcon) {
-      menuBtn.addEventListener("click", () => {
-        mobileNav.classList.toggle("active")
-  
-        if (mobileNav.classList.contains("active")) {
-          menuIcon.classList.remove("fa-bars")
-          menuIcon.classList.add("fa-times")
-        } else {
-          menuIcon.classList.remove("fa-times")
-          menuIcon.classList.add("fa-bars")
-        }
-      })
-  
-      const mobileNavLinks = document.querySelectorAll(".mobile-nav-link")
-      mobileNavLinks.forEach((link) => {
-        link.addEventListener("click", function () {
-          if (!this.classList.contains("logout")) {
-            mobileNav.classList.remove("active")
-            menuIcon.classList.remove("fa-times")
-            menuIcon.classList.add("fa-bars")
-          }
-        })
-      })
-  
-      document.addEventListener("click", (event) => {
-        const isClickInsideNav = mobileNav.contains(event.target)
-        const isClickOnMenuBtn = menuBtn.contains(event.target)
-  
-        if (!isClickInsideNav && !isClickOnMenuBtn && mobileNav.classList.contains("active")) {
-          mobileNav.classList.remove("active")
-          menuIcon.classList.remove("fa-times")
-          menuIcon.classList.add("fa-bars")
-        }
-      })
-    }
-  }
-  
-  // Show notification function
-  function showNotification(message, type = "info") {
-    const existingNotifications = document.querySelectorAll(".notification")
-    existingNotifications.forEach((notification) => notification.remove())
-  
-    const notification = document.createElement("div")
-    notification.className = `notification notification-${type}`
-  
-    const icon = type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"
-  
+}
+
+function acceptOrder(orderId) {
+    showNotification(`Pesanan #ORD-${orderId.toString().padStart(6, '0')} berhasil diterima!`, 'success');
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
     notification.innerHTML = `
-      <div class="notification-content">
-        <i class="fas ${icon}"></i>
-        <span>${message}</span>
-      </div>
-      <button class="notification-close">
-        <i class="fas fa-times"></i>
-      </button>
-    `
-  
+        <div class="notification-content">
+            <i class="fas fa-${getNotificationIcon(type)}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add styles
     notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      padding: 16px;
-      z-index: 10000;
-      max-width: 400px;
-      border-left: 4px solid ${type === "success" ? "#16a34a" : type === "error" ? "#ef4444" : "#3b82f6"};
-      animation: slideIn 0.3s ease;
-    `
-  
-    const style = document.createElement("style")
-    style.textContent = `
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      
-      .notification-content {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #1f2937;
-      }
-      
-      .notification-content i {
-        color: ${type === "success" ? "#16a34a" : type === "error" ? "#ef4444" : "#3b82f6"};
-      }
-      
-      .notification-close {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: none;
-        border: none;
-        color: #9ca3af;
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-      }
-      
-      .notification-close:hover {
-        background: #f3f4f6;
-        color: #6b7280;
-      }
-    `
-  
-    document.head.appendChild(style)
-    document.body.appendChild(notification)
-  
-    const closeButton = notification.querySelector(".notification-close")
-    closeButton.addEventListener("click", () => {
-      notification.remove()
-      style.remove()
-    })
-  
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${getNotificationColor(type)};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
     setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove()
-        style.remove()
-      }
-    }, 5000)
-  }
-  
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after delay
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+function getNotificationIcon(type) {
+    switch(type) {
+        case 'success': return 'check-circle';
+        case 'error': return 'exclamation-circle';
+        case 'warning': return 'exclamation-triangle';
+        default: return 'info-circle';
+    }
+}
+
+function getNotificationColor(type) {
+    switch(type) {
+        case 'success': return 'linear-gradient(135deg, #16a34a, #15803d)';
+        case 'error': return 'linear-gradient(135deg, #ef4444, #dc2626)';
+        case 'warning': return 'linear-gradient(135deg, #f59e0b, #d97706)';
+        default: return 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+    }
+}
+
+// Export functions for global access
+window.dashboardLayanan = {
+    showCategory,
+    updateActiveMenuItem,
+    showNotification,
+    formatCurrency,
+    formatTime,
+    openNotificationModal,
+    closeNotificationModal
+};
