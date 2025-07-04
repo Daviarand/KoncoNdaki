@@ -2,545 +2,426 @@
 session_start();
 require_once 'config/database.php';
 
-// --- LOGIKA UNTUK MEMBUAT AKUN PARTNER BARU ---
-$createUserError = '';
-$createUserSuccess = '';
-// Cek apakah form 'Buat Partner' yang di-submit
-if (isset($_POST['submit_create_user'])) {
-    $firstName = trim($_POST['firstName'] ?? '');
-    $lastName = trim($_POST['lastName'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $phone = trim($_POST['phone'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $role = trim($_POST['role'] ?? '');
+// Keamanan: Hanya Admin Pengelola Gunung yang bisa mengakses file ini
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'pengelola_gunung' || !isset($_SESSION['gunung_id'])) {
+    header('Location: login.php');
+    exit;
+}
 
-    // Peran yang bisa dibuat oleh admin HANYA partner
-    $creatable_roles = ['porter', 'guide', 'ojek'];
+$gunungDikelolaId = $_SESSION['gunung_id'];
+$namaGunungDikelola = $_SESSION['nama_gunung'] ?? 'Gunung';
+$pageTitle = "Dashboard Pengelola " . htmlspecialchars($namaGunungDikelola);
 
-    if (empty($firstName) || empty($email) || empty($password) || empty($role)) {
-        $createUserError = 'Nama Depan, Email, Password, dan Peran harus diisi.';
-    } elseif (!in_array($role, $creatable_roles)) {
-        $createUserError = 'Peran yang dipilih tidak valid.';
-    } else {
-        try {
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
+// Query untuk mengambil data booking yang memerlukan tindakan
+$queryBooking = "
+    SELECT 
+        p.id, 
+        p.kode_booking,
+        p.tanggal_pendakian, 
+        p.status_pemesanan,
+        u.first_name, 
+        u.last_name,
+        GROUP_CONCAT(l.nama_layanan SEPARATOR ', ') AS layanan_dipesan
+    FROM 
+        pemesanan p
+    JOIN 
+        users u ON p.user_id = u.id
+    LEFT JOIN 
+        pemesanan_layanan pl ON p.id = pl.pemesanan_id
+    LEFT JOIN 
+        layanan l ON pl.layanan_id = l.id
+    WHERE 
+        p.tiket_id = :gunung_id 
+        AND p.status_pemesanan IN ('pending', 'in progress')
+    GROUP BY
+        p.id
+    ORDER BY 
+        FIELD(p.status_pemesanan, 'pending', 'in progress'), p.tanggal_pemesanan ASC
+";
 
-            if ($stmt->fetch()) {
-                $createUserError = 'Email sudah digunakan oleh akun lain.';
-            } else {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password, role, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())");
-                $stmt->execute([$firstName, $lastName, $email, $phone, $hashedPassword, $role]);
-                $createUserSuccess = "Akun untuk partner '{$role}' dengan email '{$email}' berhasil dibuat.";
-            }
-        } catch (PDOException $e) {
-            $createUserError = 'Gagal membuat akun. Terjadi kesalahan sistem.';
-        }
+$stmtBooking = $pdo->prepare($queryBooking);
+$stmtBooking->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
+$stmtBooking->execute();
+$bookings = $stmtBooking->fetchAll(PDO::FETCH_ASSOC);
+
+$queryPartners = "
+    SELECT id, first_name, last_name, role AS tipe_partner 
+    FROM users 
+    WHERE role IN ('ojek', 'porter', 'guide', 'basecamp') 
+    AND gunung_id = :gunung_id
+";
+$stmtPartners = $pdo->prepare($queryPartners);
+$stmtPartners->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
+$stmtPartners->execute();
+$allPartners = $stmtPartners->fetchAll(PDO::FETCH_ASSOC);
+
+// Kelompokkan partner berdasarkan tipenya agar mudah diakses oleh JavaScript
+$partnersByTipe = [
+    'ojek' => [],
+    'porter' => [],
+    'guide' => [],
+    'basecamp' => []
+];
+
+foreach ($allPartners as $partner) {
+    $tipe = $partner['tipe_partner'];
+    if (isset($partnersByTipe[$tipe])) {
+        $partnersByTipe[$tipe][] = [
+            'id' => $partner['id'],
+            'nama' => trim($partner['first_name'] . ' ' . $partner['last_name'])
+        ];
     }
 }
 
-// --- LOGIKA UNTUK MENGAMBIL DATA BOOKING (FITUR ASLI) ---
-$stmt = $pdo->prepare("
+$queryPartner = "
+    SELECT l.nama_layanan, COUNT(pl.id) AS total_pesanan
+    FROM pemesanan_layanan pl
+    JOIN layanan l ON pl.layanan_id = l.id
+    JOIN pemesanan p ON pl.pemesanan_id = p.id
+    WHERE p.tiket_id = :gunung_id 
+      AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE())
+      AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())
+    GROUP BY l.nama_layanan
+";
+$stmtPartner = $pdo->prepare($queryPartner);
+$stmtPartner->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
+$stmtPartner->execute();
+$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_ASSOC);
+
+$partnerLabels = [];
+$partnerData = [];
+foreach ($partnerStats as $stat) {
+    $partnerLabels[] = ucfirst($stat['nama_layanan']);
+    $partnerData[] = $stat['total_pesanan'];
+}
+
+// --- DATA UNTUK GRAFIK BOOKING SELESAI PER BULAN (12 BULAN TERAKHIR) ---
+$queryMonthly = "
     SELECT 
-        pt.id, 
-        u.first_name, 
-        u.last_name, 
-        g.nama_gunung, 
-        pt.tanggal_pendakian, 
-        pt.status_pemesanan,
-        '' AS partner_dibutuhkan
-    FROM 
-        pemesanan_tiket pt
-    JOIN 
-        users u ON pt.user_id = u.id
-    JOIN 
-        tiket t ON pt.tiket_id = t.id
-    JOIN 
-        gunung g ON t.gunung_id = g.id
-    ORDER BY 
-        pt.tanggal_pendakian DESC
+        YEAR(tanggal_pemesanan) as tahun, 
+        MONTH(tanggal_pemesanan) as bulan, 
+        COUNT(id) as total_booking
+    FROM pemesanan
+    WHERE tiket_id = :gunung_id 
+      AND status_pemesanan = 'complete'
+      AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY tahun, bulan
+    ORDER BY tahun, bulan ASC
+";
+$stmtMonthly = $pdo->prepare($queryMonthly);
+$stmtMonthly->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
+$stmtMonthly->execute();
+$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
+
+$monthlyLabels = [];
+$monthlyData = [];
+// Inisialisasi 12 bulan terakhir agar grafik tidak kosong
+for ($i = 11; $i >= 0; $i--) {
+    $date = new DateTime("first day of -$i month");
+    $monthlyLabels[] = $date->format('M Y');
+    $monthlyData[$date->format('Y-n')] = 0;
+}
+// Isi dengan data dari database
+foreach ($monthlyStats as $stat) {
+    $key = $stat['tahun'] . '-' . $stat['bulan'];
+    if (isset($monthlyData[$key])) {
+        $monthlyData[$key] = $stat['total_booking'];
+    }
+}
+$monthlyData = array_values($monthlyData);
+
+// ... (kode session_start, require_once, dan info pengelola) ...
+
+// --- PERSIAPAN DATA UNTUK 3 GRAFIK ---
+
+// 1. Data untuk Pie Chart Partner Bulan Ini
+$stmtPartner = $pdo->prepare("
+    SELECT l.nama_layanan, COUNT(pl.id) AS total
+    FROM pemesanan_layanan pl
+    JOIN layanan l ON pl.layanan_id = l.id
+    JOIN pemesanan p ON pl.pemesanan_id = p.id
+    WHERE p.tiket_id = ? AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())
+    GROUP BY l.nama_layanan
 ");
-$stmt->execute();
-$bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmtPartner->execute([$gunungDikelolaId]);
+$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR); // Hasilnya: ['guide' => 5, 'porter' => 3]
+
+// 2. Data untuk Bar Chart Booking Selesai & Line Chart Jumlah Pendaki (12 bulan terakhir)
+$stmtMonthly = $pdo->prepare("
+    SELECT 
+        DATE_FORMAT(tanggal_pemesanan, '%b %Y') as bulan, 
+        COUNT(id) as total_booking,
+        SUM(jumlah_pendaki) as total_pendaki
+    FROM pemesanan
+    WHERE tiket_id = ? AND status_pemesanan = 'complete' AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(tanggal_pemesanan), MONTH(tanggal_pemesanan)
+    ORDER BY MIN(tanggal_pemesanan) ASC
+");
+$stmtMonthly->execute([$gunungDikelolaId]);
+$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
+
+$monthlyLabels = array_column($monthlyStats, 'bulan');
+$monthlyBookingData = array_column($monthlyStats, 'total_booking');
+$monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
 ?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Pengelola Gunung</title>
-    <meta name="description" content="Dashboard untuk pengelola gunung dan sistem pendakian di KoncoNdaki.">
+    <title><?php echo $pageTitle; ?></title>
     <link rel="stylesheet" href="styles/dashboard-pengelola.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Page Header -->
-    <section class="page-header">
-        <div class="container">
-            <div class="header-content">
-                <h1><i class="fas fa-mountain"></i> Dashboard Pengelola Gunung</h1>
-                <p>Sistem pengelolaan pendakian dan operasional gunung terpadu</p>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🏔️ <?php echo htmlspecialchars($_SESSION['nama_gunung']); ?></h2>
+                <p>Dashboard Pengelola</p>
             </div>
-        </div>
-    </section>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#" class="nav-link active" data-target="dashboard">📊 Dashboard</a></li>
+                    <li><a href="#" class="nav-link" data-target="kelolaBooking">🗓️ Kelola Booking</a></li>
+                    <li><a href="#" class="nav-link" data-target="kirimNotifikasi">🔔 Kirim Notifikasi</a></li>
+                    <li><a href="#" class="nav-link" data-target="tambahPartner">👥 Tambah Partner</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <div class="dashboard-layout">
-                <!-- Sidebar -->
-                <aside class="dashboard-sidebar">
-                    <div class="sidebar-header">
-                        <h3><i class="fas fa-cogs"></i> Menu Pengelola</h3>
-                        <div class="admin-info">
-                            <span class="admin-name">Admin: <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></span>
-                            <div class="admin-actions">
-                                <span class="notification-icon"><i class="fas fa-bell"></i></span>
-                                <a href="auth/logout.php" title="Logout" class="logout-btn">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                </a>
-                            </div>
-                        </div>
+        <main class="main-content">
+            <header class="header">
+                <h1><?php echo $pageTitle; ?></h1>
+                <div class="user-info">
+                    <span><?php echo htmlspecialchars($_SESSION['first_name']); ?></span>
+                    <a href="auth/logout.php" title="Logout" style="color: #333; text-decoration:none;"><i class="fas fa-sign-out-alt"></i></a>
+                </div>
+            </header>
+
+            <section id="dashboard" class="section active">
+                <div class="section-header"><h2>Ringkasan <?php echo htmlspecialchars($_SESSION['nama_gunung']); ?></h2></div>
+    
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <h3>Pesanan Partner Bulan Ini</h3>
+                    <canvas id="partnerPieChart"></canvas>
                     </div>
-
-                    <!-- Menu Categories -->
-                    <div class="sidebar-section">
-                        <h4>Menu Utama</h4>
-                        <ul class="category-list">
-                            <li class="category-item active" data-category="dashboard">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span>Dashboard</span>
-                            </li>
-                            <li class="category-item" data-category="kelolaBooking">
-                                <i class="fas fa-calendar-check"></i>
-                                <span>Kelola Booking</span>
-                                <span class="count">24</span>
-                            </li>
-                            <li class="category-item" data-category="kelolaKuota">
-                                <i class="fas fa-users"></i>
-                                <span>Kelola Kuota</span>
-                            </li>
-                            <li class="category-item" data-category="dataPendaki">
-                                <i class="fas fa-hiking"></i>
-                                <span>Data Pendaki</span>
-                                <span class="count">1,247</span>
-                            </li>
-                            <li class="category-item" data-category="laporanKeuangan">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Laporan Keuangan</span>
-                            </li>
-                            <li class="category-item" data-category="partnerNetwork">
-                                <i class="fas fa-network-wired"></i>
-                                <span>Partner Network</span>
-                            </li>
-                            <li class="category-item" data-category="pesananLayanan">
-                                <i class="fas fa-clipboard-list"></i>
-                                <span>Pesanan Layanan</span>
-                                <span class="count">12</span>
-                            </li>
-                            <li class="category-item" data-category="kelolaPartner">
-                                <i class="fas fa-user-friends"></i>
-                                <span>Kelola Partner</span>
-                            </li>
-                            <li class="category-item" data-category="buatPengguna">
-                                <i class="fas fa-user-plus"></i>
-                                <span>Buat Partner Baru</span>
-                            </li>
-                            <li class="category-item" data-category="sistem">
-                                <i class="fas fa-cog"></i>
-                                <span>Pengaturan Sistem</span>
-                            </li>
-                        </ul>
+                    <div class="chart-wrapper">
+                            <h3>Booking Selesai per Bulan</h3>
+                            <canvas id="monthlyBarChart"></canvas>
                     </div>
-                </aside>
+                    <div class="chart-wrapper">
+                        <h3>Jumlah Pendaki per Bulan</h3>
+                        <canvas id="climbersLineChart"></canvas>
+                    </div>
+                </div>
+            </section>
 
-                <!-- Main Dashboard Content -->
-                <div class="dashboard-content">
-                    <!-- Dashboard Overview Section -->
-                    <section id="dashboard" class="content-section active">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Dashboard Operasional</h2>
-                                <p>Ringkasan aktivitas dan statistik pendakian hari ini</p>
-                            </div>
-                        </div>
-
-                        <!-- Stats Grid -->
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-icon pendaki">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number">1,247</div>
-                                    <div class="stat-label">Total Pendaki Bulan Ini</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon kuota">
-                                    <i class="fas fa-chart-pie"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number">78%</div>
-                                    <div class="stat-label">Kuota Terpakai</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon jalur">
-                                    <i class="fas fa-route"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number">5</div>
-                                    <div class="stat-label">Jalur Aktif</div>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-icon pendapatan">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-number">Rp 124.7M</div>
-                                    <div class="stat-label">Pendapatan Bulan Ini</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Charts Section -->
-                        <div class="charts-section">
-                            <div class="chart-container">
-                                <h3 class="chart-title">Tren Jumlah Pendaki (6 Bulan Terakhir)</h3>
-                                <canvas id="trendChart" width="400" height="200"></canvas>
-                            </div>
-                            <div class="chart-container">
-                                <h3 class="chart-title">Distribusi Jalur Pendakian</h3>
-                                <canvas id="pathChart" width="400" height="200"></canvas>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Kelola Booking Section -->
-                    <section id="kelolaBooking" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Kelola Booking</h2>
-                                <p>Mengelola semua pemesanan tiket pendakian</p>
-                            </div>
-                            <div class="header-actions">
-                                <div class="search-box">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" placeholder="Cari booking..." id="searchBooking">
-                                </div>
-                                <button class="btn-primary">
-                                    <i class="fas fa-plus"></i>
-                                    Booking Baru
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="modern-table">
-                                <thead>
+            <section id="kelolaBooking" class="section">
+                <div class="section-header"><h2>Kelola Booking <?php echo htmlspecialchars($_SESSION['nama_gunung']); ?></h2></div>
+                <div class="booking-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Kode Booking</th>
+                                <th>Nama Pendaki</th>
+                                <th>Layanan Dipesan</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($bookings)): ?>
+                                <tr><td colspan="5">Tidak ada booking yang memerlukan tindakan saat ini.</td></tr>
+                            <?php else: ?>
+                                <?php foreach ($bookings as $booking): ?>
                                     <tr>
-                                        <th>ID Booking</th>
-                                        <th>Pendaki</th>
-                                        <th>Gunung</th>
-                                        <th>Tanggal</th>
-                                        <th>Status</th>
-                                        <th>Partner</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($bookings as $booking): ?>
-                                    <tr>
-                                        <td><span class="booking-id">#<?php echo htmlspecialchars($booking['id']); ?></span></td>
+                                        <td><?php echo htmlspecialchars($booking['kode_booking']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($booking['layanan_dipesan'] ?? '-'); ?></td>
                                         <td>
-                                            <div class="user-info">
-                                                <div class="user-avatar">
-                                                    <i class="fas fa-user"></i>
-                                                </div>
-                                                <span><?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?></span>
-                                            </div>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($booking['nama_gunung']); ?></td>
-                                        <td><?php echo htmlspecialchars($booking['tanggal_pendakian']); ?></td>
-                                        <td>
-                                            <span class="status-badge <?php echo htmlspecialchars(strtolower($booking['status_pemesanan'])); ?>">
-                                                <?php echo htmlspecialchars($booking['status_pemesanan']); ?>
+                                            <span class="status-badge status-<?php echo strtolower(str_replace(' ', '-', $booking['status_pemesanan'])); ?>">
+                                                <?php echo htmlspecialchars(ucfirst($booking['status_pemesanan'])); ?>
                                             </span>
                                         </td>
-                                        <td class="partner-icons">
-                                            <i class="fas fa-map-marked-alt" title="Guide"></i>
-                                            <i class="fas fa-hiking" title="Porter"></i>
-                                            <i class="fas fa-motorcycle" title="Ojek"></i>
-                                        </td>
-                                        <td class="action-buttons">
-                                            <button class="btn-action btn-verify" title="Verifikasi">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                            <button class="btn-action btn-edit" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn-action btn-delete" title="Hapus">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
+                                        <td class="actions-cell">
+                                            <?php if ($booking['status_pemesanan'] == 'pending'): ?>
+                                                <form action="update_status.php" method="POST" style="display:inline;">
+                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                <input type="hidden" name="new_status" value="in progress">
+                                                <button type="submit" class="btn-action btn-verify" title="Verifikasi">Verifikasi</button>
+                                        </form>
+                                            <form action="update_status.php" method="POST" style="display:inline;">
+                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                <input type="hidden" name="new_status" value="rejected">
+                                                <button type="submit" class="btn-action btn-reject" title="Tolak" onclick="return confirm('Yakin tolak pesanan ini?');">Tolak</button>
+                                        </form>
 
-                    <!-- Kelola Kuota Section -->
-                    <section id="kelolaKuota" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Kelola Kuota Jalur</h2>
-                                <p>Mengatur kuota maksimal untuk setiap jalur pendakian</p>
-                            </div>
-                        </div>
-
-                        <div class="form-container">
-                            <form class="modern-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="inputJalur">Nama Jalur</label>
-                                        <input type="text" id="inputJalur" placeholder="Masukkan nama jalur">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="inputKuota">Kuota Maksimal</label>
-                                        <input type="number" id="inputKuota" placeholder="Masukkan kuota">
-                                    </div>
-                                    <div class="form-group">
-                                        <button type="submit" class="btn-primary">
-                                            <i class="fas fa-plus"></i>
-                                            Tambah Jalur
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="modern-table">
-                                <thead>
-                                    <tr>
-                                        <th>Jalur</th>
-                                        <th>Kuota Maksimal</th>
-                                        <th>Kuota Terpakai</th>
-                                        <th>Persentase</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <div class="jalur-info">
-                                                <i class="fas fa-route"></i>
-                                                <span>Jalur Selo</span>
-                                            </div>
-                                        </td>
-                                        <td><input type="number" value="500" class="table-input"></td>
-                                        <td>312</td>
-                                        <td>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: 62%"></div>
-                                                <span class="progress-text">62%</span>
-                                            </div>
-                                        </td>
-                                        <td class="action-buttons">
-                                            <button class="btn-action btn-save" title="Simpan">
-                                                <i class="fas fa-save"></i>
+                                        <?php elseif ($booking['status_pemesanan'] == 'in progress'): ?>
+                                            <?php if (!empty($booking['layanan_dipesan'])): ?>
+                                                <button type="button" class="btn-action btn-notify btn-kirim-notif" 
+                                                        title="Kirim Notifikasi ke Partner"
+                                                        data-kode-booking="<?php echo htmlspecialchars($booking['kode_booking']); ?>"
+                                                        data-nama-pendaki="<?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?>"
+                                                        data-layanan="<?php echo htmlspecialchars($booking['layanan_dipesan']); ?>">
+                                                    <i class="fas fa-bell"></i> Kirim Notif
+                                                </button>
+                                        <?php else: ?>
+                                            <form action="update_status.php" method="POST" style="display:inline;">
+                                            <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                            <input type="hidden" name="new_status" value="complete">
+                                            <button type="submit" class="btn-action btn-complete" title="Selesaikan">Selesaikan</button>
+                                        </form>
+                                        <?php endif; ?>
+                                                <form action="update_status.php" method="POST" style="display:inline;">
+                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                <input type="hidden" name="new_status" value="complete">
+                                                <button type="submit" class="btn-action btn-complete" title="Selesaikan Pesanan">
+                                                <i class="fas fa-flag-checkered"></i>
                                             </button>
-                                            <button class="btn-action btn-delete" title="Hapus">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                         </td>
                                     </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
-                    <!-- Buat Partner Baru Section -->
-                    <section id="buatPengguna" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Buat Akun Partner Baru</h2>
-                                <p>Membuat akun baru untuk Partner (Porter, Guide, atau Ojek)</p>
-                            </div>
-                        </div>
-
-                        <?php if (!empty($createUserError)): ?>
-                            <div class="alert alert-error">
-                                <i class="fas fa-exclamation-circle"></i>
-                                <?php echo $createUserError; ?>
-                            </div>
-                        <?php endif; ?>
-                        <?php if (!empty($createUserSuccess)): ?>
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle"></i>
-                                <?php echo $createUserSuccess; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="form-container">
-                            <form method="POST" action="dashboard-pengelola-new.php#buatPengguna" class="modern-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="firstName">Nama Depan</label>
-                                        <input type="text" id="firstName" name="firstName" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="lastName">Nama Belakang</label>
-                                        <input type="text" id="lastName" name="lastName">
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="email">Email (untuk login)</label>
-                                        <input type="email" id="email" name="email" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="phone">Nomor Telepon</label>
-                                        <input type="tel" id="phone" name="phone" required>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="password">Password Sementara</label>
-                                        <input type="text" id="password" name="password" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="role">Peran (Role) Partner</label>
-                                        <select id="role" name="role" required>
-                                            <option value="" disabled selected>-- Pilih Peran Partner --</option>
-                                            <option value="porter">Porter</option>
-                                            <option value="guide">Guide</option>
-                                            <option value="ojek">Ojek</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-actions">
-                                    <button type="submit" name="submit_create_user" class="btn-primary btn-large">
-                                        <i class="fas fa-user-plus"></i>
-                                        Buat Akun Partner
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </section>
-
-                    <!-- Other sections would follow the same pattern -->
-                    <section id="dataPendaki" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Data Pendaki</h2>
-                                <p>Mengelola data semua pendaki yang terdaftar</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-hiking"></i>
-                            <h3>Data Pendaki</h3>
-                            <p>Fitur ini akan menampilkan daftar lengkap pendaki yang terdaftar</p>
-                        </div>
-                    </section>
-
-                    <section id="laporanKeuangan" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Laporan Keuangan</h2>
-                                <p>Laporan pendapatan dan pengeluaran operasional</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-chart-line"></i>
-                            <h3>Laporan Keuangan</h3>
-                            <p>Fitur ini akan menampilkan laporan keuangan lengkap</p>
-                        </div>
-                    </section>
-
-                    <section id="partnerNetwork" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Partner Network</h2>
-                                <p>Mengelola jaringan partner dan komunikasi</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-network-wired"></i>
-                            <h3>Partner Network</h3>
-                            <p>Fitur ini akan menampilkan jaringan partner dan sistem komunikasi</p>
-                        </div>
-                    </section>
-
-                    <section id="pesananLayanan" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Pesanan Layanan</h2>
-                                <p>Mengelola pesanan layanan tambahan</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-clipboard-list"></i>
-                            <h3>Pesanan Layanan</h3>
-                            <p>Fitur ini akan menampilkan daftar pesanan layanan tambahan</p>
-                        </div>
-                    </section>
-
-                    <section id="kelolaPartner" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Kelola Partner</h2>
-                                <p>Mengelola semua partner yang terdaftar</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-user-friends"></i>
-                            <h3>Kelola Partner</h3>
-                            <p>Fitur ini akan menampilkan daftar dan pengelolaan partner</p>
-                        </div>
-                    </section>
-
-                    <section id="sistem" class="content-section">
-                        <div class="content-header">
-                            <div class="header-left">
-                                <h2>Pengaturan Sistem</h2>
-                                <p>Konfigurasi dan pengaturan sistem</p>
-                            </div>
-                        </div>
-                        <div class="placeholder-content">
-                            <i class="fas fa-cog"></i>
-                            <h3>Pengaturan Sistem</h3>
-                            <p>Fitur ini akan menampilkan pengaturan dan konfigurasi sistem</p>
-                        </div>
-                    </section>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        </div>
-    </main>
+            </section>
+            
+            <section id="kirimNotifikasi" class="section">
+                <div class="section-header"><h2>Kirim Notifikasi ke Partner</h2></div>
+                <div class="form-wrapper">
+                    <form id="notifForm" action="kirim_notifikasi_proses.php" method="POST">
+                        <div class="form-group">
+                            <label for="tipePartner">Tipe Partner:</label>
+                            <select id="tipePartner" name="tipe_partner" required>
+                                <option value="">-- Pilih Tipe --</option>
+                                <option value="ojek">🛵 Ojek</option>
+                                <option value="porter">🎒 Porter</option>
+                                <option value="guide">👨‍💼 Guide</option>
+                                <option value="basecamp">⛺ Basecamp</option>
+                            </select>
+                        </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content" style="justify-content: center; text-align: center;">
-                <div class="footer-section" style="margin: 0 auto;">
-                    <div class="footer-logo" style="justify-content: center;">
-                        <i class="fas fa-mountain"></i>
-                        <span>KoncoNdaki</span>
-                    </div>
-                    <p>Platform terpercaya untuk pengelolaan pendakian gunung di seluruh Pulau Jawa.</p>
+                        <div class="form-group">
+                            <label for="pilihPartner">Pilih Partner Spesifik:</label>
+                            <select id="pilihPartner" name="partner_id" required disabled>
+                                <option value="">-- Pilih Tipe Dulu --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="pesanNotifikasi">Pesan Notifikasi:</label>
+                            <textarea id="pesanNotifikasi" name="pesan" rows="5" required placeholder="Contoh: Tolong jemput 2 pendaki di Basecamp Bromo besok jam 5 pagi. Kode Booking: KNCD-XXXXXX"></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Kirim Notifikasi</button>
+                        </div>
+                    </form>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
-            </div>
-        </div>
-    </footer>
+            </section>
+            
+            <section id="tambahPartner" class="section">
+                <div class="section-header"><h2>Buat Akun Partner</h2></div>
+                <div class="form-wrapper">
+                    <form id="addPartnerForm" action="tambah_partner_proses.php" method="POST">
+                        <div class="form-group">
+                            <label for="firstName">Nama Depan</label>
+                            <input type="text" id="firstName" name="first_name" required>
+                        </div>
 
-    <script src="scripts/dashboard-pengelola.js"></script>
+                        <div class="form-group">
+                            <label for="lastName">Nama Belakang</label>
+                            <input type="text" id="lastName" name="last_name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phone">Telepon</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="addTipePartner">Jenis Partner</label>
+                            <select id="addTipePartner" name="tipe_partner" required>
+                                <option value="">-- Pilih Jenis Layanan --</option>
+                                <option value="ojek">Ojek</option>
+                                <option value="porter">Porter</option>
+                                <option value="guide">Guide</option>
+                                <option value="basecamp">Basecamp</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ditugaskan ke Gunung</label>
+                            <input type="text" value="<?php echo htmlspecialchars($_SESSION['nama_gunung']); ?>" disabled>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Buat Akun</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script>
+        const allPartnersData = <?php echo json_encode($partnersByTipe); ?>;
+    </script>
+    <script src="scripts/dashboard-nav.js"></script>
+    <?php
+// ... (kode session_start, require_once, dan info pengelola) ...
+
+// --- PERSIAPAN DATA UNTUK 3 GRAFIK ---
+
+// 1. Data untuk Pie Chart Partner Bulan Ini
+$stmtPartner = $pdo->prepare("
+    SELECT l.nama_layanan, COUNT(pl.id) AS total
+    FROM pemesanan_layanan pl
+    JOIN layanan l ON pl.layanan_id = l.id
+    JOIN pemesanan p ON pl.pemesanan_id = p.id
+    WHERE p.tiket_id = ? AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())
+    GROUP BY l.nama_layanan
+");
+$stmtPartner->execute([$gunungDikelolaId]);
+$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR); // Hasilnya: ['guide' => 5, 'porter' => 3]
+
+// 2. Data untuk Bar Chart Booking Selesai & Line Chart Jumlah Pendaki (12 bulan terakhir)
+$stmtMonthly = $pdo->prepare("
+    SELECT 
+        DATE_FORMAT(tanggal_pemesanan, '%b %Y') as bulan, 
+        COUNT(id) as total_booking,
+        SUM(jumlah_pendaki) as total_pendaki
+    FROM pemesanan
+    WHERE tiket_id = ? AND status_pemesanan = 'complete' AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(tanggal_pemesanan), MONTH(tanggal_pemesanan)
+    ORDER BY MIN(tanggal_pemesanan) ASC
+");
+$stmtMonthly->execute([$gunungDikelolaId]);
+$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
+
+$monthlyLabels = array_column($monthlyStats, 'bulan');
+$monthlyBookingData = array_column($monthlyStats, 'total_booking');
+$monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
+?>
+    
 </body>
 </html>

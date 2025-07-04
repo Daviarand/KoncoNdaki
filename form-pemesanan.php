@@ -1,39 +1,128 @@
 <?php
 session_start();
-require_once 'auth/check_auth.php';
-?>
+// Pastikan kedua file ini ada dan path-nya benar
+require_once 'config/database.php'; 
+require_once 'auth/check_auth.php'; // Script ini harus memastikan $_SESSION['user_id'] tersedia
 
+// Blok ini HANYA akan berjalan saat formulir di-submit dengan metode POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // 1. Ambil & Sanitasi Data dari Form
+    $user_id = $_SESSION['user_id'];
+    $tiket_id = intval($_POST['tiket_id'] ?? 0);
+    $tanggal_pendakian = $_POST['tanggal_pendakian'] ?? '';
+    $jumlah_pendaki = intval($_POST['jumlah_pendaki'] ?? 0);
+    $selected_services = $_POST['services'] ?? []; // Ini adalah array, contoh: ['guide', 'ojek']
+
+    // 2. Validasi Data Penting
+    if ($tiket_id <= 0 || empty($tanggal_pendakian) || $jumlah_pendaki <= 0) {
+        die("Data dasar tidak lengkap. Pastikan gunung, tanggal, dan jumlah pendaki sudah terisi. Mohon ulangi proses pemesanan.");
+    }
+
+    // Mulai database transaction untuk memastikan semua query berhasil atau tidak sama sekali
+    $pdo->beginTransaction();
+
+    try {
+        // 3. Ambil Harga Tiket dari DATABASE (Sumber Tepercaya)
+        $stmt_tiket = $pdo->prepare("SELECT harga_tiket FROM tiket_gunung WHERE id = ?");
+        $stmt_tiket->execute([$tiket_id]);
+        $tiket = $stmt_tiket->fetch();
+
+        if (!$tiket) {
+            throw new Exception("Tiket gunung tidak valid.");
+        }
+        $harga_tiket_satuan = floatval($tiket['harga_tiket']);
+        $subtotal_tiket = $harga_tiket_satuan * $jumlah_pendaki;
+        
+        // 4. Hitung Harga Layanan Tambahan dari DATABASE
+        $subtotal_layanan = 0;
+        $layanan_data_to_insert = []; // Untuk menyimpan detail layanan yang akan di-insert
+        if (!empty($selected_services)) {
+            $placeholders = implode(',', array_fill(0, count($selected_services), '?'));
+            $stmt_layanan = $pdo->prepare("SELECT id, nama_layanan, harga_layanan, satuan FROM layanan WHERE nama_layanan IN ($placeholders)");
+            $stmt_layanan->execute($selected_services);
+            $db_services = $stmt_layanan->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($db_services as $service) {
+                $harga_layanan_per_item = floatval($service['harga_layanan']);
+                $jumlah_item_layanan = 1;
+                $harga_total_per_layanan = $harga_layanan_per_item;
+
+                // Logika Kalkulasi berdasarkan satuan layanan
+                if ($service['satuan'] === '/orang') {
+                    $jumlah_item_layanan = $jumlah_pendaki;
+                    $harga_total_per_layanan = $harga_layanan_per_item * $jumlah_pendaki;
+                }
+                // Asumsi pendakian 2 hari untuk guide/porter/basecamp
+                if ($service['satuan'] === '/hari' || $service['satuan'] === '/malam') {
+                     $jumlah_item_layanan = 2; // Hardcode 2 hari/malam, bisa dibuat dinamis
+                     $harga_total_per_layanan = $harga_layanan_per_item * 2;
+                }
+
+                $subtotal_layanan += $harga_total_per_layanan;
+                $layanan_data_to_insert[] = [
+                    'layanan_id' => $service['id'],
+                    'jumlah' => $jumlah_item_layanan,
+                    'harga_saat_pesan' => $harga_total_per_layanan 
+                ];
+            }
+        }
+        
+        // 5. Hitung Total Harga di Server (Final & Aman)
+        $total_harga = $subtotal_tiket + $subtotal_layanan;
+
+        // 6. Buat Kode Booking Unik
+        $kode_booking = 'KNCD-' . strtoupper(substr(uniqid(), 7, 6));
+
+        // 7. Insert data ke tabel utama `pemesanan`
+        $stmt_pemesanan = $pdo->prepare(
+            "INSERT INTO pemesanan (user_id, tiket_id, kode_booking, tanggal_pendakian, tanggal_turun, jumlah_pendaki, subtotal_tiket, subtotal_layanan, total_harga, status_pemesanan, tanggal_pemesanan)
+             VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 DAY), ?, ?, ?, ?, 'menunggu pembayaran', NOW())" // Asumsi pendakian 2 hari 1 malam
+        );
+        $stmt_pemesanan->execute([
+            $user_id, $tiket_id, $kode_booking, $tanggal_pendakian, $tanggal_pendakian, 
+            $jumlah_pendaki, $subtotal_tiket, $subtotal_layanan, $total_harga
+        ]);
+
+        // 8. Dapatkan ID dari pemesanan yang baru saja dibuat
+        $pemesanan_id = $pdo->lastInsertId();
+
+        // 9. Insert data layanan tambahan ke tabel `pemesanan_layanan`
+        if (!empty($layanan_data_to_insert)) {
+            $stmt_pemesanan_layanan = $pdo->prepare(
+                "INSERT INTO pemesanan_layanan (pemesanan_id, layanan_id, jumlah, harga_saat_pesan) VALUES (?, ?, ?, ?)"
+            );
+            foreach ($layanan_data_to_insert as $data) {
+                $stmt_pemesanan_layanan->execute([$pemesanan_id, $data['layanan_id'], $data['jumlah'], $data['harga_saat_pesan']]);
+            }
+        }
+
+        // 10. Jika semua query berhasil, simpan perubahan secara permanen
+        $pdo->commit();
+
+        // Arahkan pengguna ke halaman dashboard atau pembayaran
+        header("Location: proses_pembayaran.php?id=" . $pemesanan_id);
+        exit;
+
+    } catch (Exception $e) {
+        // Jika terjadi error di salah satu langkah, batalkan semua query
+        $pdo->rollBack();
+        die("Gagal memproses pemesanan: " . $e->getMessage());
+    }
+}
+// Jika halaman diakses dengan metode GET, kode PHP di atas akan diabaikan dan hanya HTML di bawah ini yang ditampilkan.
+?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Pemesanan Tiket Gunung - KoncoNdaki</title>
-    <meta name="description" content="Form pemesanan tiket pendakian gunung di KoncoNdaki.">
     <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="styles/form-pemesanan.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-content">
-                <div class="logo">
-                    <img src="images/logo.png" alt="logo">
-                </div>
-            </div>
-        </div>
-    </nav>
-    <section class="page-header">
-        <div class="container">
-            <div class="header-content">
-                <h1><i class="fas fa-clipboard-list"></i> Form Pemesanan Tiket</h1>
-                <p>Isi data pemesanan tiket pendakian gunung dengan mudah dan cepat</p>
-            </div>
-        </div>
-    </section>
     <section class="booking-form-section">
         <div class="container">
             <div class="booking-layout">
@@ -42,234 +131,54 @@ require_once 'auth/check_auth.php';
                         <h2>Mulai Pemesanan</h2>
                         <p>Isi form di bawah untuk memulai proses pemesanan tiket</p>
                     </div>
-                    <form id="bookingForm" class="booking-form">
-                        <!-- Step 1: Pilih Gunung -->
+                    <form id="bookingForm" class="booking-form" method="POST" action="form-pemesanan.php">
                         <div class="form-step active" id="step-1">
-                            <div class="step-header">
-                                <h3><i class="fas fa-mountain"></i> Pilih Gunung</h3>
-                                <p>Pilih gunung yang ingin Anda daki</p>
-                            </div>
+                            <div class="step-header"><h3><i class="fas fa-mountain"></i> Pilih Gunung</h3></div>
                             <div class="mountain-selection">
-                                <div class="mountain-option" data-mountain="bromo">
-                                    <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo">
-                                    <div class="mountain-info">
-                                        <h4>Gunung Bromo</h4>
-                                        <p>Jawa Timur • 2.329 mdpl</p>
-                                        <span class="price">Rp 35.000</span>
-                                    </div>
-                                </div>
-                                <div class="mountain-option" data-mountain="merapi">
-                                    <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi">
-                                    <div class="mountain-info">
-                                        <h4>Gunung Merapi</h4>
-                                        <p>Jawa Tengah • 2.930 mdpl</p>
-                                        <span class="price">Rp 25.000</span>
-                                    </div>
-                                </div>
-                                <div class="mountain-option" data-mountain="semeru">
-                                    <img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru">
-                                    <div class="mountain-info">
-                                        <h4>Gunung Semeru</h4>
-                                        <p>Jawa Timur • 3.676 mdpl</p>
-                                        <span class="price">Rp 45.000</span>
-                                    </div>
-                                </div>
-                                <div class="mountain-option" data-mountain="gede">
-                                    <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede">
-                                    <div class="mountain-info">
-                                        <h4>Gunung Gede</h4>
-                                        <p>Jawa Barat • 2.958 mdpl</p>
-                                        <span class="price">Rp 30.000</span>
-                                    </div>
-                                </div>
+                                <div class="mountain-option" data-mountain="bromo"><img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
+                                <div class="mountain-option" data-mountain="merapi"><img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
+                                <div class="mountain-option" data-mountain="semeru"><img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
+                                <div class="mountain-option" data-mountain="gede"><img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
                             </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-back" id="backStep1">
-                                    <i class="fas fa-arrow-left"></i> Kembali
-                                           </button>
-                                <button type="button" class="btn-next" id="nextStep1" disabled>
-                                    Lanjutkan <i class="fas fa-arrow-right"></i>
-                                </button>
-                            </div>
+                            <div class="form-actions"><button type="button" class="btn-back" id="backStep1"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep1" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
-                        <!-- Step 2: Pilih Jalur & Tanggal -->
                         <div class="form-step" id="step-2">
-                            <div class="step-header">
-                                <h3><i class="fas fa-route"></i> Pilih Jalur & Tanggal</h3>
-                                <p>Tentukan jalur pendakian dan tanggal keberangkatan</p>
-                            </div>
-                            <div class="route-selection" id="routeSelection">
-                                <!-- Routes will be populated dynamically -->
-                            </div>
+                            <div class="step-header"><h3><i class="fas fa-route"></i> Pilih Jalur & Tanggal</h3></div>
+                            <div class="route-selection" id="routeSelection"><p class="placeholder">Pilih gunung terlebih dahulu untuk melihat jalur yang tersedia.</p></div>
                             <div class="date-selection">
-                                <div class="form-group">
-                                    <label for="hikingDate">Tanggal Pendakian</label>
-                                    <input type="date" id="hikingDate" name="hikingDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="participants">Jumlah Pendaki</label>
-                                    <select id="participants" name="participants" required>
-                                        <option value="">Pilih jumlah pendaki</option>
-                                        <option value="1">1 Orang</option>
-                                        <option value="2">2 Orang</option>
-                                        <option value="3">3 Orang</option>
-                                        <option value="4">4 Orang</option>
-                                        <option value="5">5 Orang</option>
-                                        <option value="6+">6+ Orang (Grup)</option>
-                                    </select>
-                                </div>
+                                <div class="form-group"><label for="hikingDate">Tanggal Pendakian</label><input type="date" id="hikingDate" name="tanggal_pendakian" required></div>
+                                <div class="form-group"><label for="participants">Jumlah Pendaki</label><input type="number" id="participants" name="jumlah_pendaki" value="1" min="1" max="10" required></div>
                             </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-back" id="backStep2">
-                                    <i class="fas fa-arrow-left"></i> Kembali
-                                </button>
-                                <button type="button" class="btn-next" id="nextStep2" disabled>
-                                    Lanjutkan <i class="fas fa-arrow-right"></i>
-                                </button>
-                            </div>
+                            <div class="form-actions"><button type="button" class="btn-back" id="backStep2"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep2" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
-                        <!-- Step 3: Layanan Tambahan -->
                         <div class="form-step" id="step-3">
-                            <div class="step-header">
-                                <h3><i class="fas fa-plus-circle"></i> Layanan Tambahan</h3>
-                                <p>Pilih layanan tambahan untuk kenyamanan pendakian Anda</p>
-                            </div>
+                            <div class="step-header"><h3><i class="fas fa-plus-circle"></i> Layanan Tambahan</h3></div>
                             <div class="services-grid">
-                                <div class="service-card" data-service="guide">
-                                    <div class="service-icon">
-                                        <i class="fas fa-user-tie"></i>
-                                    </div>
-                                    <div class="service-info">
-                                        <h4>Jasa Guide</h4>
-                                        <p>Pemandu berpengalaman untuk memandu perjalanan Anda</p>
-                                        <span class="service-price">Rp 150.000/hari</span>
-                                    </div>
-                                    <div class="service-toggle">
-                                        <input type="checkbox" id="guide" name="services[]" value="guide">
-                                        <label for="guide" class="toggle-switch"></label>
-                                    </div>
-                                </div>
-                                <div class="service-card" data-service="porter">
-                                    <div class="service-icon">
-                                        <i class="fas fa-hiking"></i>
-                                    </div>
-                                    <div class="service-info">
-                                        <h4>Jasa Porter</h4>
-                                        <p>Bantuan membawa barang bawaan hingga 15kg</p>
-                                        <span class="service-price">Rp 100.000/hari</span>
-                                    </div>
-                                    <div class="service-toggle">
-                                        <input type="checkbox" id="porter" name="services[]" value="porter">
-                                        <label for="porter" class="toggle-switch"></label>
-                                    </div>
-                                </div>
-                                <div class="service-card" data-service="ojek">
-                                    <div class="service-icon">
-                                        <i class="fas fa-motorcycle"></i>
-                                    </div>
-                                    <div class="service-info">
-                                        <h4>Jasa Ojek</h4>
-                                        <p>Transportasi dari basecamp ke pos pendakian</p>
-                                        <span class="service-price">Rp 50.000/orang</span>
-                                    </div>
-                                    <div class="service-toggle">
-                                        <input type="checkbox" id="ojek" name="services[]" value="ojek">
-                                        <label for="ojek" class="toggle-switch"></label>
-                                    </div>
-                                </div>
-                                <div class="service-card" data-service="basecamp">
-                                    <div class="service-icon">
-                                        <i class="fas fa-campground"></i>
-                                    </div>
-                                    <div class="service-info">
-                                        <h4>Sewa Basecamp</h4>
-                                        <p>Tempat istirahat sebelum dan sesudah pendakian</p>
-                                        <span class="service-price">Rp 75.000/malam</span>
-                                    </div>
-                                    <div class="service-toggle">
-                                        <input type="checkbox" id="basecamp" name="services[]" value="basecamp">
-                                        <label for="basecamp" class="toggle-switch"></label>
-                                    </div>
-                                </div>
+                                <div class="service-card" data-service="guide"><div class="service-icon"><i class="fas fa-user-tie"></i></div><div class="service-info"><h4>Jasa Guide</h4><p>Pemandu berpengalaman</p><span class="service-price">Rp 150.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="guide" name="services[]" value="guide"><label for="guide" class="toggle-switch"></label></div></div>
+                                <div class="service-card" data-service="porter"><div class="service-icon"><i class="fas fa-hiking"></i></div><div class="service-info"><h4>Jasa Porter</h4><p>Bantuan membawa barang</p><span class="service-price">Rp 100.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="porter" name="services[]" value="porter"><label for="porter" class="toggle-switch"></label></div></div>
+                                <div class="service-card" data-service="ojek"><div class="service-icon"><i class="fas fa-motorcycle"></i></div><div class="service-info"><h4>Jasa Ojek</h4><p>Transportasi ke pos</p><span class="service-price">Rp 50.000/orang</span></div><div class="service-toggle"><input type="checkbox" id="ojek" name="services[]" value="ojek"><label for="ojek" class="toggle-switch"></label></div></div>
+                                <div class="service-card" data-service="basecamp"><div class="service-icon"><i class="fas fa-campground"></i></div><div class="service-info"><h4>Sewa Basecamp</h4><p>Tempat istirahat</p><span class="service-price">Rp 75.000/malam</span></div><div class="service-toggle"><input type="checkbox" id="basecamp" name="services[]" value="basecamp"><label for="basecamp" class="toggle-switch"></label></div></div>
                             </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-back" id="backStep3">
-                                    <i class="fas fa-arrow-left"></i> Kembali
-                                </button>
-                                <button type="button" class="btn-next" id="nextStep3">
-                                    Lanjutkan <i class="fas fa-arrow-right"></i>
-                                </button>
-                            </div>
+                            <div class="form-actions"><button type="button" class="btn-back" id="backStep3"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep3">Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
-                        <!-- Step 4: Konfirmasi & Pembayaran -->
                         <div class="form-step" id="step-4">
-                            <div class="step-header">
-                                <h3><i class="fas fa-credit-card"></i> Konfirmasi & Pembayaran</h3>
-                                <p>Periksa detail pemesanan dan lakukan pembayaran</p>
-                            </div>
-                            <div class="booking-summary" id="bookingSummary">
-                                <!-- Summary will be populated dynamically -->
-                            </div>
+                            <div class="step-header"><h3><i class="fas fa-credit-card"></i> Konfirmasi & Pembayaran</h3></div>
+                            <div class="booking-summary" id="bookingSummary"><p class="placeholder">Ringkasan akhir akan muncul di sini.</p></div>
                             <div class="payment-methods">
                                 <h4>Metode Pembayaran</h4>
-                                <div class="payment-options">
-                                    <div class="payment-option">
-                                        <input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked>
-                                        <label for="bank_transfer">
-                                            <i class="fas fa-university"></i>
-                                            Transfer Bank
-                                        </label>
-                                    </div>
-                                    <div class="payment-option">
-                                        <input type="radio" id="e_wallet" name="payment_method" value="e_wallet">
-                                        <label for="e_wallet">
-                                            <i class="fas fa-mobile-alt"></i>
-                                            E-Wallet
-                                        </label>
-                                    </div>
-                                    <div class="payment-option">
-                                        <input type="radio" id="credit_card" name="payment_method" value="credit_card">
-                                        <label for="credit_card">
-                                            <i class="fas fa-credit-card"></i>
-                                            Kartu Kredit
-                                        </label>
-                                    </div>
-                                </div>
+                                <div class="payment-options"><div class="payment-option"><input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked><label for="bank_transfer"><i class="fas fa-university"></i> Transfer Bank</label></div></div>
                             </div>
-                            <div class="terms-agreement">
-                                <label class="checkbox-container">
-                                    <input type="checkbox" id="agreeTerms" required>
-                                    <span class="checkmark"></span>
-                                    Saya setuju dengan <a href="#" target="_blank">syarat dan ketentuan</a> yang berlaku
-                                </label>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn-back" id="backStep4">
-                                    <i class="fas fa-arrow-left"></i> Kembali
-                                </button>
-                                <button type="submit" class="btn-submit" id="submitBooking">
-                                    <i class="fas fa-credit-card"></i> Bayar Sekarang
-                                </button>
-                            </div>
+                            <div class="terms-agreement"><label class="checkbox-container"><input type="checkbox" id="agreeTerms" required><span class="checkmark"></span> Saya setuju dengan syarat & ketentuan</label></div>
+                            <div class="form-actions"><button type="button" class="btn-back" id="backStep4"><i class="fas fa-arrow-left"></i> Kembali</button><button type="submit" class="btn-submit" id="submitBooking" disabled>Bayar Sekarang</button></div>
                         </div>
                     </form>
                 </div>
-                <!-- Booking Summary Sidebar -->
                 <div class="booking-sidebar">
-                    <div class="sidebar-card">
-                        <h3>Ringkasan Pemesanan</h3>
-                        <div class="summary-content" id="sidebarSummary">
-                            <div class="summary-placeholder">
-                                <i class="fas fa-clipboard-list"></i>
-                                <p>Pilih gunung untuk melihat ringkasan pemesanan</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="sidebar-card"><h3>Ringkasan Pemesanan</h3><div class="summary-content" id="sidebarSummary"><p class="placeholder">Pilih item untuk melihat ringkasan.</p></div></div>
                 </div>
             </div>
         </div>
     </section>
     <script src="scripts/form-pemesanan.js"></script>
 </body>
-
 </html>

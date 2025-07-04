@@ -1,7 +1,6 @@
 <?php
 session_start();
-// Cegah output sebelum header
-ob_start();
+ob_start(); // Mencegah error "headers already sent"
 
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -19,24 +18,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password'])) {
-                // SET SESSION DATA USER DI SINI
+                // Set session data utama
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['first_name'] = $user['first_name'];
                 $_SESSION['last_name'] = $user['last_name'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
 
+                // Logika tambahan untuk pengelola gunung
+                if ($user['role'] === 'pengelola_gunung') {
+                    $stmtGunung = $pdo->prepare("SELECT id, nama_gunung FROM gunung WHERE admin_id = ?");
+                    $stmtGunung->execute([$user['id']]);
+                    $gunung = $stmtGunung->fetch();
+                    if ($gunung) {
+                        $_SESSION['gunung_id'] = $gunung['id'];
+                        $_SESSION['nama_gunung'] = $gunung['nama_gunung'];
+                    } else {
+                        $error_message = "Akun pengelola Anda tidak terhubung ke gunung manapun.";
+                        session_destroy();
+                        header('Location: login.php');
+                        exit;
+                    }
+                }
+
                 // Redirect sesuai role
                 switch ($user['role']) {
-                    case 'layanan':
+                    case 'admin':
+                // Arahkan Super Admin ke admin.php
+                        header('Location: admin.php');
+                        exit;
+                    case 'pengelola_gunung':
+                // Arahkan Admin Pengelola ke dashboard-pengelola.php
+                    header('Location: dashboard-pengelola.php');
+                        exit;
+                    case 'layanan': // Menggabungkan semua peran layanan
+                    case 'porter':
+                    case 'guide':
+                    case 'ojek':
+                    case 'basecamp':
                         header('Location: dashboard-layanan.php');
                         exit;
-
-                    case 'admin':
-                        // Jika rolenya admin, arahkan ke dashboard admin (contoh)
-                        header('Location: dashboard-pengelola.php');
-                        exit;
-
                     case 'pendaki':
                     default:
                         header('Location: dashboard.php');
@@ -63,11 +84,9 @@ ob_end_flush();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-content">
-                <!-- Logo -->
                 <div class="logo">
                     <a href="#" class="logo-link">
                         <i class="fas fa-mountain"></i>
@@ -78,11 +97,9 @@ ob_end_flush();
         </div>
     </nav>
 
-    <!-- Login Section -->
     <section class="auth-section">
         <div class="auth-container">
             <div class="auth-content">
-                <!-- Left Side - Image -->
                 <div class="auth-image">
                     <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop" alt="Gunung Indonesia">
                     <div class="image-overlay">
@@ -91,7 +108,6 @@ ob_end_flush();
                     </div>
                 </div>
 
-                <!-- Right Side - Form -->
                 <div class="auth-form-container">
                     <div class="auth-form">
                         <div class="form-header">
@@ -164,7 +180,7 @@ ob_end_flush();
             </div>
         </div>
     </section>
-
-    <script src="scripts/auth-script.js"></script>
+    <script src="scripts/auth-script.js">
+    </script>
 </body>
 </html>

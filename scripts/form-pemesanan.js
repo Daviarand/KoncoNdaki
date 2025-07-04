@@ -1,631 +1,337 @@
-// Booking Form Logic for form-pemesanan.html
+// File: scripts/form-pemesanan.js
 class BookingForm {
-  constructor() {
-    this.currentStep = 1
-    this.totalSteps = 4
-    this.bookingData = {
-      mountain: null,
-      route: null,
-      date: null,
-      participants: null,
-      services: [],
-      paymentMethod: null,
-    }
-    this.mountainData = this.initializeMountainData()
-    this.taxRate = 0.10
-    this.init()
-  }
+    constructor() {
+        this.currentStep = 1;
+        this.totalSteps = 4;
+        this.bookingData = {
+            mountain: null,
+            route: null,
+            date: null,
+            participants: 1,
+            services: [],
+            paymentMethod: 'bank_transfer',
+            tiket_id: null,
+        };
 
-  initializeMountainData() {
-    return {
-      bromo: {
-        name: "Gunung Bromo",
-        location: "Jawa Timur",
-        height: "2.329 mdpl",
-        price: 35000,
-        routes: [
-          {
-            id: "bromo-cemoro",
-            name: "Jalur Cemoro Lawang",
-            difficulty: "easy",
-            duration: "2-3 jam",
-            distance: "3 km",
-            elevation: "400 m",
-            description: "Jalur paling populer dan mudah untuk pemula. Akses kendaraan hingga dekat kawah.",
-          },
-          {
-            id: "bromo-wonokitri",
-            name: "Jalur Wonokitri",
-            difficulty: "medium",
-            duration: "4-5 jam",
-            distance: "8 km",
-            elevation: "600 m",
-            description: "Jalur alternatif dengan pemandangan savana yang indah.",
-          },
-        ],
-      },
-      merapi: {
-        name: "Gunung Merapi",
-        location: "Jawa Tengah",
-        height: "2.930 mdpl",
-        price: 25000,
-        routes: [
-          {
-            id: "merapi-selo",
-            name: "Jalur Selo",
-            difficulty: "hard",
-            duration: "6-8 jam",
-            distance: "12 km",
-            elevation: "1200 m",
-            description: "Jalur klasik dengan pemandangan sunrise terbaik dari puncak.",
-          },
-          {
-            id: "merapi-kaliurang",
-            name: "Jalur Kaliurang",
-            difficulty: "medium",
-            duration: "5-6 jam",
-            distance: "10 km",
-            elevation: "1000 m",
-            description: "Jalur dengan fasilitas lengkap dan akses yang mudah.",
-          },
-        ],
-      },
-      semeru: {
-        name: "Gunung Semeru",
-        location: "Jawa Timur",
-        height: "3.676 mdpl",
-        price: 45000,
-        routes: [
-          {
-            id: "semeru-ranu-pani",
-            name: "Jalur Ranu Pani",
-            difficulty: "hard",
-            duration: "2-3 hari",
-            distance: "20 km",
-            elevation: "2200 m",
-            description: "Jalur utama menuju puncak tertinggi Pulau Jawa. Memerlukan persiapan matang.",
-          },
-        ],
-      },
-      gede: {
-        name: "Gunung Gede",
-        location: "Jawa Barat",
-        height: "2.958 mdpl",
-        price: 30000,
-        routes: [
-          {
-            id: "gede-gunung-putri",
-            name: "Jalur Gunung Putri",
-            difficulty: "medium",
-            duration: "4-5 jam",
-            distance: "8 km",
-            elevation: "1000 m",
-            description: "Jalur dengan hutan tropis yang rimbun dan air terjun.",
-          },
-          {
-            id: "gede-cibodas",
-            name: "Jalur Cibodas",
-            difficulty: "easy",
-            duration: "3-4 jam",
-            distance: "6 km",
-            elevation: "800 m",
-            description: "Jalur termudah dengan fasilitas terlengkap.",
-          },
-        ],
-      },
-    }
-  }
-
-  init() {
-    this.bindEvents()
-    this.setMinDate()
-    this.updateStepIndicator()
-  }
-
-  bindEvents() {
-    // Mountain selection
-    document.querySelectorAll(".mountain-option").forEach((option) => {
-      option.addEventListener("click", (e) => this.selectMountain(e))
-    })
-
-    // Route selection (will be bound dynamically)
-    document.addEventListener("click", (e) => {
-      if (e.target.closest(".route-option")) {
-        this.selectRoute(e)
-      }
-    })
-
-    // Service selection
-    document.querySelectorAll('input[name="services[]"]').forEach((checkbox) => {
-      checkbox.addEventListener("change", (e) => this.toggleService(e))
-    })
-
-    // Form inputs
-    document.getElementById("hikingDate").addEventListener("change", (e) => {
-      this.bookingData.date = e.target.value
-      this.updateNextButton(2)
-      this.updateSummary()
-    })
-
-    document.getElementById("participants").addEventListener("change", (e) => {
-      this.bookingData.participants = e.target.value
-      this.updateNextButton(2)
-      this.updateSummary()
-    })
-
-    // Payment method
-    document.querySelectorAll('input[name="payment_method"]').forEach((radio) => {
-      radio.addEventListener("change", (e) => {
-        this.bookingData.paymentMethod = e.target.value
-      })
-    })
-
-    // Navigation buttons
-    document.getElementById("nextStep1").addEventListener("click", () => this.nextStep())
-    document.getElementById("nextStep2").addEventListener("click", () => this.nextStep())
-    document.getElementById("nextStep3").addEventListener("click", () => this.nextStep())
-
-    document.getElementById("backStep1").addEventListener("click", () => {
-      window.location.href = "dashboard.php" // Mengarahkan ke dashboard.html
-    })
-
-    document.getElementById("backStep2").addEventListener("click", () => this.prevStep())
-    document.getElementById("backStep3").addEventListener("click", () => this.prevStep())
-    document.getElementById("backStep4").addEventListener("click", () => this.prevStep())
-
-    // Form submission
-    document.getElementById("bookingForm").addEventListener("submit", (e) => this.submitForm(e))
-  }
-
-  setMinDate() {
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    const minDate = tomorrow.toISOString().split("T")[0]
-    document.getElementById("hikingDate").setAttribute("min", minDate)
-  }
-
-  selectMountain(e) {
-    const mountainOption = e.currentTarget
-    const mountainId = mountainOption.dataset.mountain
-
-    // Remove previous selection
-    document.querySelectorAll(".mountain-option").forEach((option) => {
-      option.classList.remove("selected")
-    })
-
-    // Add selection to clicked option
-    mountainOption.classList.add("selected")
-
-    // Update booking data
-    this.bookingData.mountain = mountainId
-
-    // Enable next button
-    this.updateNextButton(1)
-
-    // Load routes for selected mountain
-    this.loadRoutes(mountainId)
-
-    // Update summary
-    this.updateSummary()
-  }
-
-  loadRoutes(mountainId) {
-    const routeContainer = document.getElementById("routeSelection")
-    const mountain = this.mountainData[mountainId]
-
-    if (!mountain || !mountain.routes) {
-      routeContainer.innerHTML = "<p>Tidak ada jalur tersedia untuk gunung ini.</p>"
-      return
+        this.mountainData = this.initializeMountainData();
+        this.servicePrices = {
+            guide: 150000,
+            porter: 100000,
+            ojek: 50000,
+            basecamp: 75000,
+        };
+        this.taxRate = 0.10; // Pajak 10% jika ada
+        this.init();
     }
 
-    let routesHTML = ""
-    mountain.routes.forEach((route) => {
-      routesHTML += `
-                <div class="route-option" data-route="${route.id}">
-                    <div class="route-header">
-                        <h4>${route.name}</h4>
-                        <span class="route-difficulty ${route.difficulty}">${this.getDifficultyText(route.difficulty)}</span>
-                    </div>
-                    <div class="route-info">
-                        <div class="route-stat">
-                            <i class="fas fa-clock"></i>
-                            <span class="stat-value">${route.duration}</span>
-                            <span class="stat-label">Durasi</span>
-                        </div>
-                        <div class="route-stat">
-                            <i class="fas fa-route"></i>
-                            <span class="stat-value">${route.distance}</span>
-                            <span class="stat-label">Jarak</span>
-                        </div>
-                        <div class="route-stat">
-                            <i class="fas fa-mountain"></i>
-                            <span class="stat-value">${route.elevation}</span>
-                            <span class="stat-label">Elevasi</span>
-                        </div>
-                    </div>
-                    <div class="route-description">
-                        <p>${route.description}</p>
-                    </div>
+    initializeMountainData() {
+        return {
+            bromo: {
+                name: "Gunung Bromo",
+                price: 35000,
+                tiket_id: 1,
+                routes: [
+                    { id: "bromo-cemoro", name: "Jalur Cemoro Lawang", difficulty: "Mudah" },
+                    { id: "bromo-wonokitri", name: "Jalur Wonokitri (Pasuruan)", difficulty: "Menengah" },
+                ],
+            },
+            merapi: {
+                name: "Gunung Merapi",
+                price: 25000,
+                tiket_id: 2,
+                routes: [
+                    { id: "merapi-selo", name: "Jalur Selo (Boyolali)", difficulty: "Menantang" },
+                ],
+            },
+            semeru: {
+                name: "Gunung Semeru",
+                price: 45000,
+                tiket_id: 3,
+                routes: [
+                    { id: "semeru-ranupani", name: "Jalur Ranu Pani", difficulty: "Sangat Menantang" },
+                ],
+            },
+            gede: {
+                name: "Gunung Gede",
+                price: 30000,
+                tiket_id: 4,
+                routes: [
+                    { id: "gede-cibodas", name: "Jalur Cibodas", difficulty: "Menengah" },
+                    { id: "gede-putri", name: "Jalur Gunung Putri", difficulty: "Menengah" },
+                ],
+            },
+        };
+    }
+
+    init() {
+        this.bindEvents();
+        this.setMinDate();
+        this.updateStepIndicator();
+        this.updateSummary();
+    }
+
+    bindEvents() {
+        document.querySelectorAll(".mountain-option").forEach(option => option.addEventListener("click", e => this.selectMountain(e)));
+        document.getElementById("routeSelection").addEventListener("click", e => {
+            if (e.target.closest(".route-option")) this.selectRoute(e);
+        });
+        document.querySelectorAll('input[name="services[]"]').forEach(checkbox => checkbox.addEventListener("change", e => this.toggleService(e)));
+        document.getElementById("hikingDate").addEventListener("change", e => this.handleDateOrParticipantChange(e));
+        document.getElementById("participants").addEventListener("input", e => this.handleDateOrParticipantChange(e)); // 'input' for better UX
+        document.getElementById("agreeTerms").addEventListener("change", () => this.updateSubmitButtonState());
+
+        // Navigation buttons
+        document.getElementById("nextStep1").addEventListener("click", () => this.nextStep());
+        document.getElementById("nextStep2").addEventListener("click", () => this.nextStep());
+        document.getElementById("nextStep3").addEventListener("click", () => this.nextStep());
+        document.getElementById("backStep1").addEventListener("click", () => { window.location.href = "dashboard.php"; }); // Kembali ke dashboard
+        document.getElementById("backStep2").addEventListener("click", () => this.prevStep());
+        document.getElementById("backStep3").addEventListener("click", () => this.prevStep());
+        document.getElementById("backStep4").addEventListener("click", () => this.prevStep());
+        document.getElementById("bookingForm").addEventListener("submit", e => this.submitForm(e));
+    }
+
+    setMinDate() {
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const minDate = tomorrow.toISOString().split("T")[0];
+        document.getElementById("hikingDate").setAttribute("min", minDate);
+    }
+
+    // Step Logic
+    goToStep(stepNumber) {
+        this.currentStep = stepNumber;
+        document.querySelectorAll(".form-step").forEach(step => step.classList.remove("active"));
+        document.getElementById(`step-${this.currentStep}`).classList.add("active");
+        this.updateStepIndicator();
+    }
+
+    nextStep() {
+        if (this.currentStep < this.totalSteps) {
+            this.goToStep(this.currentStep + 1);
+        }
+    }
+
+    prevStep() {
+        if (this.currentStep > 1) {
+            this.goToStep(this.currentStep - 1);
+        }
+    }
+
+   updateStepIndicator() {
+        if (this.currentStep === 4) {
+            this.updateSummary(true); 
+            
+            // Kita bungkus pemanggilan fungsi dengan setTimeout
+            setTimeout(() => {
+                this.updateSubmitButtonState();
+            }, 50); // Diberi jeda 50 milidetik
+        }
+    }
+    
+    // Form Actions
+    selectMountain(e) {
+        const mountainOption = e.currentTarget;
+        const mountainId = mountainOption.dataset.mountain;
+
+        document.querySelectorAll(".mountain-option").forEach(opt => opt.classList.remove("selected"));
+        mountainOption.classList.add("selected");
+
+        this.bookingData.mountain = mountainId;
+        this.bookingData.tiket_id = this.mountainData[mountainId].tiket_id;
+        this.bookingData.route = null; // Reset route choice
+
+        this.loadRoutes(mountainId);
+        this.updateSummary();
+        this.updateNextButtonState(1);
+        this.updateNextButtonState(2);
+    }
+
+    loadRoutes(mountainId) {
+        const routes = this.mountainData[mountainId]?.routes || [];
+        const container = document.getElementById("routeSelection");
+        container.innerHTML = ""; // Clear previous routes
+        if (routes.length === 0) {
+            container.innerHTML = '<p>Tidak ada jalur pendakian yang tersedia untuk gunung ini.</p>';
+            return;
+        }
+
+        routes.forEach(route => {
+            const difficultyClass = route.difficulty.toLowerCase().replace(' ', '-');
+            const routeEl = document.createElement("div");
+            routeEl.className = "route-option";
+            routeEl.dataset.routeId = route.id;
+            routeEl.innerHTML = `
+                <i class="fas fa-route route-icon"></i>
+                <div class="route-details">
+                    <h4>${route.name}</h4>
+                    <span class="difficulty ${difficultyClass}">${route.difficulty}</span>
                 </div>
-            `
-    })
-
-    routeContainer.innerHTML = routesHTML
-  }
-
-  getDifficultyText(difficulty) {
-    const difficultyMap = {
-      easy: "Mudah",
-      medium: "Sedang",
-      hard: "Sulit",
-    }
-    return difficultyMap[difficulty] || difficulty
-  }
-
-  selectRoute(e) {
-    const routeOption = e.target.closest(".route-option")
-    const routeId = routeOption.dataset.route
-
-    // Remove previous selection
-    document.querySelectorAll(".route-option").forEach((option) => {
-      option.classList.remove("selected")
-    })
-
-    // Add selection to clicked option
-    routeOption.classList.add("selected")
-
-    // Update booking data
-    this.bookingData.route = routeId
-
-    // Update next button
-    this.updateNextButton(2)
-
-    // Update summary
-    this.updateSummary()
-  }
-
-  toggleService(e) {
-    const checkbox = e.target
-    const serviceCard = checkbox.closest(".service-card")
-    const serviceId = checkbox.value
-
-    if (checkbox.checked) {
-      serviceCard.classList.add("selected")
-      if (!this.bookingData.services.includes(serviceId)) {
-        this.bookingData.services.push(serviceId)
-      }
-    } else {
-      serviceCard.classList.remove("selected")
-      this.bookingData.services = this.bookingData.services.filter((s) => s !== serviceId)
+                <div class="route-check"><i class="fas fa-check-circle"></i></div>
+            `;
+            container.appendChild(routeEl);
+        });
     }
 
-    this.updateSummary()
-  }
+    selectRoute(e) {
+        const routeOption = e.target.closest(".route-option");
+        if (!routeOption) return;
 
-  updateNextButton(step) {
-    const nextButton = document.getElementById(`nextStep${step}`)
-    if (!nextButton) return
+        const routeId = routeOption.dataset.routeId;
+        this.bookingData.route = routeId;
 
-    let canProceed = false
+        document.querySelectorAll(".route-option").forEach(opt => opt.classList.remove("selected"));
+        routeOption.classList.add("selected");
 
-    switch (step) {
-      case 1:
-        canProceed = this.bookingData.mountain !== null
-        break
-      case 2:
-        canProceed =
-          this.bookingData.route !== null && this.bookingData.date !== null && this.bookingData.participants !== null
-        break
-      case 3:
-        canProceed = true // Services are optional
-        break
+        this.updateSummary();
+        this.updateNextButtonState(2);
     }
 
-    nextButton.disabled = !canProceed
-  }
-
-  nextStep() {
-    if (this.currentStep < this.totalSteps) {
-      this.showStep(this.currentStep + 1)
-    }
-  }
-
-  prevStep() {
-    if (this.currentStep > 1) {
-      this.showStep(this.currentStep - 1)
-    }
-  }
-
-  showStep(stepNumber) {
-    // Hide all steps
-    document.querySelectorAll(".form-step").forEach((step) => {
-      step.classList.remove("active")
-    })
-
-    // Show target step
-    document.getElementById(`step-${stepNumber}`).classList.add("active")
-
-    // Update current step
-    this.currentStep = stepNumber
-
-    // Update step indicator
-    this.updateStepIndicator()
-
-    // Update summary for step 4
-    if (stepNumber === 4) {
-      this.updateBookingSummary()
+    handleDateOrParticipantChange(e) {
+        if(e.target.id === 'hikingDate') {
+            this.bookingData.date = e.target.value;
+        }
+        if(e.target.id === 'participants') {
+            this.bookingData.participants = parseInt(e.target.value, 10) || 1;
+        }
+        this.updateSummary();
+        this.updateNextButtonState(2);
     }
 
-    // Scroll to top of form
-    document.querySelector(".booking-form-container").scrollIntoView({
-      behavior: "smooth",
-    })
-  }
-
-  updateStepIndicator() {
-    document.querySelectorAll(".step-item").forEach((item, index) => {
-      const stepNumber = index + 1
-      if (stepNumber <= this.currentStep) {
-        item.classList.add("completed")
-      } else {
-        item.classList.remove("completed")
-      }
-
-      if (stepNumber === this.currentStep) {
-        item.classList.add("active")
-      } else {
-        item.classList.remove("active")
-      }
-    })
-  }
-
-  updateSummary() {
-    const sidebarSummary = document.getElementById("sidebarSummary")
-
-    if (!this.bookingData.mountain) {
-      sidebarSummary.innerHTML = `
-                <div class="summary-placeholder">
-                    <i class="fas fa-clipboard-list"></i>
-                    <p>Pilih gunung untuk melihat ringkasan pemesanan</p>
-                </div>
-            `
-      return
+    toggleService(e) {
+        const serviceId = e.target.value;
+        if (e.target.checked) {
+            this.bookingData.services.push(serviceId);
+            e.target.closest('.service-card').classList.add('selected');
+        } else {
+            this.bookingData.services = this.bookingData.services.filter(s => s !== serviceId);
+            e.target.closest('.service-card').classList.remove('selected');
+        }
+        this.updateSummary();
     }
 
-const mountain = this.mountainData[this.bookingData.mountain]
-const basePrice = mountain.price
-const participants = Number.parseInt(this.bookingData.participants) || 1
-const servicePrices = this.calculateServicePrices()
-const subtotalPrice = basePrice * participants + servicePrices.total
-const taxAmount = subtotalPrice * this.taxRate // Hitung pajak
-const totalPriceWithTax = subtotalPrice + taxAmount // Tambahkan pajak ke total
+    // Update UI
+    updateNextButtonState(step) {
+        const btn = document.getElementById(`nextStep${step}`);
+        let enabled = false;
+        if (step === 1) {
+            enabled = !!this.bookingData.mountain;
+        } else if (step === 2) {
+            enabled = !!this.bookingData.route && !!this.bookingData.date && this.bookingData.participants > 0;
+        }
+        btn.disabled = !enabled;
+    }
 
-let summaryHTML = `
-              <div class="summary-item">
-                  <span class="summary-label">Gunung</span>
-                  <span class="summary-value">${mountain.name}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Tiket (${participants} orang)</span>
-                  <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
-              </div>
-          `
+    updateSubmitButtonState() {
+        const isAgreed = document.getElementById('agreeTerms').checked;
+        document.getElementById('submitBooking').disabled = !isAgreed;
+    }
 
-if (this.bookingData.route) {
-  const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-  if (route) {
-    summaryHTML += `
-                          <div class="summary-item">
-                              <span class="summary-label">Jalur</span>
-                              <span class="summary-value">${route.name}</span>
-                          </div>
-                      `
-  }
+    updateSummary(isFinal = false) {
+        const sidebarContainer = document.getElementById("sidebarSummary");
+        const finalContainer = document.getElementById("bookingSummary");
+        const { mountain, route, date, participants, services } = this.bookingData;
+        const mountainInfo = mountain ? this.mountainData[mountain] : null;
+
+        if (!mountainInfo) {
+            const placeholder = '<p class="placeholder">Pilih item untuk melihat ringkasan.</p>';
+            sidebarContainer.innerHTML = placeholder;
+            finalContainer.innerHTML = placeholder;
+            return;
+        }
+
+        // Calculations
+        const ticketPrice = mountainInfo.price * participants;
+        let servicesPrice = 0;
+        const serviceDetails = [];
+
+        services.forEach(serviceId => {
+            let price = this.servicePrices[serviceId];
+            let note = '';
+            if(serviceId === 'ojek') {
+                price *= participants;
+                note = `(${participants} orang)`;
+            }
+            if(serviceId === 'guide' || serviceId === 'porter' || serviceId === 'basecamp') {
+                price *= 1; // Asumsi 2 hari
+                note = `(1 hari/malam)`;
+            }
+            servicesPrice += price;
+            serviceDetails.push({ name: serviceId.charAt(0).toUpperCase() + serviceId.slice(1), price, note });
+        });
+
+        const subtotal = ticketPrice + servicesPrice;
+        const tax = subtotal * this.taxRate;
+        const total = subtotal + tax;
+
+        // Find route name
+        const routeInfo = mountainInfo.routes.find(r => r.id === route);
+        const routeName = routeInfo ? routeInfo.name : '<i>Belum dipilih</i>';
+        
+        // Build HTML
+        let html = `
+            <div class="summary-item"><span>Gunung:</span><strong>${mountainInfo.name}</strong></div>
+            <div class="summary-item"><span>Jalur:</span><strong>${routeName}</strong></div>
+            <div class="summary-item"><span>Tanggal:</span><strong>${date || '<i>Belum dipilih</i>'}</strong></div>
+            <div class="summary-item"><span>Pendaki:</span><strong>${participants} orang</strong></div>
+            <hr>
+            <div class="summary-item"><span>Tiket (${participants} x ${this.formatCurrency(mountainInfo.price)}):</span><strong>${this.formatCurrency(ticketPrice)}</strong></div>
+        `;
+
+        if (serviceDetails.length > 0) {
+            html += `<h5>Layanan Tambahan:</h5>`;
+            serviceDetails.forEach(s => {
+                html += `<div class="summary-item"><span>- ${s.name} ${s.note}:</span><strong>${this.formatCurrency(s.price)}</strong></div>`;
+            });
+        }
+        
+        html += `<hr>`;
+
+        let finalHtml = html + `
+            <div class="summary-item total"><span>Subtotal:</span><strong>${this.formatCurrency(subtotal)}</strong></div>
+            <div class="summary-item total"><span>Pajak (10%):</span><strong>${this.formatCurrency(tax)}</strong></div>
+            <div class="summary-item grand-total"><span>Total Pembayaran:</span><strong>${this.formatCurrency(total)}</strong></div>
+        `;
+        
+        sidebarContainer.innerHTML = html;
+        if (isFinal) {
+            finalContainer.innerHTML = finalHtml;
+        }
+    }
+
+    formatCurrency(value) {
+        return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
+    }
+
+    submitForm(e) {
+        e.preventDefault();
+
+        // Cukup submit form. Data penting (tiket_id, total_harga, dll) sudah diatur
+        // di backend untuk keamanan. Frontend hanya perlu memastikan field dasar terisi.
+        const form = document.getElementById("bookingForm");
+
+        // Membuat input tersembunyi untuk data yang mungkin tidak ada sebagai field input standar
+        const createHiddenInput = (name, value) => {
+            let input = form.querySelector(`input[name="${name}"]`);
+            if (!input) {
+                input = document.createElement("input");
+                input.type = "hidden";
+                input.name = name;
+                form.appendChild(input);
+            }
+            input.value = value;
+        };
+        
+        // Data krusial yang harus dikirim ke backend
+        createHiddenInput("tiket_id", this.bookingData.tiket_id);
+        
+        // Submit form secara nyata ke action yang sudah ditentukan di HTML
+        form.submit();
+    }
 }
 
-if (this.bookingData.date) {
-  const date = new Date(this.bookingData.date)
-  summaryHTML += `
-              <div class="summary-item">
-                  <span class="summary-label">Tanggal</span>
-                  <span class="summary-value">${date.toLocaleDateString("id-ID", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}</span>
-              </div>
-          `
-}
-
-if (servicePrices.services.length > 0) {
-  servicePrices.services.forEach((service) => {
-    summaryHTML += `
-                          <div class="summary-item">
-                              <span class="summary-label">${service.name}</span>
-                              <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
-                          </div>
-                      `
-  })
-}
-
-
-summaryHTML += `
-              <div class="summary-item" style="border-top: 1px dashed #ccc; padding-top: 0.5rem; margin-top: 0.5rem;">
-                  <span class="summary-label">Subtotal</span>
-                  <span class="summary-value">Rp ${subtotalPrice.toLocaleString("id-ID")}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Pajak (10%)</span>
-                  <span class="summary-value">Rp ${taxAmount.toLocaleString("id-ID")}</span>
-              </div>
-              <div class="summary-item" style="border-top: 2px solid #16a34a; padding-top: 1rem; margin-top: 1rem;">
-                  <span class="summary-label">Total</span>
-                  <span class="summary-value">Rp ${totalPriceWithTax.toLocaleString("id-ID")}</span>
-              </div>
-          `
-
-    sidebarSummary.innerHTML = summaryHTML
-  }
-
-  calculateServicePrices() {
-    const servicePrices = {
-      guide: 150000,
-      porter: 100000,
-      ojek: 50000,
-      basecamp: 75000,
-    }
-
-    const serviceNames = {
-      guide: "Jasa Guide",
-      porter: "Jasa Porter",
-      ojek: "Jasa Ojek",
-      basecamp: "Sewa Basecamp",
-    }
-
-    let total = 0
-    const services = []
-
-    this.bookingData.services.forEach((serviceId) => {
-      if (servicePrices[serviceId]) {
-        const price = servicePrices[serviceId]
-        total += price
-        services.push({
-          id: serviceId,
-          name: serviceNames[serviceId],
-          price: price,
-        })
-      }
-    })
-
-    return { total, services }
-  }
-
-  updateBookingSummary() {
-    const bookingSummary = document.getElementById("bookingSummary")
-
-  if (!this.bookingData.mountain) {
-    bookingSummary.innerHTML = "<p>Data pemesanan tidak lengkap.</p>"
-    return
-  }
-
-const mountain = this.mountainData[this.bookingData.mountain]
-const route = mountain.routes.find((r) => r.id === this.bookingData.route)
-const basePrice = mountain.price
-const participants = Number.parseInt(this.bookingData.participants) || 1
-const servicePrices = this.calculateServicePrices()
-const subtotalPrice = basePrice * participants + servicePrices.total
-const taxAmount = subtotalPrice * this.taxRate // Hitung pajak
-const totalPriceWithTax = subtotalPrice + taxAmount // Tambahkan pajak ke total
-const date = new Date(this.bookingData.date)
-
-let summaryHTML = `
-              <h4>Detail Pemesanan</h4>
-              <div class="summary-item">
-                  <span class="summary-label">Gunung</span>
-                  <span class="summary-value">${mountain.name}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Jalur</span>
-                  <span class="summary-value">${route ? route.name : "Tidak dipilih"}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Tanggal</span>
-                  <span class="summary-value">${date.toLocaleDateString("id-ID", {
-                    weekday: "long",
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Jumlah Pendaki</span>
-                  <span class="summary-value">${participants} orang</span>
-              </div>
-          `
-
-if (servicePrices.services.length > 0) {
-  summaryHTML += '<h4 style="margin-top: 1.5rem;">Layanan Tambahan</h4>'
-  servicePrices.services.forEach((service) => {
-    summaryHTML += `
-                          <div class="summary-item">
-                              <span class="summary-label">${service.name}</span>
-                              <span class="summary-value">Rp ${service.price.toLocaleString("id-ID")}</span>
-                          </div>
-                      `
-  })
-}
-
-summaryHTML += `
-              <h4 style="margin-top: 1.5rem;">Rincian Biaya</h4>
-              <div class="summary-item">
-                  <span class="summary-label">Tiket Pendakian (${participants} orang)</span>
-                  <span class="summary-value">Rp ${(basePrice * participants).toLocaleString("id-ID")}</span>
-              </div>
-          `
-
-if (servicePrices.total > 0) {
-  summaryHTML += `
-                  <div class="summary-item">
-                      <span class="summary-label">Layanan Tambahan</span>
-                      <span class="summary-value">Rp ${servicePrices.total.toLocaleString("id-ID")}</span>
-                  </div>
-              `
-}
-
-
-summaryHTML += `
-              <div class="summary-item" style="border-top: 1px dashed #ccc; padding-top: 1rem; margin-top: 1rem;">
-                  <span class="summary-label">Subtotal</span>
-                  <span class="summary-value">Rp ${subtotalPrice.toLocaleString("id-ID")}</span>
-              </div>
-              <div class="summary-item">
-                  <span class="summary-label">Pajak (10%)</span>
-                  <span class="summary-value">Rp ${taxAmount.toLocaleString("id-ID")}</span>
-              </div>
-              <div class="summary-item" style="border-top: 2px solid #16a34a; padding-top: 1rem; margin-top: 1rem;">
-                  <span class="summary-label"><strong>Total Pembayaran</strong></span>
-                  <span class="summary-value"><strong>Rp ${totalPriceWithTax.toLocaleString("id-ID")}</strong></span>
-              </div>
-          `
-
-    bookingSummary.innerHTML = summaryHTML
-  }
-
-  submitForm(e) {
-    e.preventDefault()
-
-    // Validate required fields
-    if (!this.validateBookingData()) {
-      alert("Mohon lengkapi semua data yang diperlukan.")
-      return
-    }
-
-    // Show loading state
-    const submitButton = document.getElementById("submitBooking")
-    const originalText = submitButton.innerHTML
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...'
-    submitButton.disabled = true
-
-    // Simulate API call
-    setTimeout(() => {
-      alert("Pemesanan berhasil! Terima kasih telah memesan tiket di KoncoNdaki.")
-      submitButton.innerHTML = originalText
-      submitButton.disabled = false
-      document.getElementById("bookingForm").reset()
-      window.location.href = "dashboard.html"
-    }, 2000)
-  }
-
-  validateBookingData() {
-    const required = ["mountain", "route", "date", "participants", "paymentMethod"]
-    return required.every((field) => this.bookingData[field] !== null && this.bookingData[field] !== "")
-  }
-}
-
-// Inisialisasi booking form setelah DOM siap
+// Inisialisasi class saat halaman selesai dimuat
 window.addEventListener("DOMContentLoaded", () => {
-new BookingForm()
-})
+    new BookingForm();
+});
