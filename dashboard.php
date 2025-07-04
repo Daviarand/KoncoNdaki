@@ -3,6 +3,7 @@ session_start();
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@ session_start();
     <link rel="stylesheet" href="styles/dashboard-styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar">
@@ -64,6 +66,10 @@ session_start();
                                     <i class="fas fa-user-circle"></i>
                                     <span>Profile Saya</span>
                                 </a>
+                                <a href="chatbox.php" class="profile-menu-item">
+                                    <i class="fas fa-comment-alt"></i>
+                                    <span>KoncoNdaki Assistant</span>
+                                </a>
                                 <a href="#" class="profile-menu-item">
                                     <i class="fas fa-ticket-alt"></i>
                                     <span>Tiket Saya</span>
@@ -109,16 +115,20 @@ session_start();
                             </p>
                         </div>
                     </div>
-                    
+
                     <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
                     <a href="tentang.php" class="mobile-nav-link">Tentang</a>
-                    
+
                     <div class="mobile-profile-menu">
                         <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-user-circle"></i>
                             Profile Saya
+                        </a>
+                        <a href="chatbox.php" class="profile-menu-item">
+                            <i class="fas fa-comment-alt"></i>
+                            <span>KoncoNdaki Assistant</span>
                         </a>
                         <a href="#" class="mobile-nav-link">
                             <i class="fas fa-ticket-alt"></i>
@@ -188,7 +198,7 @@ session_start();
                 <h2>Kenapa Pilih KoncoNdaki?</h2>
                 <p>Kami menyediakan layanan terbaik untuk pengalaman pendakian yang aman dan menyenangkan</p>
             </div>
-            
+
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon green">
@@ -197,7 +207,7 @@ session_start();
                     <h3>Pemesanan Mudah</h3>
                     <p>Pesan tiket pendakian hanya dalam beberapa klik. Prosesnya cepat, mudah, dan dapat dilakukan kapan saja.</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon blue">
                         <i class="fas fa-shield-alt"></i>
@@ -205,7 +215,7 @@ session_start();
                     <h3>Keamanan Terjamin</h3>
                     <p>Sistem keamanan berlapis dan panduan lengkap untuk memastikan pendakian yang aman dan terkontrol.</p>
                 </div>
-                
+
                 <div class="feature-card">
                     <div class="feature-icon orange">
                         <i class="fas fa-map-marker-alt"></i>
@@ -224,7 +234,7 @@ session_start();
                 <h2>Gunung Populer</h2>
                 <p>Temukan destinasi pendakian terfavorit di Pulau Jawa</p>
             </div>
-            
+
             <div class="mountains-grid">
                 <div class="mountain-card">
                     <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Bromo">
@@ -296,38 +306,33 @@ session_start();
                     </div>
                     <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Layanan</h3>
                     <ul>
-                        <li><a href="form-pemesanan.php">Pemesanan Tiket</a></li>
-                        <li><a href="info-gunung.php">Info Gunung</a></li>
-                        <li><a href="cara-pemesanan.php">Panduan Pendakian</a></li>
-                        <li><a href="#">Peralatan</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">Pemesanan Tiket</a></li>
+                        <li><a href="info-gunung.php" class="nav-link">Info Gunung</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Bantuan</h3>
                     <ul>
-                        <li><a href="cara-pemesanan.php">Cara Pemesanan</a></li>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Kontak</a></li>
-                        <li><a href="diskusi.php">Diskusi</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">Cara Pemesanan</a></li>
+                        <li><a href="cara-pemesanan.php" class="nav-link">FAQ</a></li>
+                        <li><a href="tentang.php" class="nav-link">Kontak</a></li>
+                        <li><a href="diskusi.php" class="nav-link">Diskusi</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Tentang</h3>
                     <ul>
-                        <li><a href="tentang.php">Tentang Kami</a></li>
-                        <li><a href="#">Tim</a></li>
-                        <li><a href="#">Karir</a></li>
-                        <li><a href="#">Blog</a></li>
+                        <li><a href="tentang.php" class="nav-link">Tentang Kami</a></li>
                     </ul>
                 </div>
             </div>
-            
+
             <div class="footer-bottom">
                 <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
             </div>
@@ -337,4 +342,5 @@ session_start();
     <script src="scripts/script.js"></script>
     <script src="scripts/dashboard-script.js"></script>
 </body>
+
 </html>

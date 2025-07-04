@@ -66,6 +66,10 @@ require_once 'auth/check_auth.php';
                                     <i class="fas fa-user-circle"></i>
                                     <span>Profile Saya</span>
                                 </a>
+                                <a href="chatbox.php" class="profile-menu-item">
+                                    <i class="fas fa-comment-alt"></i>
+                                    <span>KoncoNdaki Assistant</span>
+                                </a>
                                 <a href="#" class="profile-menu-item">
                                     <i class="fas fa-ticket-alt"></i>
                                     <span>Tiket Saya</span>
@@ -123,6 +127,10 @@ require_once 'auth/check_auth.php';
                             <i class="fas fa-user-circle"></i>
                             Profile Saya
                         </a>
+                        <a href="chatbox.php" class="profile-menu-item">
+                                    <i class="fas fa-comment-alt"></i>
+                                    <span>KoncoNdaki Assistant</span>
+                                </a>
                         <a href="#" class="mobile-nav-link">
                             <i class="fas fa-ticket-alt"></i>
                             Tiket Saya
