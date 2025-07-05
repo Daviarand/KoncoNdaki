@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 04, 2025 at 02:08 PM
+-- Generation Time: Jul 05, 2025 at 02:40 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -451,6 +451,7 @@ CREATE TABLE `users` (
   `phone` varchar(20) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('pendaki','porter','guide','ojek','admin','basecamp','pengelola_gunung') NOT NULL DEFAULT 'pendaki',
+  `gunung_id` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -459,12 +460,12 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `role`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '1', 'admin@gmail.com', '0987387421233', '$2y$10$HMoT2tenyq66/VxGt.fraeQa9J696r5tkFgo8ZZORJoz.lXmIpXSS', 'admin', '2025-07-04 09:00:09', '2025-07-04 07:00:45'),
-(8, 'pengelola', 'bromo', 'bromo@gmail.com', '0891292809123', '$2y$10$lznieIpJxUzlaixjFayvCeevADfF9DvphLhMRdTmKAVjxnFh9TDLG', 'pengelola_gunung', '2025-07-04 14:47:43', '2025-07-04 07:47:43'),
-(9, 'pengelola', 'merapi', 'merapi@gmail.com', '0891292809123', '$2y$10$PRVJaV4qAaeGMMM1FB93Qup..xT8wsmIhH3xP6ld2QWz/39tI9tFq', 'pengelola_gunung', '2025-07-04 14:49:05', '2025-07-04 07:49:05'),
-(10, 'pengelola', 'semeru', 'semeru@gmail.com', '089628670822', '$2y$10$qqLu0.R618HdkFvtAiQSa.3Ixf58R0ZoqD3y0ExY1s1DSRKjGnZ.6', 'pengelola_gunung', '2025-07-04 14:49:46', '2025-07-04 07:49:46'),
-(11, 'Agil', 'liam', 'liam@gmail.com', '09249814871', '$2y$10$I2rvRv/KWU2PNI0MLMgHJuftQuvvKkaJy9oZPElyL6I70532sg856', 'pendaki', '2025-07-04 14:52:04', '2025-07-04 07:52:04');
+INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `role`, `gunung_id`, `created_at`, `updated_at`) VALUES
+(1, 'admin', '1', 'admin@gmail.com', '0987387421233', '$2y$10$HMoT2tenyq66/VxGt.fraeQa9J696r5tkFgo8ZZORJoz.lXmIpXSS', 'admin', NULL, '2025-07-04 09:00:09', '2025-07-04 07:00:45'),
+(8, 'pengelola', 'bromo', 'bromo@gmail.com', '0891292809123', '$2y$10$4Ju4TqDqKNigAkbheyY5/.jFEJZSMwpmkTIN1IQOqq7DAckGR9A6m', 'pengelola_gunung', 1, '2025-07-04 14:47:43', '2025-07-05 12:34:15'),
+(9, 'pengelola', 'merapi', 'merapi@gmail.com', '0891292809123', '$2y$10$PRVJaV4qAaeGMMM1FB93Qup..xT8wsmIhH3xP6ld2QWz/39tI9tFq', 'pengelola_gunung', 2, '2025-07-04 14:49:05', '2025-07-05 12:34:47'),
+(10, 'pengelola', 'semeru', 'semeru@gmail.com', '089628670822', '$2y$10$lxkg5LKOrJ8cbeU8GeJA5uNBGrcEiG.irVlbqARQwJdXpL7cH.MVW', 'pengelola_gunung', 3, '2025-07-04 14:49:46', '2025-07-05 12:35:00'),
+(11, 'Agil', 'liam', 'liam@gmail.com', '09249814871', '$2y$10$I2rvRv/KWU2PNI0MLMgHJuftQuvvKkaJy9oZPElyL6I70532sg856', 'pendaki', NULL, '2025-07-04 14:52:04', '2025-07-04 07:52:04');
 
 --
 -- Indexes for dumped tables
@@ -630,7 +631,8 @@ ALTER TABLE `tiket_gunung`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `fk_users_gunung` (`gunung_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -883,6 +885,12 @@ ALTER TABLE `porter`
 ALTER TABLE `tiket`
   ADD CONSTRAINT `tiket_ibfk_1` FOREIGN KEY (`gunung_id`) REFERENCES `gunung` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `tiket_ibfk_2` FOREIGN KEY (`jalur_id`) REFERENCES `jalur_pendakian` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `users`
+--
+ALTER TABLE `users`
+  ADD CONSTRAINT `fk_users_gunung` FOREIGN KEY (`gunung_id`) REFERENCES `gunung` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

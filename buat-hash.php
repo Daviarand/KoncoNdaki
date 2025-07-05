@@ -1,6 +1,6 @@
 <?php
 // Ganti 'password_admin_anda' dengan kata sandi yang Anda inginkan
-$passwordToHash = '1234';
+$passwordToHash = 'semeru123';
 
 // Menghasilkan hash yang kompatibel dengan password_verify()
 $hashedPassword = password_hash($passwordToHash, PASSWORD_DEFAULT);
