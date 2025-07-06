@@ -195,7 +195,79 @@
     font-weight: 700;
     color: #1f2937;
   }
-  
+
+  /* --- Styles moved from admin.php --- */
+
+ .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    font-size: 24px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.stat-number {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    word-wrap: break-word;
+}
+
+.stat-label {
+    font-size: 1em;
+    color: #666;
+}
+
+.charts-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-top: 25px;
+}
+
+/* PERUBAHAN DI SINI */
+.chart-container {
+    position: relative; /* Tambahkan ini */
+    height: 400px; /* Tambahkan tinggi tetap */
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.chart-title {
+    text-align: center;
+    font-size: 1.2em;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 992px) {
+    .charts-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+  /* --- End of styles moved from admin.php --- */
+
   /* Charts Container */
   .charts-container {
     display: grid;
