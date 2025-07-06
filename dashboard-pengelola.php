@@ -387,41 +387,128 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
         const allPartnersData = <?php echo json_encode($partnersByTipe); ?>;
     </script>
     <script src="scripts/dashboard-nav.js"></script>
-    <?php
-// ... (kode session_start, require_once, dan info pengelola) ...
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Data dari PHP ---
+        const partnerLabels = <?php echo json_encode(array_keys($partnerStats)); ?>;
+        const partnerData = <?php echo json_encode(array_values($partnerStats)); ?>;
+        const monthlyLabels = <?php echo json_encode($monthlyLabels); ?>;
+        const monthlyBookingData = <?php echo json_encode($monthlyBookingData); ?>;
+        const monthlyClimberData = <?php echo json_encode($monthlyClimberData); ?>;
 
-// --- PERSIAPAN DATA UNTUK 3 GRAFIK ---
+        // --- Palet Warna ---
+        const chartColors = ['#22c55e', '#f97316', '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'];
 
-// 1. Data untuk Pie Chart Partner Bulan Ini
-$stmtPartner = $pdo->prepare("
-    SELECT l.nama_layanan, COUNT(pl.id) AS total
-    FROM pemesanan_layanan pl
-    JOIN layanan l ON pl.layanan_id = l.id
-    JOIN pemesanan p ON pl.pemesanan_id = p.id
-    WHERE p.tiket_id = ? AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())
-    GROUP BY l.nama_layanan
-");
-$stmtPartner->execute([$gunungDikelolaId]);
-$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR); // Hasilnya: ['guide' => 5, 'porter' => 3]
+        // --- 1. Grafik Lingkaran (Pie Chart) untuk Pesanan Partner ---
+        const partnerPieCtx = document.getElementById('partnerPieChart');
+        if (partnerPieCtx && partnerData.length > 0) {
+            new Chart(partnerPieCtx, {
+                type: 'pie',
+                data: {
+                    labels: partnerLabels.map(label => label.charAt(0).toUpperCase() + label.slice(1)), // Membuat huruf pertama kapital
+                    datasets: [{
+                        label: 'Jumlah Pesanan',
+                        data: partnerData,
+                        backgroundColor: chartColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false,
+                            text: 'Pesanan Partner Bulan Ini'
+                        }
+                    }
+                }
+            });
+        } else if (partnerPieCtx) {
+             partnerPieCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Tidak ada data pesanan partner bulan ini.</div>';
+        }
 
-// 2. Data untuk Bar Chart Booking Selesai & Line Chart Jumlah Pendaki (12 bulan terakhir)
-$stmtMonthly = $pdo->prepare("
-    SELECT 
-        DATE_FORMAT(tanggal_pemesanan, '%b %Y') as bulan, 
-        COUNT(id) as total_booking,
-        SUM(jumlah_pendaki) as total_pendaki
-    FROM pemesanan
-    WHERE tiket_id = ? AND status_pemesanan = 'complete' AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-    GROUP BY YEAR(tanggal_pemesanan), MONTH(tanggal_pemesanan)
-    ORDER BY MIN(tanggal_pemesanan) ASC
-");
-$stmtMonthly->execute([$gunungDikelolaId]);
-$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
+        // --- 2. Grafik Batang (Bar Chart) untuk Booking Selesai per Bulan ---
+        const monthlyBarCtx = document.getElementById('monthlyBarChart');
+        if (monthlyBarCtx && monthlyBookingData.length > 0) {
+            new Chart(monthlyBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Booking Selesai',
+                        data: monthlyBookingData,
+                        backgroundColor: '#22c55e',
+                        borderColor: '#16a34a',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0 // Menampilkan angka bulat di sumbu Y
+                            }
+                        }
+                    }
+                }
+            });
+        } else if (monthlyBarCtx) {
+             monthlyBarCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Belum ada data booking selesai.</div>';
+        }
 
-$monthlyLabels = array_column($monthlyStats, 'bulan');
-$monthlyBookingData = array_column($monthlyStats, 'total_booking');
-$monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
-?>
+
+        // --- 3. Grafik Garis (Line Chart) untuk Jumlah Pendaki per Bulan ---
+        const climbersLineCtx = document.getElementById('climbersLineChart');
+        if (climbersLineCtx && monthlyClimberData.length > 0) {
+            new Chart(climbersLineCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Jumlah Pendaki',
+                        data: monthlyClimberData,
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderColor: '#3b82f6',
+                        tension: 0.3 // Membuat garis lebih melengkung
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                             ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        } else if (climbersLineCtx) {
+            climbersLineCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Belum ada data jumlah pendaki.</div>';
+        }
+
+    });
+    </script>
     
 </body>
 </html>
