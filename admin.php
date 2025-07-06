@@ -11,19 +11,24 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 $pageTitle = "Dashboard Super Admin";
 $actionMessage = '';
 $createUserError = '';
-$createUserSuccess = '';
 
 // --- LOGIKA AKSI POST ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Aksi Menonaktifkan Akun Pengelola
-    if (isset($_POST['deactivate_manager'])) {
-        $manager_id = intval($_POST['manager_id']);
+    // Aksi Menonaktifkan Akun
+    if (isset($_POST['deactivate_user'])) {
+        $user_id = intval($_POST['user_id']);
         try {
+            $stmtRole = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+            $stmtRole->execute([$user_id]);
+            $userToDelete = $stmtRole->fetch();
+
             $pdo->beginTransaction();
-            $pdo->prepare("UPDATE gunung SET admin_id = NULL WHERE admin_id = ?")->execute([$manager_id]);
-            $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'pengelola_gunung'")->execute([$manager_id]);
+            if ($userToDelete && $userToDelete['role'] === 'pengelola_gunung') {
+                 $pdo->prepare("UPDATE gunung SET admin_id = NULL WHERE admin_id = ?")->execute([$user_id]);
+            }
+            $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$user_id]);
             $pdo->commit();
-            $_SESSION['actionMessage'] = "Akun pengelola berhasil dinonaktifkan.";
+            $_SESSION['actionMessage'] = "Akun pengguna berhasil dinonaktifkan.";
         } catch (Exception $e) {
             $pdo->rollBack();
             $_SESSION['actionMessage'] = "Gagal menonaktifkan akun: " . $e->getMessage();
@@ -40,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = trim($_POST['phone'] ?? '');
         $password = $_POST['password'] ?? '';
         $gunung_id = $_POST['gunung_id'] ?? null;
-
         if (empty($firstName) || empty($email) || empty($password) || empty($gunung_id)) {
             $createUserError = 'Semua field wajib diisi.';
         } else {
@@ -59,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmtGunung->execute([$newUserId, $gunung_id]);
                     $pdo->commit();
                     $_SESSION['actionMessage'] = "Akun Pengelola Gunung untuk " . htmlspecialchars($firstName) . " berhasil dibuat.";
-                    // Redirect ke halaman manajemen agar bisa langsung melihat hasilnya
                     header("Location: admin.php#manajemen");
                     exit;
                 }
@@ -115,13 +118,14 @@ $stmtOkupansi = $pdo->query("SELECT g.nama_gunung, g.kuota_pendaki_harian, COALE
 $laporanOkupansi = $stmtOkupansi->fetchAll(PDO::FETCH_ASSOC);
 
 // Data Manajemen Sistem
-$stmtPengelola = $pdo->query("SELECT u.id, u.first_name, u.last_name, u.email, u.phone, g.nama_gunung FROM users u LEFT JOIN gunung g ON u.id = g.admin_id WHERE u.role = 'pengelola_gunung'");
+$stmtPengelola = $pdo->query("SELECT u.id, u.first_name, u.last_name, u.email, u.phone, g.nama_gunung FROM users u LEFT JOIN gunung g ON u.id = g.admin_id WHERE u.role = 'pengelola_gunung' ORDER BY u.created_at DESC");
 $daftarPengelola = $stmtPengelola->fetchAll(PDO::FETCH_ASSOC);
+$stmtPendaki = $pdo->query("SELECT id, first_name, last_name, email, phone FROM users WHERE role = 'pendaki' ORDER BY created_at DESC");
+$daftarPendaki = $stmtPendaki->fetchAll(PDO::FETCH_ASSOC);
 $stmtDaftarGunung = $pdo->query("SELECT * FROM gunung ORDER BY nama_gunung ASC");
 $daftarGunung = $stmtDaftarGunung->fetchAll(PDO::FETCH_ASSOC);
 $stmtDaftarLayanan = $pdo->query("SELECT * FROM layanan ORDER BY nama_layanan ASC");
 $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
-
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -258,32 +262,63 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
             
             <section id="manajemen" class="section">
                 <div class="section-header"><h2>Manajemen Sistem</h2></div>
-                <?php if ($actionMessage && strpos($actionMessage, 'dinonaktifkan') !== false): ?>
-                    <div class="message success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($actionMessage); ?></div>
-                <?php endif; ?>
-                <?php if ($actionMessage && strpos($actionMessage, 'berhasil dibuat') !== false): ?>
+                <?php if ($actionMessage): ?>
                     <div class="message success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($actionMessage); ?></div>
                 <?php endif; ?>
 
                 <div class="report-section">
-                    <h3>Daftar Akun Pengelola</h3>
+                    <h3>Daftar Akun Pengelola Gunung</h3>
                     <div class="booking-table-wrapper">
                         <table class="data-table">
                             <thead><tr><th>Nama</th><th>Email & Telp</th><th>Mengelola Gunung</th><th>Aksi</th></tr></thead>
                             <tbody>
+                                <?php if (empty($daftarPengelola)): ?>
+                                    <tr><td colspan="4" style="text-align: center;">Belum ada akun pengelola.</td></tr>
+                                <?php else: ?>
                                 <?php foreach ($daftarPengelola as $pengelola): ?>
                                 <tr>
                                     <td><?php echo htmlspecialchars($pengelola['first_name'] . ' ' . $pengelola['last_name']); ?></td>
                                     <td><?php echo htmlspecialchars($pengelola['email']); ?><br><small><?php echo htmlspecialchars($pengelola['phone']); ?></small></td>
                                     <td><?php echo htmlspecialchars($pengelola['nama_gunung'] ?? '<i>Tidak ditugaskan</i>'); ?></td>
                                     <td class="actions-cell">
-                                        <form method="POST" action="admin.php#manajemen" onsubmit="return confirm('Anda yakin ingin menonaktifkan akun ini? Akun akan dihapus secara permanen.');" style="display:inline;">
-                                            <input type="hidden" name="manager_id" value="<?php echo $pengelola['id']; ?>">
-                                            <button type="submit" name="deactivate_manager" class="btn-action btn-reject">Nonaktifkan</button>
+                                        <form method="POST" action="admin.php#manajemen" onsubmit="return confirm('Anda yakin ingin menonaktifkan akun ini?');" style="display:inline;">
+                                            <input type="hidden" name="deactivate_user" value="1">
+                                            <input type="hidden" name="user_id" value="<?php echo $pengelola['id']; ?>">
+                                            <button type="submit" class="btn-action btn-reject">Nonaktifkan</button>
                                         </form>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Daftar User Pendaki</h3>
+                    <div class="booking-table-wrapper">
+                        <table class="data-table">
+                            <thead><tr><th>Nama</th><th>Email</th><th>Telepon</th><th>Aksi</th></tr></thead>
+                            <tbody>
+                                <?php if (empty($daftarPendaki)): ?>
+                                    <tr><td colspan="4" style="text-align: center;">Belum ada user pendaki.</td></tr>
+                                <?php else: ?>
+                                <?php foreach ($daftarPendaki as $pendaki): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($pendaki['first_name'] . ' ' . $pendaki['last_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($pendaki['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($pendaki['phone']); ?></td>
+                                    <td class="actions-cell">
+                                        <form method="POST" action="admin.php#manajemen" onsubmit="return confirm('Anda yakin ingin menonaktifkan akun ini?');" style="display:inline;">
+                                            <input type="hidden" name="deactivate_user" value="1">
+                                            <input type="hidden" name="user_id" value="<?php echo $pendaki['id']; ?>">
+                                            <button type="submit" class="btn-action btn-reject">Nonaktifkan</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -328,7 +363,6 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                     </form>
                  </div>
             </section>
-
         </main>
     </div>
     
@@ -336,7 +370,6 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
     document.addEventListener('DOMContentLoaded', function() {
         const navLinks = document.querySelectorAll('.nav-link');
         const sections = document.querySelectorAll('.section');
-
         function activateTab(targetId) {
             sections.forEach(section => {
                 section.classList.remove('active');
@@ -351,7 +384,6 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                 activeLink.classList.add('active');
             }
         }
-        
         navLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -360,7 +392,6 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                 activateTab(targetId);
             });
         });
-
         let currentHash = window.location.hash.substring(1);
         if (currentHash && document.getElementById(currentHash)) {
             activateTab(currentHash);
@@ -376,7 +407,7 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
         }
         if (document.getElementById('roleChart')) {
             new Chart(document.getElementById('roleChart').getContext('2d'), {
-                type: 'doughnut', data: { labels: <?php echo json_encode(array_keys($roleData)); ?>, datasets: [{ label: 'Jumlah Pengguna', data: <?php echo json_encode(array_values($roleData)); ?>, backgroundColor: ['#34d399', '#60a5fa', '#facc15', '#a78bfa', '#f87171'] }] }, options: { responsive: true, maintainAspectRatio: false }
+                type: 'doughnut', data: { labels: <?php echo json_encode(array_keys($roleData)); ?>, datasets: [{ label: 'Jumlah Pengguna', data: <?php echo json_encode(array_values($roleData)); ?>, backgroundColor: ['#34d399', '#60a5fa', '#facc15', '#a78bfa', '#f87171', '#fb923c'] }] }, options: { responsive: true, maintainAspectRatio: false }
             });
         }
         if (document.getElementById('analisisPendapatanChart')) {
