@@ -9,48 +9,90 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 }
 
 $pageTitle = "Dashboard Super Admin";
+$actionMessage = '';
+$createUserError = '';
+$createUserSuccess = '';
 
-// --- PENGAMBILAN DATA UNTUK DASHBOARD ---
-$stmtKpi = $pdo->query("
-    SELECT
-        (SELECT COUNT(*) FROM users WHERE role = 'pendaki') as total_pendaki,
-        (SELECT COUNT(*) FROM pemesanan WHERE status_pemesanan IN ('pending', 'menunggu pembayaran')) as total_booking_baru,
-        (SELECT SUM(total_harga) FROM pemesanan WHERE status_pemesanan = 'complete' AND MONTH(tanggal_pemesanan) = MONTH(CURDATE())) as total_pendapatan_bulan_ini,
-        (SELECT g.nama_gunung FROM pemesanan p JOIN tiket_gunung tg ON p.tiket_id = tg.id JOIN gunung g ON tg.id = g.id GROUP BY g.nama_gunung ORDER BY COUNT(p.id) DESC LIMIT 1) as gunung_populer
-");
+// --- LOGIKA AKSI POST ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Aksi Menonaktifkan Akun Pengelola
+    if (isset($_POST['deactivate_manager'])) {
+        $manager_id = intval($_POST['manager_id']);
+        try {
+            $pdo->beginTransaction();
+            $pdo->prepare("UPDATE gunung SET admin_id = NULL WHERE admin_id = ?")->execute([$manager_id]);
+            $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'pengelola_gunung'")->execute([$manager_id]);
+            $pdo->commit();
+            $_SESSION['actionMessage'] = "Akun pengelola berhasil dinonaktifkan.";
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $_SESSION['actionMessage'] = "Gagal menonaktifkan akun: " . $e->getMessage();
+        }
+        header("Location: admin.php#manajemen");
+        exit;
+    }
+
+    // Aksi Membuat Akun Pengelola Baru
+    if (isset($_POST['submit_create_user'])) {
+        $firstName = trim($_POST['firstName'] ?? '');
+        $lastName = trim($_POST['lastName'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $gunung_id = $_POST['gunung_id'] ?? null;
+
+        if (empty($firstName) || empty($email) || empty($password) || empty($gunung_id)) {
+            $createUserError = 'Semua field wajib diisi.';
+        } else {
+             try {
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+                $stmt->execute([$email]);
+                if ($stmt->fetch()) {
+                    $createUserError = 'Email sudah terdaftar. Gunakan email lain.';
+                } else {
+                    $pdo->beginTransaction();
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmtUser = $pdo->prepare("INSERT INTO users (first_name, last_name, email, phone, password, role, created_at) VALUES (?, ?, ?, ?, ?, 'pengelola_gunung', NOW())");
+                    $stmtUser->execute([$firstName, $lastName, $email, $phone, $hashedPassword]);
+                    $newUserId = $pdo->lastInsertId();
+                    $stmtGunung = $pdo->prepare("UPDATE gunung SET admin_id = ? WHERE id = ?");
+                    $stmtGunung->execute([$newUserId, $gunung_id]);
+                    $pdo->commit();
+                    $_SESSION['actionMessage'] = "Akun Pengelola Gunung untuk " . htmlspecialchars($firstName) . " berhasil dibuat.";
+                    // Redirect ke halaman manajemen agar bisa langsung melihat hasilnya
+                    header("Location: admin.php#manajemen");
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $pdo->rollBack();
+                $createUserError = 'Gagal membuat akun: ' . $e->getMessage();
+            }
+        }
+    }
+}
+
+if (isset($_SESSION['actionMessage'])) {
+    $actionMessage = $_SESSION['actionMessage'];
+    unset($_SESSION['actionMessage']);
+}
+
+
+// --- PENGAMBILAN DATA (SEMUA BAGIAN) ---
+// Data Dashboard
+$stmtKpi = $pdo->query("SELECT (SELECT COUNT(*) FROM users WHERE role = 'pendaki') as total_pendaki, (SELECT COUNT(*) FROM pemesanan WHERE status_pemesanan IN ('pending', 'menunggu pembayaran')) as total_booking_baru, (SELECT SUM(total_harga) FROM pemesanan WHERE status_pemesanan = 'complete' AND MONTH(tanggal_pemesanan) = MONTH(CURDATE())) as total_pendapatan_bulan_ini, (SELECT g.nama_gunung FROM pemesanan p JOIN tiket_gunung tg ON p.tiket_id = tg.id JOIN gunung g ON tg.id = g.id GROUP BY g.nama_gunung ORDER BY COUNT(p.id) DESC LIMIT 1) as gunung_populer");
 $kpi = $stmtKpi->fetch(PDO::FETCH_ASSOC);
-
-$stmtPendapatanGunung = $pdo->query("
-    SELECT g.nama_gunung, SUM(p.total_harga) as pendapatan
-    FROM pemesanan p
-    JOIN tiket_gunung tg ON p.tiket_id = tg.id
-    JOIN gunung g ON tg.id = g.id
-    WHERE p.status_pemesanan = 'complete' AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE())
-    GROUP BY g.nama_gunung
-    ORDER BY pendapatan DESC
-");
+$stmtPendapatanGunung = $pdo->query("SELECT g.nama_gunung, SUM(p.total_harga) as pendapatan FROM pemesanan p JOIN tiket_gunung tg ON p.tiket_id = tg.id JOIN gunung g ON tg.id = g.id WHERE p.status_pemesanan = 'complete' AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) GROUP BY g.nama_gunung ORDER BY pendapatan DESC");
 $pendapatanPerGunung = $stmtPendapatanGunung->fetchAll(PDO::FETCH_ASSOC);
 $labelsPendapatan = array_column($pendapatanPerGunung, 'nama_gunung');
 $dataPendapatan = array_column($pendapatanPerGunung, 'pendapatan');
-
-$stmtRole = $pdo->query("
-    SELECT role, COUNT(*) as jumlah FROM users GROUP BY role
-");
+$stmtRole = $pdo->query("SELECT role, COUNT(*) as jumlah FROM users GROUP BY role");
 $roleData = $stmtRole->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// --- PENGAMBILAN DATA UNTUK LAPORAN & ANALISIS ---
-$laporanKeuangan = [];
+// Data Laporan
 $filterGunung = $_GET['filter_gunung'] ?? 'semua';
 $filterWaktu = $_GET['filter_waktu'] ?? 'bulanan';
-
-$baseSqlLaporan = "
-    FROM pemesanan p
-    JOIN tiket_gunung tg ON p.tiket_id = tg.id
-    JOIN gunung g ON tg.id = g.id
-    WHERE p.status_pemesanan = 'complete'
-";
+$baseSqlLaporan = " FROM pemesanan p JOIN tiket_gunung tg ON p.tiket_id = tg.id JOIN gunung g ON tg.id = g.id WHERE p.status_pemesanan = 'complete'";
 $params = [];
-
 $filterSql = "";
 if ($filterGunung !== 'semua') {
     $filterSql .= " AND g.id = :gunung_id";
@@ -61,38 +103,25 @@ if ($filterWaktu === 'mingguan') {
 } else {
     $filterSql .= " AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())";
 }
-
-// 1. Query untuk Tabel Laporan Keuangan
 $sqlLaporan = "SELECT p.kode_booking, g.nama_gunung, p.tanggal_pemesanan, p.subtotal_tiket, p.subtotal_layanan, p.total_harga " . $baseSqlLaporan . $filterSql . " ORDER BY p.tanggal_pemesanan DESC";
 $stmtLaporan = $pdo->prepare($sqlLaporan);
 $stmtLaporan->execute($params);
 $laporanKeuangan = $stmtLaporan->fetchAll(PDO::FETCH_ASSOC);
-
-// 2. [PERBAIKAN] Query untuk Analisis Pendapatan Tiket vs Layanan dengan Filter
 $sqlAnalisis = "SELECT SUM(p.subtotal_tiket) as total_tiket, SUM(p.subtotal_layanan) as total_layanan " . $baseSqlLaporan . $filterSql;
 $stmtAnalisisPendapatan = $pdo->prepare($sqlAnalisis);
 $stmtAnalisisPendapatan->execute($params);
 $analisisPendapatan = $stmtAnalisisPendapatan->fetch(PDO::FETCH_ASSOC);
-
-
-$stmtOkupansi = $pdo->query("
-    SELECT
-        g.nama_gunung, g.kuota_pendaki_harian,
-        COALESCE(SUM(p.jumlah_pendaki), 0) as total_pendaki,
-        (COALESCE(SUM(p.jumlah_pendaki), 0) / (g.kuota_pendaki_harian * 30)) * 100 AS persentase_okupansi
-    FROM gunung g
-    LEFT JOIN tiket_gunung tg ON g.id = tg.id
-    LEFT JOIN pemesanan p ON tg.id = p.tiket_id AND p.status_pemesanan = 'complete' AND MONTH(p.tanggal_pendakian) = MONTH(CURDATE())
-    GROUP BY g.id ORDER BY persentase_okupansi DESC
-");
+$stmtOkupansi = $pdo->query("SELECT g.nama_gunung, g.kuota_pendaki_harian, COALESCE(SUM(p.jumlah_pendaki), 0) as total_pendaki, (COALESCE(SUM(p.jumlah_pendaki), 0) / (g.kuota_pendaki_harian * 30)) * 100 AS persentase_okupansi FROM gunung g LEFT JOIN tiket_gunung tg ON g.id = tg.id LEFT JOIN pemesanan p ON tg.id = p.tiket_id AND p.status_pemesanan = 'complete' AND MONTH(p.tanggal_pendakian) = MONTH(CURDATE()) GROUP BY g.id ORDER BY persentase_okupansi DESC");
 $laporanOkupansi = $stmtOkupansi->fetchAll(PDO::FETCH_ASSOC);
 
-// Logika form pembuatan akun pengelola
-$firstName = ''; $lastName = ''; $email = ''; $phone = '';
-$createUserError = ''; $createUserSuccess = '';
-if (isset($_POST['submit_create_user'])) {
-    // ... Logika form Anda
-}
+// Data Manajemen Sistem
+$stmtPengelola = $pdo->query("SELECT u.id, u.first_name, u.last_name, u.email, u.phone, g.nama_gunung FROM users u LEFT JOIN gunung g ON u.id = g.admin_id WHERE u.role = 'pengelola_gunung'");
+$daftarPengelola = $stmtPengelola->fetchAll(PDO::FETCH_ASSOC);
+$stmtDaftarGunung = $pdo->query("SELECT * FROM gunung ORDER BY nama_gunung ASC");
+$daftarGunung = $stmtDaftarGunung->fetchAll(PDO::FETCH_ASSOC);
+$stmtDaftarLayanan = $pdo->query("SELECT * FROM layanan ORDER BY nama_layanan ASC");
+$daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
+
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -110,9 +139,10 @@ if (isset($_POST['submit_create_user'])) {
             <div class="logo"><h2>🏔️ Super Admin</h2><p>KoncoNdaki MIS</p></div>
             <nav>
                 <ul class="nav-menu">
-                    <li><a href="#" class="nav-link active" data-target="dashboard">📊 Dashboard</a></li>
-                    <li><a href="#" class="nav-link" data-target="laporan">📈 Laporan & Analisis</a></li>
-                    <li><a href="#" class="nav-link" data-target="buatPengguna">➕ Buat Akun Pengelola</a></li>
+                    <li><a href="#dashboard" class="nav-link" data-target="dashboard">📊 Dashboard</a></li>
+                    <li><a href="#laporan" class="nav-link" data-target="laporan">📈 Laporan & Analisis</a></li>
+                    <li><a href="#manajemen" class="nav-link" data-target="manajemen">⚙️ Manajemen Sistem</a></li>
+                    <li><a href="#tambahPengelola" class="nav-link" data-target="tambahPengelola">➕ Tambah Pengelola</a></li>
                 </ul>
             </nav>
         </aside>
@@ -125,7 +155,7 @@ if (isset($_POST['submit_create_user'])) {
                 </div>
             </header>
 
-            <section id="dashboard" class="section active">
+            <section id="dashboard" class="section">
                 <div class="section-header"><h2>Ringkasan Seluruh Gunung</h2></div>
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -165,8 +195,8 @@ if (isset($_POST['submit_create_user'])) {
                 <div class="section-header"><h2>Laporan & Analisis Lintas Gunung</h2></div>
                 <div class="report-section">
                     <h3>Laporan Keuangan Konsolidasi</h3>
-                    <form method="get" class="filter-form" onsubmit="event.preventDefault(); window.location.href = `admin.php?filter_gunung=${this.filter_gunung.value}&filter_waktu=${this.filter_waktu.value}#laporan`;">
-                        <select name="filter_gunung">
+                    <form method="get" class="filter-form" action="admin.php#laporan">
+                        <select name="filter_gunung" onchange="this.form.submit()">
                             <option value="semua">Semua Gunung</option>
                             <?php
                             $stmtGunungList = $pdo->query("SELECT id, nama_gunung FROM gunung");
@@ -176,24 +206,14 @@ if (isset($_POST['submit_create_user'])) {
                             }
                             ?>
                         </select>
-                        <select name="filter_waktu">
+                        <select name="filter_waktu" onchange="this.form.submit()">
                             <option value="bulanan" <?php echo ($filterWaktu === 'bulanan') ? 'selected' : ''; ?>>Bulan Ini</option>
                             <option value="mingguan" <?php echo ($filterWaktu === 'mingguan') ? 'selected' : ''; ?>>7 Hari Terakhir</option>
                         </select>
-                        <button type="submit">Filter</button>
                     </form>
                     <div class="booking-table-wrapper">
                         <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Kode Booking</th>
-                                    <th>Nama Gunung</th>
-                                    <th>Tgl. Pesan</th>
-                                    <th>Subtotal Tiket</th>
-                                    <th>Subtotal Layanan</th>
-                                    <th>Total Harga</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Kode Booking</th><th>Nama Gunung</th><th>Tgl. Pesan</th><th>Subtotal Tiket</th><th>Subtotal Layanan</th><th>Total Harga</th></tr></thead>
                             <tbody>
                                 <?php if (empty($laporanKeuangan)): ?>
                                     <tr><td colspan="6" style="text-align:center;">Tidak ada data untuk filter yang dipilih.</td></tr>
@@ -215,19 +235,13 @@ if (isset($_POST['submit_create_user'])) {
                 </div>
                 <div class="charts-section">
                     <div class="chart-container">
-                        <h3 class="chart-title">Analisis Pendapatan: Tiket vs Layanan</h3>
+                        <h3 class="chart-title">Analisis Pendapatan (Sesuai Filter)</h3>
                         <canvas id="analisisPendapatanChart"></canvas>
                     </div>
                     <div class="booking-table-wrapper">
                         <h3 class="chart-title">Tingkat Okupansi Kuota (Bulan Ini)</h3>
                         <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Nama Gunung</th>
-                                    <th>Pendaki Aktual</th>
-                                    <th>Okupansi</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Nama Gunung</th><th>Pendaki Aktual</th><th>Okupansi</th></tr></thead>
                             <tbody>
                                 <?php foreach ($laporanOkupansi as $row): ?>
                                 <tr>
@@ -241,96 +255,134 @@ if (isset($_POST['submit_create_user'])) {
                     </div>
                 </div>
             </section>
+            
+            <section id="manajemen" class="section">
+                <div class="section-header"><h2>Manajemen Sistem</h2></div>
+                <?php if ($actionMessage && strpos($actionMessage, 'dinonaktifkan') !== false): ?>
+                    <div class="message success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($actionMessage); ?></div>
+                <?php endif; ?>
+                <?php if ($actionMessage && strpos($actionMessage, 'berhasil dibuat') !== false): ?>
+                    <div class="message success" style="margin-bottom: 1rem;"><?php echo htmlspecialchars($actionMessage); ?></div>
+                <?php endif; ?>
 
-            <section id="buatPengguna" class="section">
-                 <div class="section-header"><h2>Buat Akun Pengelola Gunung</h2></div>
+                <div class="report-section">
+                    <h3>Daftar Akun Pengelola</h3>
+                    <div class="booking-table-wrapper">
+                        <table class="data-table">
+                            <thead><tr><th>Nama</th><th>Email & Telp</th><th>Mengelola Gunung</th><th>Aksi</th></tr></thead>
+                            <tbody>
+                                <?php foreach ($daftarPengelola as $pengelola): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($pengelola['first_name'] . ' ' . $pengelola['last_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($pengelola['email']); ?><br><small><?php echo htmlspecialchars($pengelola['phone']); ?></small></td>
+                                    <td><?php echo htmlspecialchars($pengelola['nama_gunung'] ?? '<i>Tidak ditugaskan</i>'); ?></td>
+                                    <td class="actions-cell">
+                                        <form method="POST" action="admin.php#manajemen" onsubmit="return confirm('Anda yakin ingin menonaktifkan akun ini? Akun akan dihapus secara permanen.');" style="display:inline;">
+                                            <input type="hidden" name="manager_id" value="<?php echo $pengelola['id']; ?>">
+                                            <button type="submit" name="deactivate_manager" class="btn-action btn-reject">Nonaktifkan</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Daftar Data Gunung</h3>
+                    <div class="booking-table-wrapper">
+                        <table class="data-table">
+                           <thead><tr><th>Nama Gunung</th><th>Lokasi</th><th>Kuota Harian</th><th>Status</th><th>Aksi</th></tr></thead>
+                           <tbody><?php foreach ($daftarGunung as $gunung): ?><tr><td><?php echo htmlspecialchars($gunung['nama_gunung']); ?></td><td><?php echo htmlspecialchars($gunung['lokasi']); ?></td><td><?php echo number_format($gunung['kuota_pendaki_harian']); ?></td><td><span class="status-badge <?php echo $gunung['status'] === 'buka' ? 'complete' : 'rejected'; ?>"><?php echo ucfirst($gunung['status']); ?></span></td><td class="actions-cell"><button class="btn-action btn-verify">Edit</button></td></tr><?php endforeach; ?></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h3>Daftar Layanan Tambahan</h3>
+                    <div class="booking-table-wrapper">
+                        <table class="data-table">
+                            <thead><tr><th>Nama Layanan</th><th>Harga</th><th>Satuan</th><th>Aksi</th></tr></thead>
+                            <tbody><?php foreach ($daftarLayanan as $layanan): ?><tr><td><?php echo ucfirst(htmlspecialchars($layanan['nama_layanan'])); ?></td><td>Rp <?php echo number_format($layanan['harga_layanan'], 0, ',', '.'); ?></td><td><?php echo htmlspecialchars($layanan['satuan']); ?></td><td class="actions-cell"><button class="btn-action btn-verify">Edit</button></td></tr><?php endforeach; ?></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tambahPengelola" class="section">
+                 <div class="section-header"><h2>Tambah Pengelola Baru</h2></div>
                  <div class="form-container">
-                    <?php if (!empty($createUserError)): ?>
+                    <?php if ($createUserError): ?>
                         <div class='message error'><?php echo $createUserError; ?></div>
                     <?php endif; ?>
-                    <?php if (!empty($createUserSuccess)): ?>
-                        <div class='message success'><?php echo $createUserSuccess; ?></div>
-                    <?php endif; ?>
-                    <form method="POST" action="admin.php#buatPengguna" id="create-user-form">
-                        <div class="form-group">
-                            <label for="firstName">Nama Depan</label>
-                            <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($firstName); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName">Nama Belakang</label>
-                            <input type="text" id="lastName" name="lastName" value="<?php echo htmlspecialchars($lastName); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="phone">Telepon</label>
-                            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($phone); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" id="password" name="password" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gunung_id">Tugaskan ke Gunung</label>
-                            <select id="gunung_id" name="gunung_id" required>
-                                <option value="" disabled selected>-- Pilih Gunung --</option>
-                                <?php
-                                    $stmtGunungListForm = $pdo->prepare("SELECT id, nama_gunung FROM gunung WHERE admin_id IS NULL");
-                                    $stmtGunungListForm->execute();
-                                    foreach ($stmtGunungListForm->fetchAll() as $gunung) {
-                                        echo "<option value='".htmlspecialchars($gunung['id'])."'>".htmlspecialchars($gunung['nama_gunung'])."</option>";
-                                    }
-                                ?>
-                            </select>
-                        </div>
+                    
+                    <form method="POST" action="admin.php#tambahPengelola" id="create-user-form">
+                        <div class="form-group"><label for="firstName">Nama Depan</label><input type="text" id="firstName" name="firstName" required></div>
+                        <div class="form-group"><label for="lastName">Nama Belakang</label><input type="text" id="lastName" name="lastName"></div>
+                        <div class="form-group"><label for="email">Email</label><input type="email" id="email" name="email" required></div>
+                        <div class="form-group"><label for="phone">Telepon</label><input type="tel" id="phone" name="phone" required></div>
+                        <div class="form-group"><label for="password">Password</label><input type="password" id="password" name="password" required></div>
+                        <div class="form-group"><label for="gunung_id">Tugaskan ke Gunung</label><select id="gunung_id" name="gunung_id" required><option value="" disabled selected>-- Pilih Gunung --</option><?php $stmtGunungListForm = $pdo->query("SELECT id, nama_gunung FROM gunung WHERE admin_id IS NULL"); foreach ($stmtGunungListForm->fetchAll() as $gunung) { echo "<option value='".htmlspecialchars($gunung['id'])."'>".htmlspecialchars($gunung['nama_gunung'])."</option>"; } ?></select></div>
                         <button type="submit" name="submit_create_user" class="btn-primary">Buat Akun</button>
                     </form>
                  </div>
             </section>
+
         </main>
     </div>
     
-    <script src="scripts/dashboard-nav.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        if (window.location.hash === '#laporan' || new URLSearchParams(window.location.search).has('filter_gunung')) {
-            const navLink = document.querySelector(`.nav-link[data-target='laporan']`);
-            if(navLink) {
-                document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-                document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-                navLink.classList.add('active');
-                document.getElementById('laporan').classList.add('active');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('.section');
+
+        function activateTab(targetId) {
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+            const activeSection = document.getElementById(targetId);
+            const activeLink = document.querySelector(`.nav-link[data-target='${targetId}']`);
+            if (activeSection && activeLink) {
+                activeSection.classList.add('active');
+                activeLink.classList.add('active');
             }
         }
         
-        const labelsPendapatan = <?php echo json_encode($labelsPendapatan); ?>;
-        const dataPendapatan = <?php echo json_encode($dataPendapatan); ?>;
-        const dataRole = <?php echo json_encode($roleData); ?>;
+        navLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.dataset.target;
+                window.history.pushState({path: '#' + targetId}, '', '#' + targetId);
+                activateTab(targetId);
+            });
+        });
 
+        let currentHash = window.location.hash.substring(1);
+        if (currentHash && document.getElementById(currentHash)) {
+            activateTab(currentHash);
+        } else {
+            activateTab('dashboard'); 
+        }
+
+        // --- Inisialisasi Chart.js ---
         if (document.getElementById('pendapatanChart')) {
-            const ctxPendapatan = document.getElementById('pendapatanChart').getContext('2d');
-            new Chart(ctxPendapatan, {
-                type: 'bar', data: { labels: labelsPendapatan, datasets: [{ label: 'Pendapatan (Rp)', data: dataPendapatan, backgroundColor: 'rgba(22, 163, 74, 0.7)' }] },
-                options: { responsive: true, maintainAspectRatio: false }
+            new Chart(document.getElementById('pendapatanChart').getContext('2d'), {
+                type: 'bar', data: { labels: <?php echo json_encode($labelsPendapatan); ?>, datasets: [{ label: 'Pendapatan (Rp)', data: <?php echo json_encode($dataPendapatan); ?>, backgroundColor: 'rgba(22, 163, 74, 0.7)' }] }, options: { responsive: true, maintainAspectRatio: false }
             });
         }
         if (document.getElementById('roleChart')) {
-            const ctxRole = document.getElementById('roleChart').getContext('2d');
-            new Chart(ctxRole, {
-                type: 'doughnut', data: { labels: Object.keys(dataRole), datasets: [{ label: 'Jumlah Pengguna', data: Object.values(dataRole), backgroundColor: ['#34d399', '#60a5fa', '#facc15', '#a78bfa', '#f87171', '#fb923c'] }] },
-                options: { responsive: true, maintainAspectRatio: false }
+            new Chart(document.getElementById('roleChart').getContext('2d'), {
+                type: 'doughnut', data: { labels: <?php echo json_encode(array_keys($roleData)); ?>, datasets: [{ label: 'Jumlah Pengguna', data: <?php echo json_encode(array_values($roleData)); ?>, backgroundColor: ['#34d399', '#60a5fa', '#facc15', '#a78bfa', '#f87171'] }] }, options: { responsive: true, maintainAspectRatio: false }
             });
         }
-        
-        const totalTiket = <?php echo $analisisPendapatan['total_tiket'] ?? 0; ?>;
-        const totalLayanan = <?php echo $analisisPendapatan['total_layanan'] ?? 0; ?>;
         if (document.getElementById('analisisPendapatanChart')) {
-            const ctxAnalisis = document.getElementById('analisisPendapatanChart').getContext('2d');
-            new Chart(ctxAnalisis, {
-                type: 'doughnut', data: { labels: ['Pendapatan Tiket', 'Pendapatan Layanan'], datasets: [{ data: [totalTiket, totalLayanan], backgroundColor: ['#36A2EB', '#FFCE56'] }] },
-                options: { responsive: true, maintainAspectRatio: false }
+            new Chart(document.getElementById('analisisPendapatanChart').getContext('2d'), {
+                type: 'doughnut', data: { labels: ['Pendapatan Tiket', 'Pendapatan Layanan'], datasets: [{ data: [<?php echo $analisisPendapatan['total_tiket'] ?? 0; ?>, <?php echo $analisisPendapatan['total_layanan'] ?? 0; ?>], backgroundColor: ['#36A2EB', '#FFCE56'] }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: function(context) { return context.label + ': ' + new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(context.raw); } } } } }
             });
         }
     });
