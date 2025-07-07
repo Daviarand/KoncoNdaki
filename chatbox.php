@@ -167,93 +167,101 @@ Jawab dalam bahasa Indonesia yang ramah dan informatif dengan struktur yang rapi
                         <h1>KoncoNdaki AI Assistant</h1>
                         <p>Asisten pintar untuk petualangan Anda</p>
                     </div>
-                </div>
-                <div class="header-decoration">
-                    <div class="mountain-silhouette"></div>
-                </div>
-            </div>
-        </header>
-        
-        <div class="chat-container">
-            <!-- Category Selection -->
-            <div class="category-selection" id="categorySelection">
-                <div class="welcome-message">
-                    <div class="welcome-icon">👋</div>
-                    <h3>Selamat datang di KoncoNdaki AI!</h3>
-                    <p>Pilih kategori untuk memulai percakapan dengan asisten AI kami</p>
-                </div>
-                <div class="category-buttons">
-                    <button class="category-btn" data-category="rekomendasi">
-                        <div class="category-icon">💡</div>
-                        <div class="category-content">
-                            <h4>Rekomendasi</h4>
-                            <p>Dapatkan saran terbaik untuk perjalanan dan aktivitas outdoor</p>
-                            <div class="category-features">
-                                <span>• Rekomendasi gunung</span>
-                                <span>• Tips perjalanan</span>
-                                <span>• Saran peralatan</span>
-                            </div>
-                        </div>
-                        <div class="category-arrow">→</div>
-                    </button>
-                    <button class="category-btn" data-category="prediksi">
-                        <div class="category-icon">🔮</div>
-                        <div class="category-content">
-                            <h4>Prediksi</h4>
-                            <p>Analisis dan prediksi untuk perencanaan yang lebih baik</p>
-                            <div class="category-features">
-                                <span>• Prediksi cuaca</span>
-                                <span>• Analisis kondisi</span>
-                                <span>• Estimasi waktu</span>
-                            </div>
-                        </div>
-                        <div class="category-arrow">→</div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Chat Box -->
-            <div class="chat-box" id="chatBox" style="display: none;">
-                <div class="category-header" id="categoryHeader">
-                    <div class="category-info">
-                        <span class="category-badge" id="categoryBadge"></span>
-                        <span class="online-status">
-                            <div class="status-dot"></div>
-                            AI Online
-                        </span>
+                    
+                    <div class="header-decoration">
+                        <div class="mountain-silhouette"></div>
                     </div>
-                    <button class="change-category-btn" id="changeCategoryBtn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 12h18m-9-9l9 9-9 9"/>
-                        </svg>
-                        Ganti Kategori
-                    </button>
                 </div>
-                <div class="messages-container" id="messagesContainer">
-                    <!-- Messages will be added here -->
+            </header>
+        
+            <div class="chat-container">
+                <!-- Category Selection -->
+                <div class="category-selection" id="categorySelection">
+                    <div class="welcome-message">
+                        <div class="welcome-icon">👋</div>
+                        <h3>Selamat datang di KoncoNdaki AI!</h3>
+                        <p>Pilih kategori untuk memulai percakapan dengan asisten AI kami</p>
+                    </div>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="rekomendasi">
+                            <div class="category-icon">💡</div>
+                            <div class="category-content">
+                                <h4>Rekomendasi</h4>
+                                <p>Dapatkan saran terbaik untuk perjalanan dan aktivitas outdoor</p>
+                                <div class="category-features">
+                                    <span>• Rekomendasi gunung</span>
+                                    <span>• Tips perjalanan</span>
+                                    <span>• Saran peralatan</span>
+                                </div>
+                            </div>
+                            <div class="category-arrow">→</div>
+                        </button>
+                        <button class="category-btn" data-category="prediksi">
+                            <div class="category-icon">🔮</div>
+                            <div class="category-content">
+                                <h4>Prediksi</h4>
+                                <p>Analisis dan prediksi untuk perencanaan yang lebih baik</p>
+                                <div class="category-features">
+                                    <span>• Prediksi cuaca</span>
+                                    <span>• Analisis kondisi</span>
+                                    <span>• Estimasi waktu</span>
+                                </div>
+                            </div>
+                            <div class="category-arrow">→</div>
+                        </button>
+                    </div>
+                    <div class="dashboard-navigation">
+                        <button onclick="window.location.href='dashboard.php'" class="dashboard-btn-proper">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5m7-7l-7 7 7 7"/>
+                            </svg>
+                            <span>Kembali</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Input Area -->
-            <div class="input-area" id="inputArea" style="display: none;">
-                <div class="input-wrapper">
-                    <input type="text" id="userInput" placeholder="Ketik pesan Anda di sini..." disabled>
-                    <button id="sendButton" disabled>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22,2 15,22 11,13 2,9"></polygon>
-                        </svg>
-                    </button>
+
+                <!-- Chat Box -->
+                <div class="chat-box" id="chatBox" style="display: none;">
+                    <div class="category-header" id="categoryHeader">
+                        <div class="category-info">
+                            <span class="category-badge" id="categoryBadge"></span>
+                            <span class="online-status">
+                                <div class="status-dot"></div>
+                                AI Online
+                            </span>
+                        </div>
+                        <button class="change-category-btn" id="changeCategoryBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12h18m-9-9l9 9-9 9"/>
+                            </svg>
+                            Ganti Kategori
+                        </button>
+                    </div>
+                    <div class="messages-container" id="messagesContainer">
+                        <!-- Messages will be added here -->
+                    </div>
                 </div>
-                <div class="input-suggestions">
-                    <span class="suggestion-chip" data-text="Rekomendasi gunung untuk pemula">Gunung untuk pemula</span>
-                    <span class="suggestion-chip" data-text="Tips persiapan mendaki">Tips persiapan</span>
-                    <span class="suggestion-chip" data-text="Peralatan wajib pendakian">Peralatan wajib</span>
+                
+                <!-- Input Area -->
+                <div class="input-area" id="inputArea" style="display: none;">
+                    <div class="input-wrapper">
+                        <input type="text" id="userInput" placeholder="Ketik pesan Anda di sini..." disabled>
+                        <button id="sendButton" disabled>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="input-suggestions">
+                        <span class="suggestion-chip" data-text="Rekomendasi gunung untuk pemula">Gunung untuk pemula</span>
+                        <span class="suggestion-chip" data-text="Tips persiapan mendaki">Tips persiapan</span>
+                        <span class="suggestion-chip" data-text="Peralatan wajib pendakian">Peralatan wajib</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="scripts/chatbox.js"></script>
-</body>
-</html>
+        <script src="scripts/chatbox.js"></script>
+    </body>
+    </html>

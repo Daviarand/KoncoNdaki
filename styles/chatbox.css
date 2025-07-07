@@ -124,6 +124,87 @@ body {
   clip-path: polygon(0% 100%, 25% 60%, 50% 80%, 75% 40%, 100% 70%, 100% 100%);
 }
 
+.dashboard-navigation {
+  margin-top: 40px;
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 0;
+  animation: slideInLeft 0.8s ease;
+}
+
+.dashboard-btn-proper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary-green);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  position: relative;
+  overflow: hidden;
+  margin-left: 0;
+}
+
+.dashboard-btn-proper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--primary-green-dark);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dashboard-btn-proper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.dashboard-btn-proper:hover::before {
+  opacity: 1;
+}
+
+.dashboard-btn-proper:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.dashboard-btn-proper svg,
+.dashboard-btn-proper span {
+  position: relative;
+  z-index: 1;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-btn-proper:hover svg {
+  transform: translateX(-2px);
+}
+
+.dashboard-btn-proper:active svg,
+.dashboard-btn-proper:active span {
+  transform: scale(0.95);
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .chat-container {
   padding: 40px;
   min-height: 600px;
@@ -587,6 +668,46 @@ body {
 
   .logo-text h1 {
     font-size: 1.8rem;
+  }
+
+  .dashboard-navigation {
+    justify-content: flex-start;
+    margin-top: 30px;
+    padding-left: 0;
+  }
+
+  .dashboard-btn-proper {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    gap: 10px;
+  }
+
+  .dashboard-btn-proper svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-title {
+    font-size: 1rem;
+  }
+
+  .btn-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .btn-icon {
+    padding: 10px;
+  }
+
+  .dashboard-btn {
+    font-size: 0.85rem;
+    padding: 10px 16px;
+    gap: 8px;
+  }
+
+  .dashboard-btn svg {
+    width: 16px;
+    height: 16px;
   }
 
   .chat-container {
