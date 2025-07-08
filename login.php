@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = 'Email dan password harus diisi';
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name FROM users WHERE email = ?");
+            //  MODIFIKASI 1: Ambil juga kolom 'gunung_id'
+            $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name, gunung_id FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -25,41 +26,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
 
-                // Logika tambahan untuk pengelola gunung
-                if ($user['role'] === 'pengelola_gunung') {
-                    $stmtGunung = $pdo->prepare("SELECT id, nama_gunung FROM gunung WHERE admin_id = ?");
-                    $stmtGunung->execute([$user['id']]);
-                    $gunung = $stmtGunung->fetch();
-                    if ($gunung) {
-                        $_SESSION['gunung_id'] = $gunung['id'];
-                        $_SESSION['nama_gunung'] = $gunung['nama_gunung'];
-                    } else {
-                        $error_message = "Akun pengelola Anda tidak terhubung ke gunung manapun.";
-                        session_destroy();
-                        header('Location: login.php');
-                        exit;
-                    }
-                }
-
-                // Redirect sesuai role
+                // Logika pengalihan berdasarkan peran
                 switch ($user['role']) {
                     case 'admin':
-                // Arahkan Super Admin ke admin.php
+                        // LOGIKA ADMIN TETAP SAMA
                         header('Location: admin.php');
                         exit;
+
                     case 'pengelola_gunung':
-                // Arahkan Admin Pengelola ke dashboard-pengelola.php
-                    header('Location: dashboard-pengelola.php');
-                        exit;
-                    case 'layanan': // Menggabungkan semua peran layanan
+                        // LOGIKA PENGELOLA GUNUNG TETAP SAMA
+                        $stmtGunung = $pdo->prepare("SELECT id, nama_gunung FROM gunung WHERE admin_id = ?");
+                        $stmtGunung->execute([$user['id']]);
+                        $gunung = $stmtGunung->fetch();
+                        if ($gunung) {
+                            $_SESSION['gunung_id'] = $gunung['id'];
+                            $_SESSION['nama_gunung'] = $gunung['nama_gunung'];
+                            header('Location: dashboard-pengelola.php');
+                            exit;
+                        } else {
+                            session_destroy();
+                            $error_message = "Akun pengelola Anda tidak terhubung ke gunung manapun.";
+                            break;
+                        }
+
+                    // MODIFIKASI 2: Logika baru yang lebih sederhana untuk semua peran layanan
+                    case 'layanan':
                     case 'porter':
                     case 'guide':
                     case 'ojek':
                     case 'basecamp':
-                        header('Location: dashboard-layanan.php');
-                        exit;
+                        // Cek apakah kolom 'gunung_id' untuk layanan ini sudah diisi
+                        if (!empty($user['gunung_id'])) {
+                            // Ambil nama gunung untuk disimpan di session
+                            $stmtNamaGunung = $pdo->prepare("SELECT nama_gunung FROM gunung WHERE id = ?");
+                            $stmtNamaGunung->execute([$user['gunung_id']]);
+                            $gunungLayanan = $stmtNamaGunung->fetch();
+
+                            // Set session spesifik untuk layanan dan langsung redirect
+                            $_SESSION['layanan_gunung_id'] = $user['gunung_id'];
+                            $_SESSION['nama_gunung_layanan'] = $gunungLayanan['nama_gunung'] ?? 'Gunung';
+                            header('Location: dashboard-layanan.php');
+                            exit;
+                        } else {
+                            // Jika penyedia layanan tidak ditugaskan ke gunung manapun
+                            session_destroy();
+                            $error_message = "Akun layanan Anda belum ditugaskan ke gunung manapun.";
+                            break;
+                        }
+
                     case 'pendaki':
                     default:
+                        // LOGIKA PENDAKI TETAP SAMA
                         header('Location: dashboard.php');
                         exit;
                 }
@@ -122,7 +139,7 @@ ob_end_flush();
                         </div>
                         <?php endif; ?>
 
-                        <form method="POST" action="" class="login-form">
+                        <form method="POST" action="login.php" class="login-form">
                             <div class="form-group">
                                 <label for="email">Email</label>
                                 <div class="input-group">

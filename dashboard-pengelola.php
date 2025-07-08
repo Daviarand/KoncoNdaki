@@ -2,17 +2,19 @@
 session_start();
 require_once 'config/database.php';
 
-// Keamanan: Hanya Admin Pengelola Gunung yang bisa mengakses file ini
+// Keamanan: Memastikan hanya pengelola gunung yang sudah login dan memiliki ID gunung yang bisa mengakses. Ini sudah benar.
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'pengelola_gunung' || !isset($_SESSION['gunung_id'])) {
     header('Location: login.php');
     exit;
 }
 
+// Mengambil data sesi yang sudah di-set saat login. Ini adalah cara yang tepat untuk membedakan dashboard.
 $gunungDikelolaId = $_SESSION['gunung_id'];
 $namaGunungDikelola = $_SESSION['nama_gunung'] ?? 'Gunung';
 $pageTitle = "Dashboard Pengelola " . htmlspecialchars($namaGunungDikelola);
 
-// Query untuk mengambil data booking yang memerlukan tindakan
+// Query untuk mengambil data booking. Klausa "WHERE p.tiket_id = :gunung_id" sudah benar,
+// memastikan hanya booking untuk gunung ini yang ditampilkan.
 $queryBooking = "
     SELECT 
         p.id, 
@@ -44,6 +46,8 @@ $stmtBooking->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
 $stmtBooking->execute();
 $bookings = $stmtBooking->fetchAll(PDO::FETCH_ASSOC);
 
+// Query untuk mengambil data partner. Klausa "AND gunung_id = :gunung_id" sudah benar untuk model one-to-one.
+// Ini akan mengambil user layanan yang kolom `gunung_id`-nya cocok dengan gunung yang dikelola.
 $queryPartners = "
     SELECT id, first_name, last_name, role AS tipe_partner 
     FROM users 
@@ -55,14 +59,13 @@ $stmtPartners->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
 $stmtPartners->execute();
 $allPartners = $stmtPartners->fetchAll(PDO::FETCH_ASSOC);
 
-// Kelompokkan partner berdasarkan tipenya agar mudah diakses oleh JavaScript
+// Mengelompokkan partner berdasarkan tipe untuk dropdown notifikasi. Logika ini sudah benar.
 $partnersByTipe = [
     'ojek' => [],
     'porter' => [],
     'guide' => [],
     'basecamp' => []
 ];
-
 foreach ($allPartners as $partner) {
     $tipe = $partner['tipe_partner'];
     if (isset($partnersByTipe[$tipe])) {
@@ -73,66 +76,7 @@ foreach ($allPartners as $partner) {
     }
 }
 
-$queryPartner = "
-    SELECT l.nama_layanan, COUNT(pl.id) AS total_pesanan
-    FROM pemesanan_layanan pl
-    JOIN layanan l ON pl.layanan_id = l.id
-    JOIN pemesanan p ON pl.pemesanan_id = p.id
-    WHERE p.tiket_id = :gunung_id 
-      AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE())
-      AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())
-    GROUP BY l.nama_layanan
-";
-$stmtPartner = $pdo->prepare($queryPartner);
-$stmtPartner->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
-$stmtPartner->execute();
-$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_ASSOC);
-
-$partnerLabels = [];
-$partnerData = [];
-foreach ($partnerStats as $stat) {
-    $partnerLabels[] = ucfirst($stat['nama_layanan']);
-    $partnerData[] = $stat['total_pesanan'];
-}
-
-// --- DATA UNTUK GRAFIK BOOKING SELESAI PER BULAN (12 BULAN TERAKHIR) ---
-$queryMonthly = "
-    SELECT 
-        YEAR(tanggal_pemesanan) as tahun, 
-        MONTH(tanggal_pemesanan) as bulan, 
-        COUNT(id) as total_booking
-    FROM pemesanan
-    WHERE tiket_id = :gunung_id 
-      AND status_pemesanan = 'complete'
-      AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-    GROUP BY tahun, bulan
-    ORDER BY tahun, bulan ASC
-";
-$stmtMonthly = $pdo->prepare($queryMonthly);
-$stmtMonthly->bindParam(':gunung_id', $gunungDikelolaId, PDO::PARAM_INT);
-$stmtMonthly->execute();
-$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
-
-$monthlyLabels = [];
-$monthlyData = [];
-// Inisialisasi 12 bulan terakhir agar grafik tidak kosong
-for ($i = 11; $i >= 0; $i--) {
-    $date = new DateTime("first day of -$i month");
-    $monthlyLabels[] = $date->format('M Y');
-    $monthlyData[$date->format('Y-n')] = 0;
-}
-// Isi dengan data dari database
-foreach ($monthlyStats as $stat) {
-    $key = $stat['tahun'] . '-' . $stat['bulan'];
-    if (isset($monthlyData[$key])) {
-        $monthlyData[$key] = $stat['total_booking'];
-    }
-}
-$monthlyData = array_values($monthlyData);
-
-// ... (kode session_start, require_once, dan info pengelola) ...
-
-// --- PERSIAPAN DATA UNTUK 3 GRAFIK ---
+// --- PERSIAPAN DATA UNTUK GRAFIK (Semua query sudah benar memfilter berdasarkan ID gunung) ---
 
 // 1. Data untuk Pie Chart Partner Bulan Ini
 $stmtPartner = $pdo->prepare("
@@ -144,9 +88,9 @@ $stmtPartner = $pdo->prepare("
     GROUP BY l.nama_layanan
 ");
 $stmtPartner->execute([$gunungDikelolaId]);
-$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR); // Hasilnya: ['guide' => 5, 'porter' => 3]
+$partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// 2. Data untuk Bar Chart Booking Selesai & Line Chart Jumlah Pendaki (12 bulan terakhir)
+// 2. Data untuk Bar Chart dan Line Chart (12 bulan terakhir)
 $stmtMonthly = $pdo->prepare("
     SELECT 
         DATE_FORMAT(tanggal_pemesanan, '%b %Y') as bulan, 
@@ -206,15 +150,14 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
 
             <section id="dashboard" class="section active">
                 <div class="section-header"><h2>Ringkasan <?php echo htmlspecialchars($_SESSION['nama_gunung']); ?></h2></div>
-    
                 <div class="charts-container">
                     <div class="chart-wrapper">
                         <h3>Pesanan Partner Bulan Ini</h3>
-                    <canvas id="partnerPieChart"></canvas>
+                        <canvas id="partnerPieChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
-                            <h3>Booking Selesai per Bulan</h3>
-                            <canvas id="monthlyBarChart"></canvas>
+                        <h3>Booking Selesai per Bulan</h3>
+                        <canvas id="monthlyBarChart"></canvas>
                     </div>
                     <div class="chart-wrapper">
                         <h3>Jumlah Pendaki per Bulan</h3>
@@ -253,40 +196,34 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                                         <td class="actions-cell">
                                             <?php if ($booking['status_pemesanan'] == 'pending'): ?>
                                                 <form action="update_status.php" method="POST" style="display:inline;">
-                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
-                                                <input type="hidden" name="new_status" value="in progress">
-                                                <button type="submit" class="btn-action btn-verify" title="Verifikasi">Verifikasi</button>
-                                        </form>
-                                            <form action="update_status.php" method="POST" style="display:inline;">
-                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
-                                                <input type="hidden" name="new_status" value="rejected">
-                                                <button type="submit" class="btn-action btn-reject" title="Tolak" onclick="return confirm('Yakin tolak pesanan ini?');">Tolak</button>
-                                        </form>
-
-                                        <?php elseif ($booking['status_pemesanan'] == 'in progress'): ?>
-                                            <?php if (!empty($booking['layanan_dipesan'])): ?>
-                                                <button type="button" class="btn-action btn-notify btn-kirim-notif" 
-                                                        title="Kirim Notifikasi ke Partner"
-                                                        data-kode-booking="<?php echo htmlspecialchars($booking['kode_booking']); ?>"
-                                                        data-nama-pendaki="<?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?>"
-                                                        data-layanan="<?php echo htmlspecialchars($booking['layanan_dipesan']); ?>">
-                                                    <i class="fas fa-bell"></i> Kirim Notif
-                                                </button>
-                                        <?php else: ?>
-                                            <form action="update_status.php" method="POST" style="display:inline;">
-                                            <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
-                                            <input type="hidden" name="new_status" value="complete">
-                                            <button type="submit" class="btn-action btn-complete" title="Selesaikan">Selesaikan</button>
-                                        </form>
-                                        <?php endif; ?>
+                                                    <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                    <input type="hidden" name="new_status" value="in progress">
+                                                    <button type="submit" class="btn-action btn-verify" title="Verifikasi">Verifikasi</button>
+                                                </form>
                                                 <form action="update_status.php" method="POST" style="display:inline;">
-                                                <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
-                                                <input type="hidden" name="new_status" value="complete">
-                                                <button type="submit" class="btn-action btn-complete" title="Selesaikan Pesanan">
-                                                <i class="fas fa-flag-checkered"></i>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
+                                                    <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                    <input type="hidden" name="new_status" value="rejected">
+                                                    <button type="submit" class="btn-action btn-reject" title="Tolak" onclick="return confirm('Yakin tolak pesanan ini?');">Tolak</button>
+                                                </form>
+
+                                            <?php elseif ($booking['status_pemesanan'] == 'in progress'): ?>
+                                                <?php if (!empty($booking['layanan_dipesan'])): ?>
+                                                    <button type="button" class="btn-action btn-notify btn-kirim-notif" 
+                                                            title="Kirim Notifikasi ke Partner"
+                                                            data-kode-booking="<?php echo htmlspecialchars($booking['kode_booking']); ?>"
+                                                            data-nama-pendaki="<?php echo htmlspecialchars($booking['first_name'] . ' ' . $booking['last_name']); ?>"
+                                                            data-layanan="<?php echo htmlspecialchars($booking['layanan_dipesan']); ?>">
+                                                        <i class="fas fa-bell"></i> Kirim Notif
+                                                    </button>
+                                                <?php endif; ?>
+                                                <form action="update_status.php" method="POST" style="display:inline;">
+                                                    <input type="hidden" name="pemesanan_id" value="<?php echo $booking['id']; ?>">
+                                                    <input type="hidden" name="new_status" value="complete">
+                                                    <button type="submit" class="btn-action btn-complete" title="Selesaikan Pesanan">
+                                                        <i class="fas fa-flag-checkered"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -310,19 +247,16 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                                 <option value="basecamp">⛺ Basecamp</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="pilihPartner">Pilih Partner Spesifik:</label>
                             <select id="pilihPartner" name="partner_id" required disabled>
                                 <option value="">-- Pilih Tipe Dulu --</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label for="pesanNotifikasi">Pesan Notifikasi:</label>
                             <textarea id="pesanNotifikasi" name="pesan" rows="5" required placeholder="Contoh: Tolong jemput 2 pendaki di Basecamp Bromo besok jam 5 pagi. Kode Booking: KNCD-XXXXXX"></textarea>
                         </div>
-
                         <div class="form-actions">
                             <button type="submit" class="btn-submit">Kirim Notifikasi</button>
                         </div>
@@ -338,27 +272,22 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                             <label for="firstName">Nama Depan</label>
                             <input type="text" id="firstName" name="first_name" required>
                         </div>
-
                         <div class="form-group">
                             <label for="lastName">Nama Belakang</label>
                             <input type="text" id="lastName" name="last_name">
                         </div>
-
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" id="email" name="email" required>
                         </div>
-
                         <div class="form-group">
                             <label for="phone">Telepon</label>
                             <input type="tel" id="phone" name="phone" required>
                         </div>
-
                         <div class="form-group">
                             <label for="password">Password</label>
                             <input type="password" id="password" name="password" required>
                         </div>
-
                         <div class="form-group">
                             <label for="addTipePartner">Jenis Partner</label>
                             <select id="addTipePartner" name="tipe_partner" required>
@@ -369,12 +298,10 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                                 <option value="basecamp">Basecamp</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label>Ditugaskan ke Gunung</label>
                             <input type="text" value="<?php echo htmlspecialchars($_SESSION['nama_gunung']); ?>" disabled>
                         </div>
-
                         <div class="form-actions">
                             <button type="submit" class="btn-submit">Buat Akun</button>
                         </div>
@@ -387,26 +314,23 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
         const allPartnersData = <?php echo json_encode($partnersByTipe); ?>;
     </script>
     <script src="scripts/dashboard-nav.js"></script>
-    
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Data dari PHP ---
+        // --- Data dari PHP untuk Charts ---
         const partnerLabels = <?php echo json_encode(array_keys($partnerStats)); ?>;
         const partnerData = <?php echo json_encode(array_values($partnerStats)); ?>;
         const monthlyLabels = <?php echo json_encode($monthlyLabels); ?>;
         const monthlyBookingData = <?php echo json_encode($monthlyBookingData); ?>;
         const monthlyClimberData = <?php echo json_encode($monthlyClimberData); ?>;
-
-        // --- Palet Warna ---
         const chartColors = ['#22c55e', '#f97316', '#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b'];
 
-        // --- 1. Grafik Lingkaran (Pie Chart) untuk Pesanan Partner ---
+        // --- Inisialisasi Grafik (Charts.js) ---
         const partnerPieCtx = document.getElementById('partnerPieChart');
         if (partnerPieCtx && partnerData.length > 0) {
             new Chart(partnerPieCtx, {
                 type: 'pie',
                 data: {
-                    labels: partnerLabels.map(label => label.charAt(0).toUpperCase() + label.slice(1)), // Membuat huruf pertama kapital
+                    labels: partnerLabels.map(label => label.charAt(0).toUpperCase() + label.slice(1)),
                     datasets: [{
                         label: 'Jumlah Pesanan',
                         data: partnerData,
@@ -415,24 +339,12 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                         borderWidth: 2
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: false,
-                            text: 'Pesanan Partner Bulan Ini'
-                        }
-                    }
-                }
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
             });
         } else if (partnerPieCtx) {
              partnerPieCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Tidak ada data pesanan partner bulan ini.</div>';
         }
 
-        // --- 2. Grafik Batang (Bar Chart) untuk Booking Selesai per Bulan ---
         const monthlyBarCtx = document.getElementById('monthlyBarChart');
         if (monthlyBarCtx && monthlyBookingData.length > 0) {
             new Chart(monthlyBarCtx, {
@@ -448,29 +360,12 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                         borderRadius: 5
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0 // Menampilkan angka bulat di sumbu Y
-                            }
-                        }
-                    }
-                }
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
             });
         } else if (monthlyBarCtx) {
              monthlyBarCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Belum ada data booking selesai.</div>';
         }
 
-
-        // --- 3. Grafik Garis (Line Chart) untuk Jumlah Pendaki per Bulan ---
         const climbersLineCtx = document.getElementById('climbersLineChart');
         if (climbersLineCtx && monthlyClimberData.length > 0) {
             new Chart(climbersLineCtx, {
@@ -483,32 +378,15 @@ $monthlyClimberData = array_column($monthlyStats, 'total_pendaki');
                         fill: true,
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         borderColor: '#3b82f6',
-                        tension: 0.3 // Membuat garis lebih melengkung
+                        tension: 0.3
                     }]
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                             ticks: {
-                                precision: 0
-                            }
-                        }
-                    }
-                }
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
             });
         } else if (climbersLineCtx) {
             climbersLineCtx.parentNode.innerHTML = '<div style="text-align:center; padding: 20px;">Belum ada data jumlah pendaki.</div>';
         }
-
     });
     </script>
-    
 </body>
 </html>
