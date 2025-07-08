@@ -119,10 +119,150 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Pemesanan Tiket Gunung - KoncoNdaki</title>
     <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/dashboard-styles.css">
     <link rel="stylesheet" href="styles/form-pemesanan.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <div class="nav-content">
+                <!-- Logo -->
+                <div class="logo">
+                    <a href="dashboard.php">
+                        <img src="images/logo.png" alt="KoncoNdaki Logo" width="120" height="40">
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="nav-links desktop-nav" role="menubar">
+                    <a href="dashboard.php" class="nav-link" role="menuitem">Home</a>
+                    <a href="info-gunung.php" class="nav-link" role="menuitem">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="nav-link" role="menuitem">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="nav-link" role="menuitem">Diskusi</a>
+                    <a href="tentang.php" class="nav-link" role="menuitem">Tentang</a>
+                </div>
+
+                <!-- User Profile -->
+                <div class="user-profile desktop-nav">
+                    <div class="profile-dropdown">
+                        <button class="profile-btn" id="profileBtn" aria-expanded="false" aria-haspopup="true">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                            </div>
+                            <span class="profile-name" id="profileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </span>
+                            <i class="fas fa-chevron-down profile-arrow" aria-hidden="true"></i>
+                        </button>
+
+                        <div class="profile-menu" id="profileMenu" role="menu" aria-labelledby="profileBtn">
+                            <div class="profile-header">
+                                <div class="profile-avatar large">
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                </div>
+                                <div class="profile-info">
+                                    <h4 id="menuProfileName">
+                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                    </h4>
+                                    <p id="menuProfileEmail">
+                                        <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="profile-menu-items">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
+                                    <i class="fas fa-user-circle" aria-hidden="true"></i>
+                                    <span>Profile Saya</span>
+                                </a>
+                                <a href="chatbox.php" class="profile-menu-item" role="menuitem">
+                                    <i class="fas fa-comment-alt" aria-hidden="true"></i>
+                                    <span>KoncoNdaki Assistant</span>
+                                </a>
+                                <a href="#" class="profile-menu-item" role="menuitem">
+                                    <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+                                    <span>Tiket Saya</span>
+                                </a>
+                                <a href="#" class="profile-menu-item" role="menuitem">
+                                    <i class="fas fa-history" aria-hidden="true"></i>
+                                    <span>Riwayat Pemesanan</span>
+                                </a>
+                                <a href="#" class="profile-menu-item" role="menuitem">
+                                    <i class="fas fa-cog" aria-hidden="true"></i>
+                                    <span>Pengaturan</span>
+                                </a>
+                                <div class="profile-menu-divider" role="separator"></div>
+                                <a href="#" class="profile-menu-item logout" id="logoutBtn" role="menuitem">
+                                    <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                                    <span>Keluar</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <button class="mobile-menu-btn" aria-expanded="false" aria-controls="mobile-nav" aria-label="Toggle mobile menu">
+                    <i class="fas fa-bars" id="menu-icon" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation -->
+            <div class="mobile-nav" id="mobile-nav" role="menu">
+                <div class="mobile-nav-content">
+                    <!-- Mobile Profile Header -->
+                    <div class="mobile-profile-header">
+                        <div class="profile-avatar">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h4 id="mobileProfileName">
+                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                            </h4>
+                            <p id="mobileProfileEmail">
+                                <?php echo htmlspecialchars($_SESSION['email']); ?>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <a href="dashboard.php" class="mobile-nav-link" role="menuitem">Home</a>
+                    <a href="info-gunung.php" class="mobile-nav-link" role="menuitem">Info Gunung</a>
+                    <a href="cara-pemesanan.php" class="mobile-nav-link" role="menuitem">Cara Pemesanan</a>
+                    <a href="diskusi.php" class="mobile-nav-link" role="menuitem">Diskusi</a>
+                    <a href="tentang.php" class="mobile-nav-link" role="menuitem">Tentang</a>
+                    
+                    <div class="mobile-profile-menu">
+                        <a href="profile.php" class="mobile-nav-link" role="menuitem">
+                            <i class="fas fa-user-circle" aria-hidden="true"></i>
+                            Profile Saya
+                        </a>
+                        <a href="chatbox.php" class="mobile-nav-link" role="menuitem">
+                            <i class="fas fa-comment-alt" aria-hidden="true"></i>
+                            KoncoNdaki Assistant
+                        </a>
+                        <a href="#" class="mobile-nav-link" role="menuitem">
+                            <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+                            Tiket Saya
+                        </a>
+                        <a href="#" class="mobile-nav-link" role="menuitem">
+                            <i class="fas fa-history" aria-hidden="true"></i>
+                            Riwayat Pemesanan
+                        </a>
+                        <a href="#" class="mobile-nav-link" role="menuitem">
+                            <i class="fas fa-cog" aria-hidden="true"></i>
+                            Pengaturan
+                        </a>
+                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn" role="menuitem">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            Keluar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
     <section class="booking-form-section">
         <div class="container">
             <div class="booking-layout">
@@ -168,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <h4>Metode Pembayaran</h4>
                                 <div class="payment-options"><div class="payment-option"><input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked><label for="bank_transfer"><i class="fas fa-university"></i> Transfer Bank</label></div></div>
                             </div>
-                            <div class="terms-agreement"><label class="checkbox-container"><input type="checkbox" id="agreeTerms" required><span class="checkmark"></span> Saya setuju dengan syarat & ketentuan</label></div>
+                            <div class="terms-agreement"><label class="checkbox-container"><input type="checkbox" id="agreeTerms" required><span class="checkmark"></span> Saya setuju dengan <a href="syarat-ketentuan.php" target="_blank">syarat & ketentuan</a></label></div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep4"><i class="fas fa-arrow-left"></i> Kembali</button><button type="submit" class="btn-submit" id="submitBooking" disabled>Bayar Sekarang</button></div>
                         </div>
                     </form>
@@ -179,6 +319,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </section>
+
     <script src="scripts/form-pemesanan.js"></script>
+    <script src="scripts/tentang.js"></script>
 </body>
 </html>
