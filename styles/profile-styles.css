@@ -350,7 +350,7 @@
         background: #111827;
     }
     
-    .profile-header,
+    .profile-page-header,
     .profile-form-container {
         background: #1f2937;
         color: white;
@@ -835,6 +835,7 @@
     transition: all 0.3s ease;
     background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
     font-weight: 500;
+    color: #1f2937;
   }
   
   .form-group input:focus,
