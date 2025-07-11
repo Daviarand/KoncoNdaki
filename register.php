@@ -186,8 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label class="checkbox-container">
                                     <input type="checkbox" id="terms" required>
                                     <span class="checkmark"></span>
-                                    Saya setuju dengan <a href="#"> Syarat & Ketentuan </a> dan <a href="#"> Kebijakan
-                                        Privasi</a>
+                                    Saya setuju dengan <a href="syarat-ketentuan.php"> Syarat & Ketentuan </a>
                                 </label>
                             </div>
 
