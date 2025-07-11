@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2025 at 11:41 AM
+-- Generation Time: Jul 11, 2025 at 09:30 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -192,7 +192,9 @@ INSERT INTO `notifikasi` (`id`, `penerima_id`, `gunung_id`, `pengirim_id`, `judu
 (1, 15, 2, 9, 'Tugas Baru untuk Anda (Porter)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-A668B5\r\n- Nama Pemesan: Annuru Wulandari\r\n- Layanan yang Dibutuhkan: porter\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:06:45'),
 (2, 15, 2, 9, 'Tugas Baru untuk Anda (Porter)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-A668B5\r\n- Nama Pemesan: Annuru Wulandari\r\n- Layanan yang Dibutuhkan: porter\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:06:59'),
 (3, 19, 3, 10, 'Tugas Baru untuk Anda (Basecamp)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-88B641\r\n- Nama Pemesan: Daviar Andrianoe\r\n- Layanan yang Dibutuhkan: basecamp\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:33:26'),
-(4, 16, 1, 8, 'Tugas Baru untuk Anda (Ojek)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-F0C9C4\r\n- Nama Pemesan: Annuru Wulandari\r\n- Layanan yang Dibutuhkan: ojek\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:35:53');
+(4, 16, 1, 8, 'Tugas Baru untuk Anda (Ojek)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-F0C9C4\r\n- Nama Pemesan: Annuru Wulandari\r\n- Layanan yang Dibutuhkan: ojek\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:35:53'),
+(5, 17, 2, 9, 'Tugas Baru untuk Anda (Ojek)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-960141\r\n- Nama Pemesan: Daviar Andrianoe\r\n- Layanan yang Dibutuhkan: ojek\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:48:23'),
+(6, 20, 2, 9, 'Tugas Baru untuk Anda (Ojek)', 'Pemberitahuan Tugas Baru:\r\n- Kode Booking: KNCD-956929\r\n- Nama Pemesan: Daviar Andrianoe\r\n- Layanan yang Dibutuhkan: ojek\r\n\r\nMohon segera persiapkan layanan sesuai detail pesanan. Terima kasih.', '', NULL, 'belum', '2025-07-08 09:48:32');
 
 -- --------------------------------------------------------
 
@@ -268,7 +270,9 @@ INSERT INTO `pemesanan` (`id`, `user_id`, `tiket_id`, `kode_booking`, `tanggal_p
 (12, 12, 3, 'KNCD-72D25A', '2025-08-01', '2025-08-02', 1, 45000.00, 150000.00, 195000.00, 'in progress', '2025-07-08 08:51:03'),
 (13, 12, 4, 'KNCD-46FF4C', '2025-07-09', '2025-07-10', 1, 30000.00, 50000.00, 80000.00, 'pending', '2025-07-08 08:51:16'),
 (14, 14, 3, 'KNCD-88B641', '2025-07-17', '2025-07-18', 1, 45000.00, 150000.00, 195000.00, 'in progress', '2025-07-08 09:05:12'),
-(15, 12, 1, 'KNCD-F0C9C4', '2025-07-17', '2025-07-18', 1, 35000.00, 50000.00, 85000.00, 'in progress', '2025-07-08 09:35:27');
+(15, 12, 1, 'KNCD-F0C9C4', '2025-07-17', '2025-07-18', 1, 35000.00, 50000.00, 85000.00, 'in progress', '2025-07-08 09:35:27'),
+(16, 14, 2, 'KNCD-960141', '2025-07-16', '2025-07-17', 1, 25000.00, 50000.00, 75000.00, 'in progress', '2025-07-08 09:47:05'),
+(17, 14, 2, 'KNCD-956929', '2025-07-26', '2025-07-27', 2, 50000.00, 100000.00, 150000.00, 'in progress', '2025-07-08 09:47:37');
 
 -- --------------------------------------------------------
 
@@ -340,7 +344,9 @@ INSERT INTO `pemesanan_layanan` (`id`, `pemesanan_id`, `layanan_id`, `jumlah`, `
 (19, 12, 4, 2, 150000.00),
 (20, 13, 3, 1, 50000.00),
 (21, 14, 4, 2, 150000.00),
-(22, 15, 3, 1, 50000.00);
+(22, 15, 3, 1, 50000.00),
+(23, 16, 3, 1, 50000.00),
+(24, 17, 3, 2, 100000.00);
 
 -- --------------------------------------------------------
 
@@ -477,25 +483,27 @@ CREATE TABLE `users` (
   `gunung_bertugas_id` int(11) DEFAULT NULL,
   `gunung_id` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `profile_picture` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `role`, `gunung_bertugas_id`, `gunung_id`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '1', 'admin@gmail.com', '0987387421233', '$2y$10$HMoT2tenyq66/VxGt.fraeQa9J696r5tkFgo8ZZORJoz.lXmIpXSS', 'admin', NULL, NULL, '2025-07-04 09:00:09', '2025-07-04 07:00:45'),
-(8, 'pengelola', 'bromo', 'bromo@gmail.com', '0891292809123', '$2y$10$4Ju4TqDqKNigAkbheyY5/.jFEJZSMwpmkTIN1IQOqq7DAckGR9A6m', 'pengelola_gunung', NULL, 1, '2025-07-04 14:47:43', '2025-07-05 12:34:15'),
-(9, 'pengelola', 'merapi', 'merapi@gmail.com', '0891292809123', '$2y$10$PRVJaV4qAaeGMMM1FB93Qup..xT8wsmIhH3xP6ld2QWz/39tI9tFq', 'pengelola_gunung', NULL, 2, '2025-07-04 14:49:05', '2025-07-05 12:34:47'),
-(10, 'pengelola', 'semeru', 'semeru@gmail.com', '089628670822', '$2y$10$lxkg5LKOrJ8cbeU8GeJA5uNBGrcEiG.irVlbqARQwJdXpL7cH.MVW', 'pengelola_gunung', NULL, 3, '2025-07-04 14:49:46', '2025-07-05 12:35:00'),
-(11, 'Agil', 'liam', 'liam@gmail.com', '09249814871', '$2y$10$I2rvRv/KWU2PNI0MLMgHJuftQuvvKkaJy9oZPElyL6I70532sg856', 'pendaki', NULL, NULL, '2025-07-04 14:52:04', '2025-07-04 07:52:04'),
-(14, 'Daviar', 'Andrianoe', 'daviar.andrianoe05@gmail.com', '082122830574', '$2y$10$XGZ/6n6QwogBmeAtTLo9DuGnEqD/EeVEfFKaAhQfj5EjKQjBNWY8q', 'pendaki', NULL, NULL, '2025-07-08 16:04:42', '2025-07-08 09:04:42'),
-(15, 'porter', 'merapi', 'portermerapi@gmail.com', '111122223333', '$2y$10$we6sIGxJk.8Nj/JapyPiIe40tk5nL.dIeGfTRuUK9MryyBoRIpaBG', 'porter', NULL, 2, '2025-07-08 16:06:33', '2025-07-08 09:06:33'),
-(16, 'ojek', 'bromo', 'ojekbromo@gmail.com', '111122223333', '$2y$10$6FjKJmLFF9RxyhIMlbbhpO9sdSltnfdwq7QNcwbZ.x8PyGc/dbjBS', 'ojek', NULL, 1, '2025-07-08 16:08:31', '2025-07-08 09:08:31'),
-(17, 'ojek', 'merapi', 'ojekmerapi@gmail.com', '111122223333', '$2y$10$xpqvB16AuVvTAuZGjtY8ZupsYplecvy62gLMBXtJD5nfUPljOXDdu', 'ojek', NULL, 2, '2025-07-08 16:09:27', '2025-07-08 09:09:27'),
-(18, 'ojek', 'semeru', 'ojeksemeru@gmail.com', '111122223333', '$2y$10$RhHNcvDcLdC5kOBujZNULurQd059fSimtq2MzBCFvSccGOfDdQr7y', 'ojek', NULL, 3, '2025-07-08 16:10:08', '2025-07-08 09:10:08'),
-(19, 'basecamp', 'semeru', 'basecampsemeru@gmail.com', '111122223333', '$2y$10$4lKQfAqErwEg4m/CF8fZoO1SPZgOo09yhuKC9enO1O9Ex8RHDACvG', 'basecamp', NULL, 3, '2025-07-08 16:33:14', '2025-07-08 09:33:14');
+INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `password`, `role`, `gunung_bertugas_id`, `gunung_id`, `created_at`, `updated_at`, `profile_picture`) VALUES
+(1, 'admin', '1', 'admin@gmail.com', '0987387421233', '$2y$10$HMoT2tenyq66/VxGt.fraeQa9J696r5tkFgo8ZZORJoz.lXmIpXSS', 'admin', NULL, NULL, '2025-07-04 09:00:09', '2025-07-04 07:00:45', NULL),
+(8, 'pengelola', 'bromo', 'bromo@gmail.com', '0891292809123', '$2y$10$4Ju4TqDqKNigAkbheyY5/.jFEJZSMwpmkTIN1IQOqq7DAckGR9A6m', 'pengelola_gunung', NULL, 1, '2025-07-04 14:47:43', '2025-07-05 12:34:15', NULL),
+(9, 'pengelola', 'merapi', 'merapi@gmail.com', '0891292809123', '$2y$10$PRVJaV4qAaeGMMM1FB93Qup..xT8wsmIhH3xP6ld2QWz/39tI9tFq', 'pengelola_gunung', NULL, 2, '2025-07-04 14:49:05', '2025-07-05 12:34:47', NULL),
+(10, 'pengelola', 'semeru', 'semeru@gmail.com', '089628670822', '$2y$10$lxkg5LKOrJ8cbeU8GeJA5uNBGrcEiG.irVlbqARQwJdXpL7cH.MVW', 'pengelola_gunung', NULL, 3, '2025-07-04 14:49:46', '2025-07-05 12:35:00', NULL),
+(11, 'Agil', 'liam', 'liam@gmail.com', '09249814871', '$2y$10$I2rvRv/KWU2PNI0MLMgHJuftQuvvKkaJy9oZPElyL6I70532sg856', 'pendaki', NULL, NULL, '2025-07-04 14:52:04', '2025-07-04 07:52:04', NULL),
+(14, 'Daviar', 'Andrianoe', 'daviar.andrianoe05@gmail.com', '082122830574', '$2y$10$XGZ/6n6QwogBmeAtTLo9DuGnEqD/EeVEfFKaAhQfj5EjKQjBNWY8q', 'pendaki', NULL, NULL, '2025-07-08 16:04:42', '2025-07-11 07:29:53', 'profile_14_1752218993.jpeg'),
+(15, 'porter', 'merapi', 'portermerapi@gmail.com', '111122223333', '$2y$10$we6sIGxJk.8Nj/JapyPiIe40tk5nL.dIeGfTRuUK9MryyBoRIpaBG', 'porter', NULL, 2, '2025-07-08 16:06:33', '2025-07-08 09:06:33', NULL),
+(16, 'ojek', 'bromo', 'ojekbromo@gmail.com', '111122223333', '$2y$10$6FjKJmLFF9RxyhIMlbbhpO9sdSltnfdwq7QNcwbZ.x8PyGc/dbjBS', 'ojek', NULL, 1, '2025-07-08 16:08:31', '2025-07-08 09:08:31', NULL),
+(17, 'ojek', 'merapi', 'ojekmerapi@gmail.com', '111122223333', '$2y$10$xpqvB16AuVvTAuZGjtY8ZupsYplecvy62gLMBXtJD5nfUPljOXDdu', 'ojek', NULL, 2, '2025-07-08 16:09:27', '2025-07-08 09:09:27', NULL),
+(18, 'ojek', 'semeru', 'ojeksemeru@gmail.com', '111122223333', '$2y$10$RhHNcvDcLdC5kOBujZNULurQd059fSimtq2MzBCFvSccGOfDdQr7y', 'ojek', NULL, 3, '2025-07-08 16:10:08', '2025-07-08 09:10:08', NULL),
+(19, 'basecamp', 'semeru', 'basecampsemeru@gmail.com', '111122223333', '$2y$10$4lKQfAqErwEg4m/CF8fZoO1SPZgOo09yhuKC9enO1O9Ex8RHDACvG', 'basecamp', NULL, 3, '2025-07-08 16:33:14', '2025-07-08 09:33:14', NULL),
+(20, 'ojek', 'merapi2', 'ojekmerapi2@gmail.com', '111122223333', '$2y$10$rCB6oWfau8XqB0EmoHj1o.Sci5nLSO0QHk/bJkxMXy.Gp1HF0Lvfm', 'ojek', NULL, 2, '2025-07-08 16:45:28', '2025-07-08 09:45:28', NULL);
 
 --
 -- Indexes for dumped tables
@@ -715,7 +723,7 @@ ALTER TABLE `log_aktivitas`
 -- AUTO_INCREMENT for table `notifikasi`
 --
 ALTER TABLE `notifikasi`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `ojek`
@@ -733,7 +741,7 @@ ALTER TABLE `pembayaran`
 -- AUTO_INCREMENT for table `pemesanan`
 --
 ALTER TABLE `pemesanan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `pemesanan_basecamp`
@@ -751,7 +759,7 @@ ALTER TABLE `pemesanan_guide`
 -- AUTO_INCREMENT for table `pemesanan_layanan`
 --
 ALTER TABLE `pemesanan_layanan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `pemesanan_ojek`
@@ -793,7 +801,7 @@ ALTER TABLE `tiket_gunung`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Constraints for dumped tables

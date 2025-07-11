@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             //  MODIFIKASI 1: Ambil juga kolom 'gunung_id'
-            $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name, gunung_id FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT id, email, password, role, first_name, last_name, gunung_id, profile_picture FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['last_name'] = $user['last_name'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
+                $_SESSION['profile_picture'] = $user['profile_picture'];
 
                 // Logika pengalihan berdasarkan peran
                 switch ($user['role']) {

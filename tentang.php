@@ -55,7 +55,11 @@ require_once 'auth/check_auth.php';
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn" aria-expanded="false" aria-haspopup="true">
                             <div class="profile-avatar">
-                                <i class="fas fa-user" aria-hidden="true"></i>
+                                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                <?php else: ?>
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                <?php endif; ?>
                             </div>
                             <span class="profile-name" id="profileName">
                                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
@@ -66,7 +70,11 @@ require_once 'auth/check_auth.php';
                         <div class="profile-menu" id="profileMenu" role="menu" aria-labelledby="profileBtn">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
-                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                    <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                        <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                    <?php else: ?>
+                                        <i class="fas fa-user" aria-hidden="true"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="profile-info">
                                     <h4 id="menuProfileName">

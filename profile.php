@@ -21,8 +21,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_picture'])) {
+    $file = $_FILES['profile_picture'];
+    if ($file['error'] === UPLOAD_ERR_OK) {
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $maxSize = 2 * 1024 * 1024; // 2MB
+
+        // Tambahan: cek ukuran file
+        if ($file['size'] > $maxSize) {
+            $error_message = "Ukuran file maksimal 2MB.";
+        } elseif (in_array(strtolower($ext), $allowed)) {
+            // Tambahan: cek mime type (opsional)
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mime = finfo_file($finfo, $file['tmp_name']);
+            finfo_close($finfo);
+            $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!in_array($mime, $allowedMime)) {
+                $error_message = "Tipe file tidak valid.";
+            } else {
+                $newName = 'profile_' . $user_id . '_' . time() . '.' . $ext;
+                $uploadPath = 'uploads/' . $newName;
+                if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                    $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE id = ?");
+                    $stmt->execute([$newName, $user_id]);
+                    $_SESSION['profile_picture'] = $newName; // <-- Tambahkan baris ini
+                    header("Location: profile.php");
+                    exit;
+                } else {
+                    $error_message = "Gagal mengupload foto.";
+                }
+            }
+        } else {
+            $error_message = "Format file tidak didukung. Hanya JPG, JPEG, PNG, WEBP.";
+        }
+    } else {
+        $error_message = "Gagal mengupload file.";
+    }
+}
 // Ambil data user terbaru dari database (ambil id & role juga!)
-$stmt = $pdo->prepare("SELECT id, first_name, last_name, email, phone, role FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, first_name, last_name, email, phone, role, profile_picture FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 if (!$user) {
@@ -74,7 +112,11 @@ $_SESSION['role'] = $user['role'];
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
                             <div class="profile-avatar">
-                                <i class="fas fa-user"></i>
+                                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                <?php else: ?>
+                                    <i class="fas fa-user"></i>
+                                <?php endif; ?>
                             </div>
                             <span class="profile-name" id="profileName">
                                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
@@ -85,7 +127,11 @@ $_SESSION['role'] = $user['role'];
                         <div class="profile-menu" id="profileMenu">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
-                                    <i class="fas fa-user"></i>
+                                    <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                        <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                    <?php else: ?>
+                                        <i class="fas fa-user"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="profile-info">
                                     <h4 id="menuProfileName">
@@ -139,7 +185,11 @@ $_SESSION['role'] = $user['role'];
                     <!-- Mobile Profile Header -->
                     <div class="mobile-profile-header">
                         <div class="profile-avatar">
-                            <i class="fas fa-user"></i>
+                            <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                            <?php else: ?>
+                                <i class="fas fa-user"></i>
+                            <?php endif; ?>
                         </div>
                         <div class="profile-info">
                             <h4 id="mobileProfileName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h4>
@@ -159,9 +209,9 @@ $_SESSION['role'] = $user['role'];
                             Profile Saya
                         </a>
                         <a href="chatbox.php" class="profile-menu-item">
-                                    <i class="fas fa-comment-alt"></i>
-                                    <span>KoncoNdaki Assistant</span>
-                                </a>
+                            <i class="fas fa-comment-alt"></i>
+                            <span>KoncoNdaki Assistant</span>
+                        </a>
                         <a href="#" class="mobile-nav-link">
                             <i class="fas fa-ticket-alt"></i>
                             Tiket Saya
@@ -191,10 +241,17 @@ $_SESSION['role'] = $user['role'];
                 <!-- Profile Header -->
                 <div class="profile-page-header">
                     <div class="profile-avatar-large">
-                        <i class="fas fa-user"></i>
-                        <button class="avatar-edit-btn" id="avatarEditBtn" title="Ubah foto profil">
-                            <i class="fas fa-camera"></i>
-                        </button>
+                        <?php if (!empty($user['profile_picture'])): ?>
+                            <img src="uploads/<?php echo htmlspecialchars($user['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                        <?php else: ?>
+                            <i class="fas fa-user"></i>
+                        <?php endif; ?>
+                        <form id="avatarForm" action="profile.php" method="post" enctype="multipart/form-data" style="display:inline;">
+                            <input type="file" name="profile_picture" id="profilePictureInput" style="display:none;" accept="image/*" onchange="document.getElementById('avatarForm').submit();">
+                            <button type="button" class="avatar-edit-btn" id="avatarEditBtn" title="Ubah foto profil" onclick="document.getElementById('profilePictureInput').click();">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                        </form>
                     </div>
                     <div class="profile-header-info">
                         <h1 id="profilePageName"><?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?></h1>

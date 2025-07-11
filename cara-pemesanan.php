@@ -5,6 +5,7 @@ require_once 'auth/check_auth.php';
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@ require_once 'auth/check_auth.php';
     <link rel="stylesheet" href="styles/cara-pemesanan.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar">
@@ -38,19 +40,27 @@ require_once 'auth/check_auth.php';
                 <div class="user-profile desktop-nav">
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
-                            <div class="profile-avatar">
-                                <i class="fas fa-user"></i>
+                        <div class="profile-avatar">
+                                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                <?php else: ?>
+                                    <i class="fas fa-user"></i>
+                                <?php endif; ?>
                             </div>
                             <span class="profile-name" id="profileName">
                                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
                             </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
-                        
+
                         <div class="profile-menu" id="profileMenu">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
-                                    <i class="fas fa-user"></i>
+                                    <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                        <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                    <?php else: ?>
+                                        <i class="fas fa-user"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="profile-info">
                                     <h4 id="menuProfileName">
@@ -104,7 +114,11 @@ require_once 'auth/check_auth.php';
                     <!-- Mobile Profile Header -->
                     <div class="mobile-profile-header">
                         <div class="profile-avatar">
-                            <i class="fas fa-user"></i>
+                            <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                            <?php else: ?>
+                                <i class="fas fa-user"></i>
+                            <?php endif; ?>
                         </div>
                         <div class="profile-info">
                             <h4 id="mobileProfileName">
@@ -115,22 +129,22 @@ require_once 'auth/check_auth.php';
                             </p>
                         </div>
                     </div>
-                    
+
                     <a href="dashboard.php" class="mobile-nav-link">Home</a>
                     <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link active">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link">Diskusi</a>
                     <a href="tentang.php" class="mobile-nav-link">Tentang</a>
-                    
+
                     <div class="mobile-profile-menu">
                         <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-user-circle"></i>
                             Profile Saya
                         </a>
                         <a href="chatbox.php" class="profile-menu-item">
-                                    <i class="fas fa-comment-alt"></i>
-                                    <span>KoncoNdaki Assistant</span>
-                                </a>
+                            <i class="fas fa-comment-alt"></i>
+                            <span>KoncoNdaki Assistant</span>
+                        </a>
                         <a href="#" class="mobile-nav-link">
                             <i class="fas fa-ticket-alt"></i>
                             Tiket Saya
@@ -266,7 +280,7 @@ require_once 'auth/check_auth.php';
                     </div>
                     <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Layanan</h3>
                     <ul>
@@ -274,7 +288,7 @@ require_once 'auth/check_auth.php';
                         <li><a href="info-gunung.php" class="nav-link">Info Gunung</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Bantuan</h3>
                     <ul>
@@ -284,7 +298,7 @@ require_once 'auth/check_auth.php';
                         <li><a href="diskusi.php" class="nav-link">Diskusi</a></li>
                     </ul>
                 </div>
-                
+
                 <div class="footer-section">
                     <h3>Tentang</h3>
                     <ul>
@@ -292,7 +306,7 @@ require_once 'auth/check_auth.php';
                     </ul>
                 </div>
             </div>
-            
+
             <div class="footer-bottom">
                 <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
             </div>
@@ -302,4 +316,5 @@ require_once 'auth/check_auth.php';
     <script src="scripts/script.js"></script>
     <script src="scripts/cara-pemesanan.js"></script>
 </body>
+
 </html>

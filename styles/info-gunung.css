@@ -531,3 +531,15 @@
 .loading {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+.profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+.profile-avatar.large .profile-img {
+    width: 80px;
+    height: 80px;
+}

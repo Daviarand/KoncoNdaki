@@ -408,3 +408,15 @@
     }
   }
   
+.profile-img {
+    width: 40px;         /* Atur sesuai kebutuhan, misal 40px untuk navbar */
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+.profile-avatar.large .profile-img {
+    width: 80px;         /* Untuk avatar besar di dropdown/profile */
+    height: 80px;
+}
+  
