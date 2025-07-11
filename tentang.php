@@ -94,15 +94,15 @@ require_once 'auth/check_auth.php';
                                     <i class="fas fa-comment-alt" aria-hidden="true"></i>
                                     <span>KoncoNdaki Assistant</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-ticket-alt" aria-hidden="true"></i>
                                     <span>Tiket Saya</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-history" aria-hidden="true"></i>
                                     <span>Riwayat Pemesanan</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-cog" aria-hidden="true"></i>
                                     <span>Pengaturan</span>
                                 </a>

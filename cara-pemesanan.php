@@ -80,15 +80,15 @@ require_once 'auth/check_auth.php';
                                     <i class="fas fa-comment-alt"></i>
                                     <span>KoncoNdaki Assistant</span>
                                 </a>
-                                <a href="#" class="profile-menu-item">
+                                <a href="profile.php" class="profile-menu-item">
                                     <i class="fas fa-ticket-alt"></i>
                                     <span>Tiket Saya</span>
                                 </a>
-                                <a href="#" class="profile-menu-item">
+                                <a href="profile.php" class="profile-menu-item">
                                     <i class="fas fa-history"></i>
                                     <span>Riwayat Pemesanan</span>
                                 </a>
-                                <a href="#" class="profile-menu-item">
+                                <a href="profile.php" class="profile-menu-item">
                                     <i class="fas fa-cog"></i>
                                     <span>Pengaturan</span>
                                 </a>

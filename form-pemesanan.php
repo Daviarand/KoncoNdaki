@@ -149,7 +149,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn" aria-expanded="false" aria-haspopup="true">
                             <div class="profile-avatar">
-                                <i class="fas fa-user" aria-hidden="true"></i>
+                                <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                <?php else: ?>
+                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                <?php endif; ?>
                             </div>
                             <span class="profile-name" id="profileName">
                                 <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
@@ -160,7 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="profile-menu" id="profileMenu" role="menu" aria-labelledby="profileBtn">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
-                                    <i class="fas fa-user" aria-hidden="true"></i>
+                                    <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                        <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                    <?php else: ?>
+                                        <i class="fas fa-user" aria-hidden="true"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="profile-info">
                                     <h4 id="menuProfileName">
@@ -214,7 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- Mobile Profile Header -->
                     <div class="mobile-profile-header">
                         <div class="profile-avatar">
-                            <i class="fas fa-user" aria-hidden="true"></i>
+                            <?php if (!empty($_SESSION['profile_picture'])): ?>
+                                <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                            <?php else: ?>
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                            <?php endif; ?>
                         </div>
                         <div class="profile-info">
                             <h4 id="mobileProfileName">
@@ -253,8 +265,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fas fa-cog" aria-hidden="true"></i>
                             Pengaturan
                         </a>
-                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn" role="menuitem">
-                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                        <a href="auth/logout.php" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
                             Keluar
                         </a>
                     </div>
