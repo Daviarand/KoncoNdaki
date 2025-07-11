@@ -188,20 +188,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <i class="fas fa-comment-alt" aria-hidden="true"></i>
                                     <span>KoncoNdaki Assistant</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-ticket-alt" aria-hidden="true"></i>
                                     <span>Tiket Saya</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-history" aria-hidden="true"></i>
                                     <span>Riwayat Pemesanan</span>
                                 </a>
-                                <a href="#" class="profile-menu-item" role="menuitem">
+                                <a href="profile.php" class="profile-menu-item" role="menuitem">
                                     <i class="fas fa-cog" aria-hidden="true"></i>
                                     <span>Pengaturan</span>
                                 </a>
                                 <div class="profile-menu-divider" role="separator"></div>
-                                <a href="#" class="profile-menu-item logout" id="logoutBtn" role="menuitem">
+                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn" role="menuitem">
                                     <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                                     <span>Keluar</span>
                                 </a>
@@ -253,15 +253,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fas fa-comment-alt" aria-hidden="true"></i>
                             KoncoNdaki Assistant
                         </a>
-                        <a href="#" class="mobile-nav-link" role="menuitem">
+                        <a href="profile.php" class="mobile-nav-link" role="menuitem">
                             <i class="fas fa-ticket-alt" aria-hidden="true"></i>
                             Tiket Saya
                         </a>
-                        <a href="#" class="mobile-nav-link" role="menuitem">
+                        <a href="profile.php" class="mobile-nav-link" role="menuitem">
                             <i class="fas fa-history" aria-hidden="true"></i>
                             Riwayat Pemesanan
                         </a>
-                        <a href="#" class="mobile-nav-link" role="menuitem">
+                        <a href="profile.php" class="mobile-nav-link" role="menuitem">
                             <i class="fas fa-cog" aria-hidden="true"></i>
                             Pengaturan
                         </a>

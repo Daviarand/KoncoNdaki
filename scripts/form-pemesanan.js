@@ -401,4 +401,18 @@ class BookingForm {
 // Inisialisasi class saat halaman selesai dimuat
 window.addEventListener("DOMContentLoaded", () => {
   new BookingForm()
+
+  // Tambahkan handler konfirmasi logout
+  const logoutBtn = document.getElementById("logoutBtn")
+  const mobileLogoutBtn = document.getElementById("mobileLogoutBtn")
+
+  function handleLogout(e) {
+    e.preventDefault()
+    if (confirm("Apakah Anda yakin ingin keluar?")) {
+      window.location.href = "auth/logout.php"
+    }
+  }
+
+  if (logoutBtn) logoutBtn.addEventListener("click", handleLogout)
+  if (mobileLogoutBtn) mobileLogoutBtn.addEventListener("click", handleLogout)
 })
