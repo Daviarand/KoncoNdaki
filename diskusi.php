@@ -1,9 +1,278 @@
 <?php
 session_start();
+require_once 'config/database.php';
+
+// Check if user is logged in - PERBAIKAN: lebih fleksibel
+$isLoggedIn = false;
+
+// Cek berbagai kemungkinan session variables
+if (isset($_SESSION['id']) && isset($_SESSION['email'])) {
+    $isLoggedIn = true;
+} elseif (isset($_SESSION['user_id']) && isset($_SESSION['email'])) {
+    // Jika menggunakan user_id instead of id, normalisasi
+    $_SESSION['id'] = $_SESSION['user_id'];
+    $isLoggedIn = true;
+} elseif (isset($_SESSION['email']) && isset($_SESSION['first_name'])) {
+    // Minimal requirement: email dan first_name
+    $isLoggedIn = true;
+    // Set default id jika tidak ada
+    if (!isset($_SESSION['id'])) {
+        $_SESSION['id'] = 1; // temporary fallback
+    }
+}
+
+// Hanya redirect jika benar-benar tidak ada session sama sekali
+if (!$isLoggedIn) {
+    header('Location: auth/login.php');
+    exit;
+}
+
+// Handle AJAX requests for forum functionality
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax'])) {
+    header('Content-Type: application/json');
+    
+    $action = $_POST['action'] ?? '';
+    
+    switch ($action) {
+        case 'create_post':
+            createPost($pdo);
+            break;
+        case 'get_posts':
+            getPosts($pdo);
+            break;
+        case 'like_post':
+            likePost($pdo);
+            break;
+        case 'add_comment':
+            addComment($pdo);
+            break;
+        default:
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    }
+    exit;
+}
+
+// Handle GET requests for loading posts
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    getPosts($pdo);
+    exit;
+}
+
+// Forum functions
+function createPost($pdo) {
+    try {
+        // Cek berbagai kemungkinan user_id
+        $user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? 1;
+        
+        $content = trim($_POST['content'] ?? '');
+        $category = $_POST['category'] ?? 'pengalaman';
+        $title = $_POST['title'] ?? '';
+        
+        if (empty($content)) {
+            echo json_encode(['success' => false, 'message' => 'Content cannot be empty']);
+            return;
+        }
+        
+        // If no title provided, create one from content
+        if (empty($title)) {
+            $title = substr($content, 0, 50) . (strlen($content) > 50 ? '...' : '');
+        }
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO forum_posts (user_id, title, content, category, created_at) 
+            VALUES (?, ?, ?, ?, NOW())
+        ");
+        
+        $stmt->execute([$user_id, $title, $content, $category]);
+        $post_id = $pdo->lastInsertId();
+        
+        // Get the created post with user info
+        $stmt = $pdo->prepare("
+            SELECT fp.*, u.first_name, u.last_name, u.email,
+                   0 as like_count, 0 as comment_count,
+                   DATE_FORMAT(fp.created_at, '%d/%m/%Y %H:%i') as formatted_date,
+                   'Baru saja' as time_ago
+            FROM forum_posts fp 
+            JOIN users u ON fp.user_id = u.id 
+            WHERE fp.id = ?
+        ");
+        $stmt->execute([$post_id]);
+        $post = $stmt->fetch();
+        
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Post created successfully',
+            'post' => $post
+        ]);
+        
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error creating post: ' . $e->getMessage()]);
+    }
+}
+
+function getPosts($pdo) {
+    try {
+        $page = $_GET['page'] ?? 1;
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+        
+        $stmt = $pdo->prepare("
+            SELECT fp.*, u.first_name, u.last_name, u.email,
+                   COALESCE(l.like_count, 0) as like_count,
+                   COALESCE(c.comment_count, 0) as comment_count,
+                   DATE_FORMAT(fp.created_at, '%d/%m/%Y %H:%i') as formatted_date,
+                   CASE 
+                       WHEN fp.created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 'Baru saja'
+                       WHEN fp.created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN CONCAT(TIMESTAMPDIFF(HOUR, fp.created_at, NOW()), ' jam yang lalu')
+                       ELSE CONCAT(TIMESTAMPDIFF(DAY, fp.created_at, NOW()), ' hari yang lalu')
+                   END as time_ago
+            FROM forum_posts fp 
+            JOIN users u ON fp.user_id = u.id 
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) as like_count 
+                FROM forum_likes 
+                GROUP BY post_id
+            ) l ON fp.id = l.post_id
+            LEFT JOIN (
+                SELECT post_id, COUNT(*) as comment_count 
+                FROM forum_comments 
+                GROUP BY post_id
+            ) c ON fp.id = c.post_id
+            ORDER BY fp.created_at DESC 
+            LIMIT ? OFFSET ?
+        ");
+        
+        $stmt->execute([$limit, $offset]);
+        $posts = $stmt->fetchAll();
+        
+        echo json_encode(['success' => true, 'posts' => $posts]);
+        
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error fetching posts: ' . $e->getMessage()]);
+    }
+}
+
+function likePost($pdo) {
+    try {
+        $user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? 1;
+        $post_id = $_POST['post_id'] ?? 0;
+        
+        // Check if already liked
+        $stmt = $pdo->prepare("SELECT id FROM forum_likes WHERE user_id = ? AND post_id = ?");
+        $stmt->execute([$user_id, $post_id]);
+        $existing = $stmt->fetch();
+        
+        if ($existing) {
+            // Unlike
+            $stmt = $pdo->prepare("DELETE FROM forum_likes WHERE user_id = ? AND post_id = ?");
+            $stmt->execute([$user_id, $post_id]);
+            $liked = false;
+        } else {
+            // Like
+            $stmt = $pdo->prepare("INSERT INTO forum_likes (user_id, post_id, created_at) VALUES (?, ?, NOW())");
+            $stmt->execute([$user_id, $post_id]);
+            $liked = true;
+        }
+        
+        // Get updated like count
+        $stmt = $pdo->prepare("SELECT COUNT(*) as like_count FROM forum_likes WHERE post_id = ?");
+        $stmt->execute([$post_id]);
+        $result = $stmt->fetch();
+        
+        echo json_encode([
+            'success' => true, 
+            'liked' => $liked,
+            'like_count' => $result['like_count']
+        ]);
+        
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error processing like: ' . $e->getMessage()]);
+    }
+}
+
+function addComment($pdo) {
+    try {
+        $user_id = $_SESSION['id'] ?? $_SESSION['user_id'] ?? 1;
+        $post_id = $_POST['post_id'] ?? 0;
+        $content = trim($_POST['content'] ?? '');
+        
+        if (empty($content)) {
+            echo json_encode(['success' => false, 'message' => 'Comment cannot be empty']);
+            return;
+        }
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO forum_comments (user_id, post_id, content, created_at) 
+            VALUES (?, ?, ?, NOW())
+        ");
+        $stmt->execute([$user_id, $post_id, $content]);
+        
+        // Get the created comment with user info
+        $comment_id = $pdo->lastInsertId();
+        $stmt = $pdo->prepare("
+            SELECT fc.*, u.first_name, u.last_name,
+                   DATE_FORMAT(fc.created_at, '%d/%m/%Y %H:%i') as formatted_date,
+                   'Baru saja' as time_ago
+            FROM forum_comments fc 
+            JOIN users u ON fc.user_id = u.id 
+            WHERE fc.id = ?
+        ");
+        $stmt->execute([$comment_id]);
+        $comment = $stmt->fetch();
+        
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Comment added successfully',
+            'comment' => $comment
+        ]);
+        
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Error adding comment: ' . $e->getMessage()]);
+    }
+}
+
+// Get existing posts for initial page load
+try {
+    $stmt = $pdo->prepare("
+        SELECT fp.*, u.first_name, u.last_name, u.email,
+               COALESCE(l.like_count, 0) as like_count,
+               COALESCE(c.comment_count, 0) as comment_count,
+               DATE_FORMAT(fp.created_at, '%d/%m/%Y %H:%i') as formatted_date,
+               CASE 
+                   WHEN fp.created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 'Baru saja'
+                   WHEN fp.created_at >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN CONCAT(TIMESTAMPDIFF(HOUR, fp.created_at, NOW()), ' jam yang lalu')
+                   ELSE CONCAT(TIMESTAMPDIFF(DAY, fp.created_at, NOW()), ' hari yang lalu')
+               END as time_ago
+        FROM forum_posts fp 
+        JOIN users u ON fp.user_id = u.id 
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) as like_count 
+            FROM forum_likes 
+            GROUP BY post_id
+        ) l ON fp.id = l.post_id
+        LEFT JOIN (
+            SELECT post_id, COUNT(*) as comment_count 
+            FROM forum_comments 
+            GROUP BY post_id
+        ) c ON fp.id = c.post_id
+        ORDER BY fp.created_at DESC 
+        LIMIT 10
+    ");
+    $stmt->execute();
+    $initial_posts = $stmt->fetchAll();
+} catch (Exception $e) {
+    $initial_posts = [];
+}
+
+// Set default values untuk menghindari error
+$firstName = $_SESSION['first_name'] ?? 'User';
+$lastName = $_SESSION['last_name'] ?? '';
+$email = $_SESSION['email'] ?? 'user@example.com';
+$profilePicture = $_SESSION['profile_picture'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +283,6 @@ session_start();
     <link rel="stylesheet" href="styles/diskusi.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-
 <body>
     <!-- Navbar -->
     <nav class="navbar">
@@ -39,33 +307,33 @@ session_start();
                     <div class="profile-dropdown">
                         <button class="profile-btn" id="profileBtn">
                             <div class="profile-avatar">
-                                <?php if (!empty($_SESSION['profile_picture'])): ?>
-                                    <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                <?php if (!empty($profilePicture)): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($profilePicture); ?>" alt="Foto Profil" class="profile-img">
                                 <?php else: ?>
                                     <i class="fas fa-user"></i>
                                 <?php endif; ?>
                             </div>
                             <span class="profile-name" id="profileName">
-                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                <?php echo htmlspecialchars($firstName . ' ' . $lastName); ?>
                             </span>
                             <i class="fas fa-chevron-down profile-arrow"></i>
                         </button>
-
+                        
                         <div class="profile-menu" id="profileMenu">
                             <div class="profile-header">
                                 <div class="profile-avatar large">
-                                    <?php if (!empty($_SESSION['profile_picture'])): ?>
-                                        <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                                    <?php if (!empty($profilePicture)): ?>
+                                        <img src="uploads/<?php echo htmlspecialchars($profilePicture); ?>" alt="Foto Profil" class="profile-img">
                                     <?php else: ?>
                                         <i class="fas fa-user"></i>
                                     <?php endif; ?>
                                 </div>
                                 <div class="profile-info">
                                     <h4 id="menuProfileName">
-                                        <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                        <?php echo htmlspecialchars($firstName . ' ' . $lastName); ?>
                                     </h4>
                                     <p id="menuProfileEmail">
-                                        <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                        <?php echo htmlspecialchars($email); ?>
                                     </p>
                                 </div>
                             </div>
@@ -91,7 +359,7 @@ session_start();
                                     <span>Pengaturan</span>
                                 </a>
                                 <div class="profile-menu-divider"></div>
-                                <a href="#" class="profile-menu-item logout" id="logoutBtn">
+                                <a href="auth/logout.php" class="profile-menu-item logout" id="logoutBtn">
                                     <i class="fas fa-sign-out-alt"></i>
                                     <span>Keluar</span>
                                 </a>
@@ -112,28 +380,28 @@ session_start();
                     <!-- Mobile Profile Header -->
                     <div class="mobile-profile-header">
                         <div class="profile-avatar">
-                            <?php if (!empty($_SESSION['profile_picture'])): ?>
-                                <img src="uploads/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" alt="Foto Profil" class="profile-img">
+                            <?php if (!empty($profilePicture)): ?>
+                                <img src="uploads/<?php echo htmlspecialchars($profilePicture); ?>" alt="Foto Profil" class="profile-img">
                             <?php else: ?>
                                 <i class="fas fa-user"></i>
                             <?php endif; ?>
                         </div>
                         <div class="profile-info">
                             <h4 id="mobileProfileName">
-                                <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>
+                                <?php echo htmlspecialchars($firstName . ' ' . $lastName); ?>
                             </h4>
                             <p id="mobileProfileEmail">
-                                <?php echo htmlspecialchars($_SESSION['email']); ?>
+                                <?php echo htmlspecialchars($email); ?>
                             </p>
                         </div>
                     </div>
-
+                    
                     <a href="dashboard.php" class="mobile-nav-link">Home</a>
                     <a href="info-gunung.php" class="mobile-nav-link">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link active">Diskusi</a>
                     <a href="tentang.php" class="mobile-nav-link">Tentang</a>
-
+                    
                     <div class="mobile-profile-menu">
                         <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-user-circle"></i>
@@ -143,19 +411,19 @@ session_start();
                             <i class="fas fa-comment-alt"></i>
                             <span>KoncoNdaki Assistant</span>
                         </a>
-                        <a href="#" class="mobile-nav-link">
+                        <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-ticket-alt"></i>
                             Tiket Saya
                         </a>
-                        <a href="#" class="mobile-nav-link">
+                        <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-history"></i>
                             Riwayat Pemesanan
                         </a>
-                        <a href="#" class="mobile-nav-link">
+                        <a href="profile.php" class="mobile-nav-link">
                             <i class="fas fa-cog"></i>
                             Pengaturan
                         </a>
-                        <a href="#" class="mobile-nav-link logout" id="mobileLogoutBtn">
+                        <a href="auth/logout.php" class="mobile-nav-link logout" id="mobileLogoutBtn">
                             <i class="fas fa-sign-out-alt"></i>
                             Keluar
                         </a>
@@ -181,7 +449,6 @@ session_start();
             <div class="forum-layout">
                 <!-- Sidebar -->
                 <div class="forum-sidebar">
-                    <!-- HAPUS sidebar-card anggota aktif -->
                     <div class="sidebar-card">
                         <h3><i class="fas fa-fire"></i> Topik Populer</h3>
                         <div class="popular-topics">
@@ -211,41 +478,6 @@ session_start();
                             </div>
                         </div>
                     </div>
-                    <!-- HAPUS mulai dari sini -->
-                    <!--
-                    <div class="sidebar-card">
-                        <h3><i class="fas fa-users"></i> Anggota Aktif</h3>
-                        <div class="active-members">
-                            <div class="member-item">
-                                <div class="member-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="member-info">
-                                    <span class="member-name">Andi Pratama</span>
-                                    <span class="member-posts">142 post</span>
-                                </div>
-                            </div>
-                            <div class="member-item">
-                                <div class="member-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="member-info">
-                                    <span class="member-name">Sari Dewi</span>
-                                    <span class="member-posts">98 post</span>
-                                </div>
-                            </div>
-                            <div class="member-item">
-                                <div class="member-avatar">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="member-info">
-                                    <span class="member-name">Budi Santoso</span>
-                                    <span class="member-posts">87 post</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    -->
                 </div>
 
                 <!-- Main Content -->
@@ -254,7 +486,11 @@ session_start();
                     <div class="create-post-card">
                         <div class="create-post-header">
                             <div class="user-avatar">
-                                <i class="fas fa-user"></i>
+                                <?php if (!empty($profilePicture)): ?>
+                                    <img src="uploads/<?php echo htmlspecialchars($profilePicture); ?>" alt="Foto Profil" class="profile-img">
+                                <?php else: ?>
+                                    <i class="fas fa-user"></i>
+                                <?php endif; ?>
                             </div>
                             <input type="text" placeholder="Bagikan pengalaman pendakian Anda..." id="createPostInput">
                         </div>
@@ -285,214 +521,83 @@ session_start();
 
                     <!-- Posts Feed -->
                     <div class="posts-feed" id="postsFeed">
-                        <!-- Post 1 -->
-                        <div class="post-card" data-category="pengalaman">
-                            <div class="post-header">
-                                <div class="post-author">
-                                    <div class="author-avatar">
-                                        <i class="fas fa-user"></i>
+                        <?php if (!empty($initial_posts)): ?>
+                            <?php foreach ($initial_posts as $post): ?>
+                                <?php
+                                $categoryInfo = [
+                                    'pengalaman' => ['name' => 'Pengalaman Pendakian', 'icon' => 'fa-mountain', 'class' => 'pengalaman'],
+                                    'tips' => ['name' => 'Tips & Trik', 'icon' => 'fa-lightbulb', 'class' => 'tips'],
+                                    'peralatan' => ['name' => 'Peralatan', 'icon' => 'fa-backpack', 'class' => 'peralatan'],
+                                    'cuaca' => ['name' => 'Info Cuaca', 'icon' => 'fa-cloud-sun', 'class' => 'cuaca'],
+                                    'tanya-jawab' => ['name' => 'Tanya Jawab', 'icon' => 'fa-question-circle', 'class' => 'tanya-jawab']
+                                ];
+                                $category = $categoryInfo[$post['category']] ?? $categoryInfo['pengalaman'];
+                                $fullName = htmlspecialchars($post['first_name'] . ' ' . $post['last_name']);
+                                ?>
+                                <div class="post-card" data-category="<?php echo $post['category']; ?>" data-post-id="<?php echo $post['id']; ?>">
+                                    <div class="post-header">
+                                        <div class="post-author">
+                                            <div class="author-avatar">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div class="author-info">
+                                                <span class="author-name"><?php echo $fullName; ?></span>
+                                                <span class="post-time"><?php echo $post['time_ago']; ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="post-category <?php echo $category['class']; ?>">
+                                            <i class="fas <?php echo $category['icon']; ?>"></i>
+                                            <?php echo $category['name']; ?>
+                                        </div>
                                     </div>
-                                    <div class="author-info">
-                                        <span class="author-name">Andi Pratama</span>
-                                        <span class="post-time">2 jam yang lalu</span>
+                                    <div class="post-content">
+                                        <h3><?php echo htmlspecialchars($post['title']); ?></h3>
+                                        <p><?php echo htmlspecialchars($post['content']); ?></p>
+                                    </div>
+                                    <div class="post-footer">
+                                        <div class="post-stats">
+                                            <button class="stat-btn like-btn" data-post="<?php echo $post['id']; ?>">
+                                                <i class="far fa-heart"></i>
+                                                <span><?php echo $post['like_count']; ?></span>
+                                            </button>
+                                            <button class="stat-btn comment-btn" data-post="<?php echo $post['id']; ?>">
+                                                <i class="far fa-comment"></i>
+                                                <span><?php echo $post['comment_count']; ?></span>
+                                            </button>
+                                            <button class="stat-btn share-btn">
+                                                <i class="fas fa-share"></i>
+                                                <span>0</span>
+                                            </button>
+                                        </div>
+                                        <button class="btn-read-more" onclick="expandPost(<?php echo $post['id']; ?>)">
+                                            Lihat Komentar
+                                        </button>
+                                    </div>
+                                    <div class="comments-section" id="comments-<?php echo $post['id']; ?>" style="display: none;">
+                                        <div class="comments-list" id="comments-list-<?php echo $post['id']; ?>">
+                                            <!-- Comments will be loaded here -->
+                                        </div>
+                                        <div class="comment-input">
+                                            <div class="user-avatar small">
+                                                <?php if (!empty($profilePicture)): ?>
+                                                    <img src="uploads/<?php echo htmlspecialchars($profilePicture); ?>" alt="Foto Profil" class="profile-img">
+                                                <?php else: ?>
+                                                    <i class="fas fa-user"></i>
+                                                <?php endif; ?>
+                                            </div>
+                                            <input type="text" placeholder="Tulis komentar..." data-post-id="<?php echo $post['id']; ?>">
+                                            <button class="btn-comment" data-post-id="<?php echo $post['id']; ?>">
+                                                <i class="fas fa-paper-plane"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="post-category pengalaman">
-                                    <i class="fas fa-mountain"></i>
-                                    Pengalaman Pendakian
-                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="no-posts">
+                                <p>Belum ada postingan. Jadilah yang pertama untuk berbagi!</p>
                             </div>
-                            <div class="post-content">
-                                <h3>Pengalaman Mendaki Gunung Bromo di Musim Hujan</h3>
-                                <p>Kemarin baru saja selesai mendaki Gunung Bromo bersama teman-teman. Meskipun cuaca tidak terlalu mendukung karena musim hujan, pemandangan sunrise tetap spektakuler! Beberapa tips yang bisa saya bagikan untuk pendakian di musim hujan...</p>
-                                <div class="post-image">
-                                    <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop" alt="Gunung Bromo">
-                                </div>
-                            </div>
-                            <div class="post-footer">
-                                <div class="post-stats">
-                                    <button class="stat-btn like-btn" data-post="1">
-                                        <i class="far fa-heart"></i>
-                                        <span>24</span>
-                                    </button>
-                                    <button class="stat-btn comment-btn" data-post="1">
-                                        <i class="far fa-comment"></i>
-                                        <span>8</span>
-                                    </button>
-                                    <button class="stat-btn share-btn">
-                                        <i class="fas fa-share"></i>
-                                        <span>3</span>
-                                    </button>
-                                </div>
-                                <button class="btn-read-more" onclick="expandPost(1)">
-                                    Baca Selengkapnya
-                                </button>
-                            </div>
-                            <div class="comments-section" id="comments-1" style="display: none;">
-                                <div class="comment">
-                                    <div class="comment-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="comment-content">
-                                        <span class="comment-author">Sari Dewi</span>
-                                        <p>Wah keren banget! Aku juga pengen coba mendaki Bromo. Kira-kira persiapan apa aja yang perlu dibawa untuk musim hujan?</p>
-                                        <span class="comment-time">1 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="comment-input">
-                                    <div class="user-avatar small">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <input type="text" placeholder="Tulis komentar...">
-                                    <button class="btn-comment">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Post 2 -->
-                        <div class="post-card" data-category="tips">
-                            <div class="post-header">
-                                <div class="post-author">
-                                    <div class="author-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="author-info">
-                                        <span class="author-name">Budi Santoso</span>
-                                        <span class="post-time">5 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="post-category tips">
-                                    <i class="fas fa-lightbulb"></i>
-                                    Tips & Trik
-                                </div>
-                            </div>
-                            <div class="post-content">
-                                <h3>5 Tips Penting untuk Pendaki Pemula</h3>
-                                <p>Buat teman-teman yang baru mau mulai hobi mendaki, ini beberapa tips penting yang harus diketahui:</p>
-                                <ul>
-                                    <li>Pilih gunung dengan tingkat kesulitan pemula</li>
-                                    <li>Persiapkan fisik minimal 2 minggu sebelum pendakian</li>
-                                    <li>Bawa peralatan yang sesuai dan jangan berlebihan</li>
-                                    <li>Selalu informasikan rencana pendakian ke keluarga</li>
-                                    <li>Ikuti aturan dan jaga kebersihan alam</li>
-                                </ul>
-                            </div>
-                            <div class="post-footer">
-                                <div class="post-stats">
-                                    <button class="stat-btn like-btn" data-post="2">
-                                        <i class="far fa-heart"></i>
-                                        <span>45</span>
-                                    </button>
-                                    <button class="stat-btn comment-btn" data-post="2">
-                                        <i class="far fa-comment"></i>
-                                        <span>12</span>
-                                    </button>
-                                    <button class="stat-btn share-btn">
-                                        <i class="fas fa-share"></i>
-                                        <span>7</span>
-                                    </button>
-                                </div>
-                                <button class="btn-read-more" onclick="expandPost(2)">
-                                    Lihat Komentar
-                                </button>
-                            </div>
-                            <div class="comments-section" id="comments-2" style="display: none;">
-                                <div class="comment">
-                                    <div class="comment-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="comment-content">
-                                        <span class="comment-author">Maya Putri</span>
-                                        <p>Terima kasih tipsnya! Sangat membantu untuk pemula seperti saya. Ada rekomendasi gunung untuk pemula di Jawa Barat?</p>
-                                        <span class="comment-time">3 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="comment-input">
-                                    <div class="user-avatar small">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <input type="text" placeholder="Tulis komentar...">
-                                    <button class="btn-comment">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Post 3 -->
-                        <div class="post-card" data-category="tanya-jawab">
-                            <div class="post-header">
-                                <div class="post-author">
-                                    <div class="author-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="author-info">
-                                        <span class="author-name">Dina Marlina</span>
-                                        <span class="post-time">1 hari yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="post-category tanya-jawab">
-                                    <i class="fas fa-question-circle"></i>
-                                    Tanya Jawab
-                                </div>
-                            </div>
-                            <div class="post-content">
-                                <h3>Tanya: Perlengkapan Wajib untuk Mendaki Gunung Semeru?</h3>
-                                <p>Halo semuanya! Saya berencana mendaki Gunung Semeru bulan depan untuk pertama kalinya. Bisa minta saran perlengkapan apa saja yang wajib dibawa? Terutama untuk menghadapi cuaca dingin di puncak. Terima kasih!</p>
-                            </div>
-                            <div class="post-footer">
-                                <div class="post-stats">
-                                    <button class="stat-btn like-btn" data-post="3">
-                                        <i class="far fa-heart"></i>
-                                        <span>18</span>
-                                    </button>
-                                    <button class="stat-btn comment-btn" data-post="3">
-                                        <i class="far fa-comment"></i>
-                                        <span>15</span>
-                                    </button>
-                                    <button class="stat-btn share-btn">
-                                        <i class="fas fa-share"></i>
-                                        <span>2</span>
-                                    </button>
-                                </div>
-                                <button class="btn-read-more" onclick="expandPost(3)">
-                                    Lihat Jawaban
-                                </button>
-                            </div>
-                            <div class="comments-section" id="comments-3" style="display: none;">
-                                <div class="comment">
-                                    <div class="comment-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="comment-content">
-                                        <span class="comment-author">Andi Pratama</span>
-                                        <p>Untuk Semeru wajib bawa sleeping bag yang tahan suhu -5°C, jaket tebal, sarung tangan, dan kacamata hitam. Jangan lupa headlamp cadangan!</p>
-                                        <span class="comment-time">20 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="comment">
-                                    <div class="comment-avatar">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <div class="comment-content">
-                                        <span class="comment-author">Riko Saputra</span>
-                                        <p>Tambahan: bawa masker atau buff untuk melindungi dari debu vulkanik. Semeru sering ada hujan abu soalnya.</p>
-                                        <span class="comment-time">18 jam yang lalu</span>
-                                    </div>
-                                </div>
-                                <div class="comment-input">
-                                    <div class="user-avatar small">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    <input type="text" placeholder="Tulis komentar...">
-                                    <button class="btn-comment">
-                                        <i class="fas fa-paper-plane"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Load More Button -->
@@ -518,7 +623,7 @@ session_start();
                     </div>
                     <p>Platform terpercaya untuk pemesanan tiket pendakian gunung di seluruh Pulau Jawa.</p>
                 </div>
-
+                
                 <div class="footer-section">
                     <h3>Layanan</h3>
                     <ul>
@@ -526,7 +631,7 @@ session_start();
                         <li><a href="info-gunung.php" class="nav-link">Info Gunung</a></li>
                     </ul>
                 </div>
-
+                
                 <div class="footer-section">
                     <h3>Bantuan</h3>
                     <ul>
@@ -536,7 +641,7 @@ session_start();
                         <li><a href="diskusi.php" class="nav-link">Diskusi</a></li>
                     </ul>
                 </div>
-
+                
                 <div class="footer-section">
                     <h3>Tentang</h3>
                     <ul>
@@ -544,24 +649,22 @@ session_start();
                     </ul>
                 </div>
             </div>
-
+            
             <div class="footer-bottom">
                 <p>&copy; 2024 KoncoNdaki. Semua hak dilindungi.</p>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Variabel ini akan menampung data pengguna dari session PHP
-        // dan akan dibaca oleh file diskusi.js
-        const LOGGED_IN_USER = {
-            firstName: "<?php echo isset($_SESSION['first_name']) ? htmlspecialchars($_SESSION['first_name']) : 'Pengguna'; ?>",
-            lastName: "<?php echo isset($_SESSION['last_name']) ? htmlspecialchars($_SESSION['last_name']) : ''; ?>"
-        };
-    </script>
+<script>
+  // Variabel ini akan menampung data pengguna dari session PHP
+  const LOGGED_IN_USER = {
+    firstName: "<?php echo htmlspecialchars($firstName); ?>",
+    lastName: "<?php echo htmlspecialchars($lastName); ?>"
+  };
+</script>
 
-    <script src="scripts/script.js"></script>
-    <script src="scripts/diskusi.js"></script>
+<script src="scripts/script.js"></script>
+<script src="scripts/diskusi.js"></script>
 </body>
-
 </html>

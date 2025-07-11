@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 11, 2025 at 09:30 AM
+-- Generation Time: Jul 11, 2025 at 11:35 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -60,6 +60,60 @@ CREATE TABLE `detail_pendaki` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `forum_comments`
+--
+
+CREATE TABLE `forum_comments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `content` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `forum_likes`
+--
+
+CREATE TABLE `forum_likes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `forum_posts`
+--
+
+CREATE TABLE `forum_posts` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `category` enum('pengalaman','tips','peralatan','cuaca','tanya-jawab') NOT NULL DEFAULT 'pengalaman',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `forum_posts`
+--
+
+INSERT INTO `forum_posts` (`id`, `user_id`, `title`, `content`, `category`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Pengalaman Mendaki Gunung Bromo di Musim Hujan', 'Kemarin baru saja selesai mendaki Gunung Bromo bersama teman-teman. Meskipun cuaca tidak terlalu mendukung karena musim hujan, pemandangan sunrise tetap spektakuler! Beberapa tips yang bisa saya bagikan untuk pendakian di musim hujan...', 'pengalaman', '2025-07-11 07:20:39', '2025-07-11 09:20:39'),
+(2, 8, '5 Tips Penting untuk Pendaki Pemula', 'Buat teman-teman yang baru mau mulai hobi mendaki, ini beberapa tips penting yang harus diketahui: 1. Pilih gunung dengan tingkat kesulitan pemula 2. Persiapkan fisik minimal 2 minggu sebelum pendakian 3. Bawa peralatan yang sesuai dan jangan berlebihan 4. Selalu informasikan rencana pendakian ke keluarga 5. Ikuti aturan dan jaga kebersihan alam', 'tips', '2025-07-11 04:20:39', '2025-07-11 09:20:39'),
+(3, 9, 'Tanya: Perlengkapan Wajib untuk Mendaki Gunung Semeru?', 'Halo semuanya! Saya berencana mendaki Gunung Semeru bulan depan untuk pertama kalinya. Bisa minta saran perlengkapan apa saja yang wajib dibawa? Terutama untuk menghadapi cuaca dingin di puncak. Terima kasih!', 'tanya-jawab', '2025-07-10 09:20:39', '2025-07-11 09:20:39'),
+(4, 22, 'pengalaman post', 'pengalaman post', 'pengalaman', '2025-07-11 09:31:23', '2025-07-11 09:31:23');
 
 -- --------------------------------------------------------
 
@@ -503,7 +557,8 @@ INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `phone`, `passwor
 (17, 'ojek', 'merapi', 'ojekmerapi@gmail.com', '111122223333', '$2y$10$xpqvB16AuVvTAuZGjtY8ZupsYplecvy62gLMBXtJD5nfUPljOXDdu', 'ojek', NULL, 2, '2025-07-08 16:09:27', '2025-07-08 09:09:27', NULL),
 (18, 'ojek', 'semeru', 'ojeksemeru@gmail.com', '111122223333', '$2y$10$RhHNcvDcLdC5kOBujZNULurQd059fSimtq2MzBCFvSccGOfDdQr7y', 'ojek', NULL, 3, '2025-07-08 16:10:08', '2025-07-08 09:10:08', NULL),
 (19, 'basecamp', 'semeru', 'basecampsemeru@gmail.com', '111122223333', '$2y$10$4lKQfAqErwEg4m/CF8fZoO1SPZgOo09yhuKC9enO1O9Ex8RHDACvG', 'basecamp', NULL, 3, '2025-07-08 16:33:14', '2025-07-08 09:33:14', NULL),
-(20, 'ojek', 'merapi2', 'ojekmerapi2@gmail.com', '111122223333', '$2y$10$rCB6oWfau8XqB0EmoHj1o.Sci5nLSO0QHk/bJkxMXy.Gp1HF0Lvfm', 'ojek', NULL, 2, '2025-07-08 16:45:28', '2025-07-08 09:45:28', NULL);
+(20, 'ojek', 'merapi2', 'ojekmerapi2@gmail.com', '111122223333', '$2y$10$rCB6oWfau8XqB0EmoHj1o.Sci5nLSO0QHk/bJkxMXy.Gp1HF0Lvfm', 'ojek', NULL, 2, '2025-07-08 16:45:28', '2025-07-08 09:45:28', NULL),
+(22, 'svt', 'nice', 'svt@gmail.com', '098752436832', '$2y$10$Zl0au0RY3INXYKosr.UTQ.lVIVhMWmOLDDDtOMcVPqO9p2kPW5Sz.', 'pendaki', NULL, NULL, '2025-07-11 16:17:01', '2025-07-11 09:18:15', 'profile_22_1752225495.jpeg');
 
 --
 -- Indexes for dumped tables
@@ -523,6 +578,32 @@ ALTER TABLE `basecamp`
 ALTER TABLE `detail_pendaki`
   ADD PRIMARY KEY (`id`),
   ADD KEY `pemesanan_tiket_id` (`pemesanan_tiket_id`);
+
+--
+-- Indexes for table `forum_comments`
+--
+ALTER TABLE `forum_comments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `post_id` (`post_id`),
+  ADD KEY `created_at` (`created_at`);
+
+--
+-- Indexes for table `forum_likes`
+--
+ALTER TABLE `forum_likes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `user_post_unique` (`user_id`,`post_id`),
+  ADD KEY `post_id` (`post_id`);
+
+--
+-- Indexes for table `forum_posts`
+--
+ALTER TABLE `forum_posts`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `category` (`category`),
+  ADD KEY `created_at` (`created_at`);
 
 --
 -- Indexes for table `guide`
@@ -690,6 +771,24 @@ ALTER TABLE `detail_pendaki`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `forum_comments`
+--
+ALTER TABLE `forum_comments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `forum_likes`
+--
+ALTER TABLE `forum_likes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `forum_posts`
+--
+ALTER TABLE `forum_posts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `guide`
 --
 ALTER TABLE `guide`
@@ -801,7 +900,7 @@ ALTER TABLE `tiket_gunung`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Constraints for dumped tables
@@ -819,6 +918,26 @@ ALTER TABLE `basecamp`
 --
 ALTER TABLE `detail_pendaki`
   ADD CONSTRAINT `detail_pendaki_ibfk_1` FOREIGN KEY (`pemesanan_tiket_id`) REFERENCES `pemesanan_tiket` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `forum_comments`
+--
+ALTER TABLE `forum_comments`
+  ADD CONSTRAINT `forum_comments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `forum_comments_ibfk_2` FOREIGN KEY (`post_id`) REFERENCES `forum_posts` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `forum_likes`
+--
+ALTER TABLE `forum_likes`
+  ADD CONSTRAINT `forum_likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `forum_likes_ibfk_2` FOREIGN KEY (`post_id`) REFERENCES `forum_posts` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `forum_posts`
+--
+ALTER TABLE `forum_posts`
+  ADD CONSTRAINT `forum_posts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `guide`
