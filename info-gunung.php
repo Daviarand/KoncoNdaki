@@ -1,6 +1,24 @@
 <?php
 session_start();
 require_once 'auth/check_auth.php';
+
+// Koneksi database
+$host = 'localhost';
+$dbname = 'koncondaki';
+$username = 'root'; // sesuaikan dengan username database Anda
+$password = ''; // sesuaikan dengan password database Anda
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Query untuk mengambil data gunung
+    $stmt = $pdo->query("SELECT id, nama_gunung, lokasi, ketinggian, kuota_pendaki_harian FROM gunung ORDER BY id");
+    $mountains = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    $mountains = [];
+    error_log("Database error: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -440,14 +458,88 @@ require_once 'auth/check_auth.php';
     </section>
 
     <!-- Mountains Grid Section -->
-    <section class="mountains-grid-section">
-        <div class="container">
-            <div class="mountains-grid" id="mountainsGrid">
-                <!-- Mountain Card 1 -->
+<section class="mountains-grid-section">
+    <div class="container">
+        <div class="mountains-grid" id="mountainsGrid">
+            <?php if (!empty($mountains)): ?>
+                <?php foreach ($mountains as $mountain): ?>
+                    <?php
+                    // Mapping data gunung untuk menentukan region dan difficulty
+                    $mountainConfig = [
+                        'Gunung Bromo' => ['region' => 'jawa-timur', 'difficulty' => 'Pemula', 'duration' => '2-3 jam', 'price' => 'Rp 35.000', 'image' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'bromo'],
+                        'Gunung Merapi' => ['region' => 'jawa-tengah', 'difficulty' => 'Menengah', 'duration' => '4-6 jam', 'price' => 'Rp 25.000', 'image' => 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'merapi'],
+                        'Gunung Semeru' => ['region' => 'jawa-timur', 'difficulty' => 'Lanjutan', 'duration' => '2-3 hari', 'price' => 'Rp 45.000', 'image' => 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'semeru'],
+                        'Gunung Gede' => ['region' => 'jawa-barat', 'difficulty' => 'Menengah', 'duration' => '5-7 jam', 'price' => 'Rp 30.000', 'image' => 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'gede']
+                    ];
+                    
+                    $config = $mountainConfig[$mountain['nama_gunung']] ?? [
+                        'region' => 'jawa-timur', 
+                        'difficulty' => 'Menengah', 
+                        'duration' => '4-6 jam', 
+                        'price' => 'Rp 25.000', 
+                        'image' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+                        'modal_id' => strtolower(str_replace(['Gunung ', ' '], ['', ''], $mountain['nama_gunung']))
+                    ];
+                    
+                    $difficultyClass = strtolower($config['difficulty']) === 'pemula' ? 'beginner' : (strtolower($config['difficulty']) === 'lanjutan' ? 'advanced' : 'intermediate');
+                    ?>
+                    
+                    <div class="mountain-detail-card" data-region="<?php echo $config['region']; ?>" data-name="<?php echo strtolower($mountain['nama_gunung']); ?>">
+                        <div class="mountain-image">
+                            <img src="<?php echo $config['image']; ?>" alt="<?php echo htmlspecialchars($mountain['nama_gunung']); ?>">
+                            <div class="difficulty-badge <?php echo $difficultyClass; ?>"><?php echo $config['difficulty']; ?></div>
+                        </div>
+                        <div class="mountain-content">
+                            <div class="mountain-header">
+                                <h3><?php echo htmlspecialchars($mountain['nama_gunung']); ?></h3>
+                            </div>
+                            <div class="mountain-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><?php echo htmlspecialchars($mountain['lokasi']); ?></span>
+                            </div>
+                            <div class="mountain-stats">
+                                <div class="stat">
+                                    <i class="fas fa-mountain"></i>
+                                    <span><?php echo number_format($mountain['ketinggian']); ?> mdpl</span>
+                                </div>
+                                <div class="stat">
+                                    <i class="fas fa-clock"></i>
+                                    <span><?php echo $config['duration']; ?></span>
+                                </div>
+                                <div class="stat">
+                                    <i class="fas fa-users"></i>
+                                    <span><?php echo $mountain['kuota_pendaki_harian']; ?> kuota</span>
+                                </div>
+                            </div>
+                            <p class="mountain-description">
+                                <?php
+                                $descriptions = [
+                                    'Gunung Bromo' => 'Gunung berapi aktif yang terkenal dengan pemandangan sunrise spektakuler dan lautan pasir yang menakjubkan.',
+                                    'Gunung Merapi' => 'Gunung berapi paling aktif di Indonesia dengan pemandangan kota Yogyakarta yang memukau dari puncaknya.',
+                                    'Gunung Semeru' => 'Puncak tertinggi di Pulau Jawa dengan pemandangan yang sangat menakjubkan dan tantangan pendakian yang menantang.',
+                                    'Gunung Gede' => 'Gunung dengan keanekaragaman flora dan fauna yang tinggi, terkenal dengan air terjun dan danau kawahnya.'
+                                ];
+                                echo $descriptions[$mountain['nama_gunung']] ?? 'Gunung dengan pemandangan alam yang indah dan jalur pendakian yang menantang.';
+                                ?>
+                            </p>
+                            <div class="mountain-footer">
+                                <div class="price">
+                                    <span class="price-label">Mulai dari</span>
+                                    <span class="price-amount"><?php echo $config['price']; ?></span>
+                                </div>
+                                <button class="btn-detail" onclick="openMountainModal('<?php echo $config['modal_id']; ?>')">
+                                    <i class="fas fa-info-circle"></i>
+                                    Detail
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <!-- Fallback jika tidak ada data dari database -->
                 <div class="mountain-detail-card" data-region="jawa-timur" data-name="gunung bromo">
                     <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Bromo">
+                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Bromo">
                         <div class="difficulty-badge beginner">Pemula</div>
                     </div>
                     <div class="mountain-content">
@@ -468,13 +560,12 @@ require_once 'auth/check_auth.php';
                                 <span>2-3 jam</span>
                             </div>
                             <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>5-15°C</span>
+                                <i class="fas fa-users"></i>
+                                <span>500 kuota</span>
                             </div>
                         </div>
                         <p class="mountain-description">
-                            Gunung berapi aktif yang terkenal dengan pemandangan sunrise spektakuler dan lautan pasir
-                            yang menakjubkan.
+                            Gunung berapi aktif yang terkenal dengan pemandangan sunrise spektakuler dan lautan pasir yang menakjubkan.
                         </p>
                         <div class="mountain-footer">
                             <div class="price">
@@ -488,237 +579,10 @@ require_once 'auth/check_auth.php';
                         </div>
                     </div>
                 </div>
-
-                <!-- Mountain Card 2 -->
-                <div class="mountain-detail-card" data-region="jawa-tengah" data-name="gunung merapi">
-                    <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Merapi">
-                        <div class="difficulty-badge intermediate">Menengah</div>
-                    </div>
-                    <div class="mountain-content">
-                        <div class="mountain-header">
-                            <h3>Gunung Merapi</h3>
-                        </div>
-                        <div class="mountain-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Jawa Tengah</span>
-                        </div>
-                        <div class="mountain-stats">
-                            <div class="stat">
-                                <i class="fas fa-mountain"></i>
-                                <span>2.930 mdpl</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-clock"></i>
-                                <span>4-6 jam</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>8-18°C</span>
-                            </div>
-                        </div>
-                        <p class="mountain-description">
-                            Gunung berapi paling aktif di Indonesia dengan pemandangan kota Yogyakarta yang memukau dari
-                            puncaknya.
-                        </p>
-                        <div class="mountain-footer">
-                            <div class="price">
-                                <span class="price-label">Mulai dari</span>
-                                <span class="price-amount">Rp 25.000</span>
-                            </div>
-                            <button class="btn-detail" onclick="openMountainModal('merapi')">
-                                <i class="fas fa-info-circle"></i>
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mountain Card 3 -->
-                <div class="mountain-detail-card" data-region="jawa-timur" data-name="gunung semeru">
-                    <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Semeru">
-                        <div class="difficulty-badge advanced">Lanjutan</div>
-                    </div>
-                    <div class="mountain-content">
-                        <div class="mountain-header">
-                            <h3>Gunung Semeru</h3>
-                        </div>
-                        <div class="mountain-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Jawa Timur</span>
-                        </div>
-                        <div class="mountain-stats">
-                            <div class="stat">
-                                <i class="fas fa-mountain"></i>
-                                <span>3.676 mdpl</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-clock"></i>
-                                <span>2-3 hari</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>0-10°C</span>
-                            </div>
-                        </div>
-                        <p class="mountain-description">
-                            Puncak tertinggi di Pulau Jawa dengan pemandangan yang sangat menakjubkan dan tantangan
-                            pendakian yang menantang.
-                        </p>
-                        <div class="mountain-footer">
-                            <div class="price">
-                                <span class="price-label">Mulai dari</span>
-                                <span class="price-amount">Rp 45.000</span>
-                            </div>
-                            <button class="btn-detail" onclick="openMountainModal('semeru')">
-                                <i class="fas fa-info-circle"></i>
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mountain Card 4 -->
-                <div class="mountain-detail-card" data-region="jawa-barat" data-name="gunung gede">
-                    <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Gede">
-                        <div class="difficulty-badge intermediate">Menengah</div>
-                    </div>
-                    <div class="mountain-content">
-                        <div class="mountain-header">
-                            <h3>Gunung Gede</h3>
-                        </div>
-                        <div class="mountain-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Jawa Barat</span>
-                        </div>
-                        <div class="mountain-stats">
-                            <div class="stat">
-                                <i class="fas fa-mountain"></i>
-                                <span>2.958 mdpl</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-clock"></i>
-                                <span>5-7 jam</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>10-20°C</span>
-                            </div>
-                        </div>
-                        <p class="mountain-description">
-                            Gunung dengan keanekaragaman flora dan fauna yang tinggi, terkenal dengan air terjun dan
-                            danau kawahnya.
-                        </p>
-                        <div class="mountain-footer">
-                            <div class="price">
-                                <span class="price-label">Mulai dari</span>
-                                <span class="price-amount">Rp 30.000</span>
-                            </div>
-                            <button class="btn-detail" onclick="openMountainModal('gede')">
-                                <i class="fas fa-info-circle"></i>
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mountain Card 5 -->
-                <div class="mountain-detail-card" data-region="jawa-barat" data-name="gunung papandayan">
-                    <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Papandayan">
-                        <div class="difficulty-badge beginner">Pemula</div>
-                    </div>
-                    <div class="mountain-content">
-                        <div class="mountain-header">
-                            <h3>Gunung Papandayan</h3>
-                        </div>
-                        <div class="mountain-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Jawa Barat</span>
-                        </div>
-                        <div class="mountain-stats">
-                            <div class="stat">
-                                <i class="fas fa-mountain"></i>
-                                <span>2.665 mdpl</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-clock"></i>
-                                <span>3-4 jam</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>12-22°C</span>
-                            </div>
-                        </div>
-                        <p class="mountain-description">
-                            Gunung dengan kawah aktif yang mengeluarkan gas belerang dan pemandangan savana yang indah.
-                        </p>
-                        <div class="mountain-footer">
-                            <div class="price">
-                                <span class="price-label">Mulai dari</span>
-                                <span class="price-amount">Rp 20.000</span>
-                            </div>
-                            <button class="btn-detail" onclick="openMountainModal('papandayan')">
-                                <i class="fas fa-info-circle"></i>
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mountain Card 6 -->
-                <div class="mountain-detail-card" data-region="jawa-tengah" data-name="gunung merbabu">
-                    <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop"
-                            alt="Gunung Merbabu">
-                        <div class="difficulty-badge intermediate">Menengah</div>
-                    </div>
-                    <div class="mountain-content">
-                        <div class="mountain-header">
-                            <h3>Gunung Merbabu</h3>
-                        </div>
-                        <div class="mountain-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Jawa Tengah</span>
-                        </div>
-                        <div class="mountain-stats">
-                            <div class="stat">
-                                <i class="fas fa-mountain"></i>
-                                <span>3.145 mdpl</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-clock"></i>
-                                <span>6-8 jam</span>
-                            </div>
-                            <div class="stat">
-                                <i class="fas fa-thermometer-half"></i>
-                                <span>5-15°C</span>
-                            </div>
-                        </div>
-                        <p class="mountain-description">
-                            Gunung dengan padang savana yang luas dan pemandangan Gunung Merapi yang spektakuler.
-                        </p>
-                        <div class="mountain-footer">
-                            <div class="price">
-                                <span class="price-label">Mulai dari</span>
-                                <span class="price-amount">Rp 28.000</span>
-                            </div>
-                            <button class="btn-detail" onclick="openMountainModal('merbabu')">
-                                <i class="fas fa-info-circle"></i>
-                                Detail
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- Mountain Detail Modal -->
     <div class="modal-overlay" id="mountainModal">

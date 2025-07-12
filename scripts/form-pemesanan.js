@@ -14,18 +14,37 @@ class BookingForm {
     }
 
     this.mountainData = this.initializeMountainData()
-    this.servicePrices = {
-      guide: 150000,
-      porter: 100000,
-      ojek: 50000,
-      basecamp: 75000,
-    }
+    this.servicePrices = this.initializeServicePrices()
     this.taxRate = 0.1 // Pajak 10%
     this.hasUnsavedChanges = false
     this.init()
   }
 
   initializeMountainData() {
+    // Gunakan data dari database yang dikirim dari PHP
+    if (window.gunungData && window.gunungData.length > 0) {
+      const mountainData = {}
+
+      window.gunungData.forEach((gunung) => {
+        const mountainId = gunung.nama_gunung
+          .toLowerCase()
+          .replace(/gunung\s+/i, "")
+          .replace(/\s+/g, "")
+
+        mountainData[mountainId] = {
+          name: gunung.nama_gunung,
+          price: Number.parseFloat(gunung.harga_tiket) || 0,
+          tiket_id: gunung.id,
+          routes: this.getRoutesForMountain(mountainId),
+        }
+      })
+
+      console.log("Mountain Data Processed:", mountainData)
+      return mountainData
+    }
+
+    // Fallback data jika database kosong
+    console.warn("Using fallback mountain data - database might be empty")
     return {
       bromo: {
         name: "Gunung Bromo",
@@ -58,6 +77,51 @@ class BookingForm {
         ],
       },
     }
+  }
+
+  initializeServicePrices() {
+    // Gunakan data dari database yang dikirim dari PHP
+    if (window.layananData && window.layananData.length > 0) {
+      const servicePrices = {}
+
+      window.layananData.forEach((layanan) => {
+        servicePrices[layanan.nama_layanan] = {
+          price: Number.parseFloat(layanan.harga_layanan) || 0,
+          satuan: layanan.satuan || "/hari",
+          deskripsi: layanan.deskripsi || "",
+        }
+      })
+
+      console.log("Service Prices from Database:", servicePrices)
+      return servicePrices
+    }
+
+    // Fallback data jika database kosong
+    console.warn("Using fallback service data - database might be empty")
+    return {
+      guide: { price: 150000, satuan: "/hari", deskripsi: "Pemandu berpengalaman" },
+      porter: { price: 100000, satuan: "/hari", deskripsi: "Bantuan membawa barang" },
+      ojek: { price: 50000, satuan: "/orang", deskripsi: "Transportasi ke pos" },
+      basecamp: { price: 75000, satuan: "/malam", deskripsi: "Tempat istirahat" },
+    }
+  }
+
+  getRoutesForMountain(mountainId) {
+    // Data jalur pendakian (bisa dipindah ke database juga jika diperlukan)
+    const routes = {
+      bromo: [
+        { id: "bromo-cemoro", name: "Jalur Cemoro Lawang", difficulty: "Mudah" },
+        { id: "bromo-wonokitri", name: "Jalur Wonokitri (Pasuruan)", difficulty: "Menengah" },
+      ],
+      merapi: [{ id: "merapi-selo", name: "Jalur Selo (Boyolali)", difficulty: "Menantang" }],
+      semeru: [{ id: "semeru-ranupani", name: "Jalur Ranu Pani", difficulty: "Sangat Menantang" }],
+      gede: [
+        { id: "gede-cibodas", name: "Jalur Cibodas", difficulty: "Menengah" },
+        { id: "gede-putri", name: "Jalur Gunung Putri", difficulty: "Menengah" },
+      ],
+    }
+
+    return routes[mountainId] || []
   }
 
   init() {
@@ -305,24 +369,43 @@ class BookingForm {
       return
     }
 
-    // Calculations
+    // Calculations - MENGGUNAKAN DATA DARI DATABASE
     const ticketPrice = mountainInfo.price * participants
     let servicesPrice = 0
     const serviceDetails = []
 
     services.forEach((serviceId) => {
-      let price = this.servicePrices[serviceId]
+      const serviceInfo = this.servicePrices[serviceId]
+      if (!serviceInfo) {
+        console.warn(`Service ${serviceId} not found in database`)
+        return
+      }
+
+      let price = serviceInfo.price
       let note = ""
-      if (serviceId === "ojek") {
+      let jumlah_item_layanan = 1
+
+      // Logika Kalkulasi berdasarkan satuan layanan - SAMA SEPERTI DI PHP
+      if (serviceInfo.satuan === "/orang") {
+        jumlah_item_layanan = participants
         price *= participants
         note = `(${participants} orang)`
       }
-      if (serviceId === "guide" || serviceId === "porter" || serviceId === "basecamp") {
-        price *= 1 // Asumsi 1 hari
+      // Untuk layanan per hari/malam, gunakan 1 hari/malam saja - TIDAK DIKALI
+      if (serviceInfo.satuan === "/hari" || serviceInfo.satuan === "/malam") {
+        jumlah_item_layanan = 1 // 1 hari/malam
+        // price tetap sama (tidak dikali)
         note = `(1 hari/malam)`
       }
+
       servicesPrice += price
-      serviceDetails.push({ name: serviceId.charAt(0).toUpperCase() + serviceId.slice(1), price, note })
+      serviceDetails.push({
+        name: serviceId.charAt(0).toUpperCase() + serviceId.slice(1),
+        price,
+        note,
+      })
+
+      console.log(`Service ${serviceId}: base price ${serviceInfo.price}, calculated price ${price}, note: ${note}`)
     })
 
     const subtotal = ticketPrice + servicesPrice
@@ -364,6 +447,8 @@ class BookingForm {
     if (isFinal && finalContainer) {
       finalContainer.innerHTML = finalHtml
     }
+
+    console.log("Summary updated:", { ticketPrice, servicesPrice, subtotal, tax, total })
   }
 
   formatCurrency(value) {

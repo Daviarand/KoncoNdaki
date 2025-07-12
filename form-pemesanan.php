@@ -4,6 +4,24 @@ session_start();
 require_once 'config/database.php'; 
 require_once 'auth/check_auth.php'; // Script ini harus memastikan $_SESSION['user_id'] tersedia
 
+// Ambil data layanan dari database untuk ditampilkan di form
+try {
+    $stmt_layanan = $pdo->query("SELECT id, nama_layanan, harga_layanan, satuan, deskripsi FROM layanan ORDER BY nama_layanan ASC");
+    $layanan_data = $stmt_layanan->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $layanan_data = [];
+    error_log("Error fetching layanan data: " . $e->getMessage());
+}
+
+// Ambil data gunung dan tiket dari database
+try {
+    $stmt_gunung = $pdo->query("SELECT g.*, tg.harga_tiket FROM gunung g LEFT JOIN tiket_gunung tg ON g.id = tg.id ORDER BY g.nama_gunung ASC");
+    $gunung_data = $stmt_gunung->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $gunung_data = [];
+    error_log("Error fetching gunung data: " . $e->getMessage());
+}
+
 // Blok ini HANYA akan berjalan saat formulir di-submit dengan metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
@@ -53,10 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $jumlah_item_layanan = $jumlah_pendaki;
                     $harga_total_per_layanan = $harga_layanan_per_item * $jumlah_pendaki;
                 }
-                // Asumsi pendakian 2 hari untuk guide/porter/basecamp
+                // Untuk layanan per hari/malam, gunakan 1 hari/malam saja
                 if ($service['satuan'] === '/hari' || $service['satuan'] === '/malam') {
-                     $jumlah_item_layanan = 2; // Hardcode 2 hari/malam, bisa dibuat dinamis
-                     $harga_total_per_layanan = $harga_layanan_per_item * 2;
+                     $jumlah_item_layanan = 1; // 1 hari/malam
+                     $harga_total_per_layanan = $harga_layanan_per_item; // tidak dikali
                 }
 
                 $subtotal_layanan += $harga_total_per_layanan;
@@ -287,10 +305,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-step active" id="step-1">
                             <div class="step-header"><h3><i class="fas fa-mountain"></i> Pilih Gunung</h3></div>
                             <div class="mountain-selection">
-                                <div class="mountain-option" data-mountain="bromo"><img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
-                                <div class="mountain-option" data-mountain="merapi"><img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
-                                <div class="mountain-option" data-mountain="semeru"><img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
-                                <div class="mountain-option" data-mountain="gede"><img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
+                                <?php if (!empty($gunung_data)): ?>
+                                    <?php foreach ($gunung_data as $gunung): ?>
+                                        <?php
+                                        // Mapping untuk gambar gunung
+                                        $images = [
+                                            'Gunung Bromo' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
+                                            'Gunung Merapi' => 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
+                                            'Gunung Semeru' => 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
+                                            'Gunung Gede' => 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop'
+                                        ];
+                                        $image = $images[$gunung['nama_gunung']] ?? 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop';
+                                        $mountain_id = strtolower(str_replace(['Gunung ', ' '], ['', ''], $gunung['nama_gunung']));
+                                        ?>
+                                        <div class="mountain-option" data-mountain="<?php echo $mountain_id; ?>">
+                                            <img src="<?php echo $image; ?>" alt="<?php echo htmlspecialchars($gunung['nama_gunung']); ?>">
+                                            <div class="mountain-info">
+                                                <h4><?php echo htmlspecialchars($gunung['nama_gunung']); ?></h4>
+                                                <p><?php echo htmlspecialchars($gunung['lokasi']); ?></p>
+                                                <span class="price">Rp <?php echo number_format($gunung['harga_tiket'] ?? 0, 0, ',', '.'); ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <!-- Fallback data jika database kosong -->
+                                    <div class="mountain-option" data-mountain="bromo"><img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="merapi"><img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="semeru"><img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="gede"><img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
+                                <?php endif; ?>
                             </div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep1"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep1" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
@@ -306,10 +349,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-step" id="step-3">
                             <div class="step-header"><h3><i class="fas fa-plus-circle"></i> Layanan Tambahan</h3></div>
                             <div class="services-grid">
-                                <div class="service-card" data-service="guide"><div class="service-icon"><i class="fas fa-user-tie"></i></div><div class="service-info"><h4>Jasa Guide</h4><p>Pemandu berpengalaman</p><span class="service-price">Rp 150.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="guide" name="services[]" value="guide"><label for="guide" class="toggle-switch"></label></div></div>
-                                <div class="service-card" data-service="porter"><div class="service-icon"><i class="fas fa-hiking"></i></div><div class="service-info"><h4>Jasa Porter</h4><p>Bantuan membawa barang</p><span class="service-price">Rp 100.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="porter" name="services[]" value="porter"><label for="porter" class="toggle-switch"></label></div></div>
-                                <div class="service-card" data-service="ojek"><div class="service-icon"><i class="fas fa-motorcycle"></i></div><div class="service-info"><h4>Jasa Ojek</h4><p>Transportasi ke pos</p><span class="service-price">Rp 50.000/orang</span></div><div class="service-toggle"><input type="checkbox" id="ojek" name="services[]" value="ojek"><label for="ojek" class="toggle-switch"></label></div></div>
-                                <div class="service-card" data-service="basecamp"><div class="service-icon"><i class="fas fa-campground"></i></div><div class="service-info"><h4>Sewa Basecamp</h4><p>Tempat istirahat</p><span class="service-price">Rp 75.000/malam</span></div><div class="service-toggle"><input type="checkbox" id="basecamp" name="services[]" value="basecamp"><label for="basecamp" class="toggle-switch"></label></div></div>
+                                <?php if (!empty($layanan_data)): ?>
+                                    <?php foreach ($layanan_data as $layanan): ?>
+                                        <?php
+                                        // Mapping icon untuk layanan
+                                        $icons = [
+                                            'guide' => 'fas fa-user-tie',
+                                            'porter' => 'fas fa-hiking',
+                                            'ojek' => 'fas fa-motorcycle',
+                                            'basecamp' => 'fas fa-campground'
+                                        ];
+                                        $icon = $icons[$layanan['nama_layanan']] ?? 'fas fa-plus-circle';
+                                        ?>
+                                        <div class="service-card" data-service="<?php echo htmlspecialchars($layanan['nama_layanan']); ?>">
+                                            <div class="service-icon"><i class="<?php echo $icon; ?>"></i></div>
+                                            <div class="service-info">
+                                                <h4><?php echo ucfirst(htmlspecialchars($layanan['nama_layanan'])); ?></h4>
+                                                <p><?php echo htmlspecialchars($layanan['deskripsi']); ?></p>
+                                                <span class="service-price">Rp <?php echo number_format($layanan['harga_layanan'], 0, ',', '.'); ?><?php echo htmlspecialchars($layanan['satuan']); ?></span>
+                                            </div>
+                                            <div class="service-toggle">
+                                                <input type="checkbox" id="<?php echo htmlspecialchars($layanan['nama_layanan']); ?>" name="services[]" value="<?php echo htmlspecialchars($layanan['nama_layanan']); ?>">
+                                                <label for="<?php echo htmlspecialchars($layanan['nama_layanan']); ?>" class="toggle-switch"></label>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <!-- Fallback data jika database kosong -->
+                                    <div class="service-card" data-service="guide"><div class="service-icon"><i class="fas fa-user-tie"></i></div><div class="service-info"><h4>Jasa Guide</h4><p>Pemandu berpengalaman</p><span class="service-price">Rp 150.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="guide" name="services[]" value="guide"><label for="guide" class="toggle-switch"></label></div></div>
+                                    <div class="service-card" data-service="porter"><div class="service-icon"><i class="fas fa-hiking"></i></div><div class="service-info"><h4>Jasa Porter</h4><p>Bantuan membawa barang</p><span class="service-price">Rp 100.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="porter" name="services[]" value="porter"><label for="porter" class="toggle-switch"></label></div></div>
+                                    <div class="service-card" data-service="ojek"><div class="service-icon"><i class="fas fa-motorcycle"></i></div><div class="service-info"><h4>Jasa Ojek</h4><p>Transportasi ke pos</p><span class="service-price">Rp 50.000/orang</span></div><div class="service-toggle"><input type="checkbox" id="ojek" name="services[]" value="ojek"><label for="ojek" class="toggle-switch"></label></div></div>
+                                    <div class="service-card" data-service="basecamp"><div class="service-icon"><i class="fas fa-campground"></i></div><div class="service-info"><h4>Sewa Basecamp</h4><p>Tempat istirahat</p><span class="service-price">Rp 75.000/malam</span></div><div class="service-toggle"><input type="checkbox" id="basecamp" name="services[]" value="basecamp"><label for="basecamp" class="toggle-switch"></label></div></div>
+                                <?php endif; ?>
                             </div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep3"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep3">Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
@@ -332,6 +403,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </section>
 
+    <!-- Pass data to JavaScript -->
+    <script>
+        // Data dari database untuk digunakan di JavaScript
+        window.gunungData = <?php echo json_encode($gunung_data); ?>;
+        window.layananData = <?php echo json_encode($layanan_data); ?>;
+        
+        // Debug: Log data untuk memastikan ter-pass dengan benar
+        console.log('Data Gunung dari Database:', window.gunungData);
+        console.log('Data Layanan dari Database:', window.layananData);
+    </script>
     <script src="scripts/form-pemesanan.js"></script>
     <script src="scripts/tentang.js"></script>
 </body>

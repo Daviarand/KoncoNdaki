@@ -81,7 +81,7 @@ const mountainData = {
         elevation: '2.329 mdpl',
         difficulty: 'Pemula',
         duration: '2-3 jam',
-        temperature: '5-15°C',
+        quota: '500 kuota',
         price: 'Rp 35.000',
         image: 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Bromo adalah gunung berapi aktif yang terletak di Jawa Timur, Indonesia. Gunung ini terkenal dengan pemandangan sunrise yang spektakuler dan lautan pasir yang menakjubkan.',
@@ -111,7 +111,7 @@ const mountainData = {
         elevation: '2.930 mdpl',
         difficulty: 'Menengah',
         duration: '4-6 jam',
-        temperature: '8-18°C',
+        quota: '250 kuota',
         price: 'Rp 25.000',
         image: 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Merapi adalah gunung berapi paling aktif di Indonesia yang terletak di perbatasan Jawa Tengah dan Yogyakarta. Dari puncaknya, pendaki dapat melihat pemandangan kota Yogyakarta yang memukau.',
@@ -140,7 +140,7 @@ const mountainData = {
         elevation: '3.676 mdpl',
         difficulty: 'Lanjutan',
         duration: '2-3 hari',
-        temperature: '0-10°C',
+        quota: '600 kuota',
         price: 'Rp 45.000',
         image: 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Semeru adalah puncak tertinggi di Pulau Jawa dengan ketinggian 3.676 mdpl. Gunung ini menawarkan pemandangan yang sangat menakjubkan dan tantangan pendakian yang menantang.',
@@ -169,7 +169,7 @@ const mountainData = {
         elevation: '2.958 mdpl',
         difficulty: 'Menengah',
         duration: '5-7 jam',
-        temperature: '10-20°C',
+        quota: '800 kuota',
         price: 'Rp 30.000',
         image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Gede terletak di Jawa Barat dengan keanekaragaman flora dan fauna yang tinggi. Gunung ini terkenal dengan air terjun dan danau kawahnya yang indah.',
@@ -198,7 +198,7 @@ const mountainData = {
         elevation: '2.665 mdpl',
         difficulty: 'Pemula',
         duration: '3-4 jam',
-        temperature: '12-22°C',
+        quota: '400 kuota',
         price: 'Rp 20.000',
         image: 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Papandayan memiliki kawah aktif yang mengeluarkan gas belerang dan pemandangan savana yang indah. Cocok untuk pendaki pemula.',
@@ -227,7 +227,7 @@ const mountainData = {
         elevation: '3.145 mdpl',
         difficulty: 'Menengah',
         duration: '6-8 jam',
-        temperature: '5-15°C',
+        quota: '300 kuota',
         price: 'Rp 28.000',
         image: 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
         description: 'Gunung Merbabu memiliki padang savana yang luas dan pemandangan Gunung Merapi yang spektakuler. Populer di kalangan pendaki karena keindahan alamnya.',
@@ -277,8 +277,8 @@ function openMountainModal(mountainId) {
                             <span>${mountain.duration}</span>
                         </div>
                         <div class="modal-stat">
-                            <i class="fas fa-thermometer-half"></i>
-                            <span>${mountain.temperature}</span>
+                            <i class="fas fa-users"></i>
+                            <span>${mountain.quota}</span>
                         </div>
                         <div class="modal-stat">
                             <i class="fas fa-signal"></i>
