@@ -249,7 +249,7 @@ session_start();
 
             <div class="mountains-grid">
                 <div class="mountain-card">
-                    <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Bromo">
+                    <img src="images/bromo.jpeg" alt="Gunung Bromo">
                     <div class="mountain-info">
                         <h3>Gunung Bromo</h3>
                         <div class="mountain-location">
@@ -264,7 +264,7 @@ session_start();
                 </div>
 
                 <div class="mountain-card">
-                    <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Merapi">
+                    <img src="images/merapi.jpeg" alt="Gunung Merapi">
                     <div class="mountain-info">
                         <h3>Gunung Merapi</h3>
                         <div class="mountain-location">
@@ -279,7 +279,7 @@ session_start();
                 </div>
 
                 <div class="mountain-card">
-                    <img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Semeru">
+                    <img src="images/semeru.jpeg" alt="Gunung Semeru">
                     <div class="mountain-info">
                         <h3>Gunung Semeru</h3>
                         <div class="mountain-location">

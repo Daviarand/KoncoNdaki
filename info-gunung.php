@@ -211,7 +211,7 @@ try {
                             </div>
                             <div class="mountain-selection">
                                 <div class="mountain-option" data-mountain="bromo">
-                                    <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo">
+                                    <img src="images/Bromo.jpeg" alt="Gunung Bromo">
                                     <div class="mountain-info">
                                         <h4>Gunung Bromo</h4>
                                         <p>Jawa Timur • 2.329 mdpl</p>
@@ -219,7 +219,7 @@ try {
                                     </div>
                                 </div>
                                 <div class="mountain-option" data-mountain="merapi">
-                                    <img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi">
+                                    <img src="images/merapi.jpeg" alt="Gunung Merapi">
                                     <div class="mountain-info">
                                         <h4>Gunung Merapi</h4>
                                         <p>Jawa Tengah • 2.930 mdpl</p>
@@ -227,7 +227,7 @@ try {
                                     </div>
                                 </div>
                                 <div class="mountain-option" data-mountain="semeru">
-                                    <img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru">
+                                    <img src="images/semeru.jpeg" alt="Gunung Semeru">
                                     <div class="mountain-info">
                                         <h4>Gunung Semeru</h4>
                                         <p>Jawa Timur • 3.676 mdpl</p>
@@ -235,7 +235,7 @@ try {
                                     </div>
                                 </div>
                                 <div class="mountain-option" data-mountain="gede">
-                                    <img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede">
+                                    <img src="images/gede.jpeg" alt="Gunung Gede">
                                     <div class="mountain-info">
                                         <h4>Gunung Gede</h4>
                                         <p>Jawa Barat • 2.958 mdpl</p>
@@ -466,10 +466,10 @@ try {
                     <?php
                     // Mapping data gunung untuk menentukan region dan difficulty
                     $mountainConfig = [
-                        'Gunung Bromo' => ['region' => 'jawa-timur', 'difficulty' => 'Pemula', 'duration' => '2-3 jam', 'price' => 'Rp 35.000', 'image' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'bromo'],
-                        'Gunung Merapi' => ['region' => 'jawa-tengah', 'difficulty' => 'Menengah', 'duration' => '4-6 jam', 'price' => 'Rp 25.000', 'image' => 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'merapi'],
-                        'Gunung Semeru' => ['region' => 'jawa-timur', 'difficulty' => 'Lanjutan', 'duration' => '2-3 hari', 'price' => 'Rp 45.000', 'image' => 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'semeru'],
-                        'Gunung Gede' => ['region' => 'jawa-barat', 'difficulty' => 'Menengah', 'duration' => '5-7 jam', 'price' => 'Rp 30.000', 'image' => 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop', 'modal_id' => 'gede']
+                        'Gunung Bromo' => ['region' => 'jawa-timur', 'difficulty' => 'Pemula', 'duration' => '2-3 jam', 'price' => 'Rp 35.000', 'image' => 'images/Bromo.jpeg', 'modal_id' => 'bromo'],
+                        'Gunung Merapi' => ['region' => 'jawa-tengah', 'difficulty' => 'Menengah', 'duration' => '4-6 jam', 'price' => 'Rp 25.000', 'image' => 'images/merapi.jpeg', 'modal_id' => 'merapi'],
+                        'Gunung Semeru' => ['region' => 'jawa-timur', 'difficulty' => 'Lanjutan', 'duration' => '2-3 hari', 'price' => 'Rp 45.000', 'image' => 'images/semeru.jpeg', 'modal_id' => 'semeru'],
+                        'Gunung Gede' => ['region' => 'jawa-barat', 'difficulty' => 'Menengah', 'duration' => '5-7 jam', 'price' => 'Rp 30.000', 'image' => 'images/gede.jpg', 'modal_id' => 'gede']
                     ];
                     
                     $config = $mountainConfig[$mountain['nama_gunung']] ?? [
@@ -477,7 +477,7 @@ try {
                         'difficulty' => 'Menengah', 
                         'duration' => '4-6 jam', 
                         'price' => 'Rp 25.000', 
-                        'image' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+                        'image' => 'images/merapi.jpeg',
                         'modal_id' => strtolower(str_replace(['Gunung ', ' '], ['', ''], $mountain['nama_gunung']))
                     ];
                     
@@ -539,7 +539,7 @@ try {
                 <!-- Fallback jika tidak ada data dari database -->
                 <div class="mountain-detail-card" data-region="jawa-timur" data-name="gunung bromo">
                     <div class="mountain-image">
-                        <img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop" alt="Gunung Bromo">
+                        <img src="images/Bromo.jpeg" alt="Gunung Bromo">
                         <div class="difficulty-badge beginner">Pemula</div>
                     </div>
                     <div class="mountain-content">

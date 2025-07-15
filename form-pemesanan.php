@@ -310,10 +310,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <?php
                                         // Mapping untuk gambar gunung
                                         $images = [
-                                            'Gunung Bromo' => 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-                                            'Gunung Merapi' => 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-                                            'Gunung Semeru' => 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop',
-                                            'Gunung Gede' => 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop'
+                                            'Gunung Bromo' => 'images/Bromo.jpeg',
+                                            'Gunung Merapi' => 'images/merapi.jpeg',
+                                            'Gunung Semeru' => 'images/semeru.jpeg',
+                                            'Gunung Gede' => 'images/gede.jpg'
                                         ];
                                         $image = $images[$gunung['nama_gunung']] ?? 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop';
                                         $mountain_id = strtolower(str_replace(['Gunung ', ' '], ['', ''], $gunung['nama_gunung']));
@@ -329,10 +329,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <!-- Fallback data jika database kosong -->
-                                    <div class="mountain-option" data-mountain="bromo"><img src="https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="merapi"><img src="https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="semeru"><img src="https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="gede"><img src="https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=300&h=200&fit=crop" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="bromo"><img src="images/Bromo.jpeg" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="merapi"><img src="images/merapi.jpeg" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="semeru"><img src="images/semeru.jpeg" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="gede"><img src="images/gede.jpg" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
                                 <?php endif; ?>
                             </div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep1"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep1" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>

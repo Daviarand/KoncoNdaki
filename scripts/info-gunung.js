@@ -83,7 +83,7 @@ const mountainData = {
         duration: '2-3 jam',
         quota: '500 kuota',
         price: 'Rp 35.000',
-        image: 'https://images.pexels.com/photos/2356045/pexels-photo-2356045.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
+        image: 'images/Bromo.jpeg',
         description: 'Gunung Bromo adalah gunung berapi aktif yang terletak di Jawa Timur, Indonesia. Gunung ini terkenal dengan pemandangan sunrise yang spektakuler dan lautan pasir yang menakjubkan.',
         highlights: [
             'Pemandangan sunrise terbaik di Jawa Timur',
@@ -113,7 +113,7 @@ const mountainData = {
         duration: '4-6 jam',
         quota: '250 kuota',
         price: 'Rp 25.000',
-        image: 'https://images.pexels.com/photos/1671325/pexels-photo-1671325.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
+        image: 'images/merapi.jpeg',
         description: 'Gunung Merapi adalah gunung berapi paling aktif di Indonesia yang terletak di perbatasan Jawa Tengah dan Yogyakarta. Dari puncaknya, pendaki dapat melihat pemandangan kota Yogyakarta yang memukau.',
         highlights: [
             'Gunung berapi paling aktif di Indonesia',
@@ -142,7 +142,7 @@ const mountainData = {
         duration: '2-3 hari',
         quota: '600 kuota',
         price: 'Rp 45.000',
-        image: 'https://images.pexels.com/photos/1525041/pexels-photo-1525041.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
+        image: 'images/semeru.jpeg',
         description: 'Gunung Semeru adalah puncak tertinggi di Pulau Jawa dengan ketinggian 3.676 mdpl. Gunung ini menawarkan pemandangan yang sangat menakjubkan dan tantangan pendakian yang menantang.',
         highlights: [
             'Puncak tertinggi di Pulau Jawa',
@@ -171,7 +171,7 @@ const mountainData = {
         duration: '5-7 jam',
         quota: '800 kuota',
         price: 'Rp 30.000',
-        image: 'https://images.pexels.com/photos/1366919/pexels-photo-1366919.jpeg?auto=compress&cs=tinysrgb&w=600&h=300&fit=crop',
+        image: 'images/gede.jpg',
         description: 'Gunung Gede terletak di Jawa Barat dengan keanekaragaman flora dan fauna yang tinggi. Gunung ini terkenal dengan air terjun dan danau kawahnya yang indah.',
         highlights: [
             'Keanekaragaman flora dan fauna',
