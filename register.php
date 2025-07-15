@@ -159,7 +159,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="password" id="registerPassword" name="password"
                                         placeholder="Buat password" required>
                                     <button type="button" class="toggle-password" id="toggleRegisterPassword">
-                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
                                 <div class="password-strength" id="passwordStrength">
@@ -177,7 +176,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="password" id="confirmPassword" name="confirmPassword"
                                         placeholder="Konfirmasi password" required>
                                     <button type="button" class="toggle-password" id="toggleConfirmPassword">
-                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
                             </div>

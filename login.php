@@ -155,7 +155,6 @@ ob_end_flush();
                                     <i class="fas fa-lock"></i>
                                     <input type="password" id="password" name="password" placeholder="Masukkan password Anda" required>
                                     <button type="button" class="toggle-password" id="togglePassword">
-                                        <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
                             </div>
