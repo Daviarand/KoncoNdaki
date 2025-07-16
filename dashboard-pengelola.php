@@ -93,13 +93,13 @@ $partnerStats = $stmtPartner->fetchAll(PDO::FETCH_KEY_PAIR);
 // 2. Data untuk Bar Chart dan Line Chart (12 bulan terakhir)
 $stmtMonthly = $pdo->prepare("
     SELECT 
-        DATE_FORMAT(tanggal_pemesanan, '%b %Y') as bulan, 
+        DATE_FORMAT(tanggal_pendakian, '%b %Y') as bulan, 
         COUNT(id) as total_booking,
         SUM(jumlah_pendaki) as total_pendaki
     FROM pemesanan
-    WHERE tiket_id = ? AND status_pemesanan = 'complete' AND tanggal_pemesanan >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-    GROUP BY YEAR(tanggal_pemesanan), MONTH(tanggal_pemesanan)
-    ORDER BY MIN(tanggal_pemesanan) ASC
+    WHERE tiket_id = ? AND status_pemesanan = 'complete' AND tanggal_pendakian >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(tanggal_pendakian), MONTH(tanggal_pendakian)
+    ORDER BY MIN(tanggal_pendakian) ASC
 ");
 $stmtMonthly->execute([$gunungDikelolaId]);
 $monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);

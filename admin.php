@@ -213,7 +213,7 @@ if ($filterWaktu === 'mingguan') {
 } else {
     $filterSql .= " AND MONTH(p.tanggal_pemesanan) = MONTH(CURDATE()) AND YEAR(p.tanggal_pemesanan) = YEAR(CURDATE())";
 }
-$sqlLaporan = "SELECT p.kode_booking, g.nama_gunung, p.tanggal_pemesanan, p.subtotal_tiket, p.subtotal_layanan, p.total_harga " . $baseSqlLaporan . $filterSql . " ORDER BY p.tanggal_pemesanan DESC";
+$sqlLaporan = "SELECT p.kode_booking, g.nama_gunung, p.tanggal_pemesanan, p.tanggal_pendakian, p.subtotal_tiket, p.subtotal_layanan, p.total_harga " . $baseSqlLaporan . $filterSql . " ORDER BY p.tanggal_pemesanan DESC";
 $stmtLaporan = $pdo->prepare($sqlLaporan);
 $stmtLaporan->execute($params);
 $laporanKeuangan = $stmtLaporan->fetchAll(PDO::FETCH_ASSOC);
@@ -1274,6 +1274,7 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                                 <tr>
                                     <th>Kode Booking</th>
                                     <th>Nama Gunung</th>
+                                    <th>Tgl. Pendakian</th>
                                     <th>Tgl. Pesan</th>
                                     <th>Subtotal Tiket</th>
                                     <th>Subtotal Layanan</th>
@@ -1283,11 +1284,25 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                             <tbody>
                                 <?php if (empty($laporanKeuangan)): ?>
                                     <tr>
-                                        <td colspan="6" style="text-align:center;">Tidak ada data untuk filter yang dipilih.</td>
+                                        <td colspan="7" style="text-align:center;">Tidak ada data untuk filter yang dipilih.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php foreach ($laporanKeuangan as $row): ?>
                                         <tr>
+                                            <td><?php echo htmlspecialchars($row['kode_booking']); ?></td>
+                                            <td><?php echo htmlspecialchars($row['nama_gunung']); ?></td>
+                                            <td>
+                                                <?php
+                                                $tanggal_pendakian_db = $row['tanggal_pendakian'];
+                                                $timestamp = strtotime($tanggal_pendakian_db);
+                                                if ($timestamp === false || empty($tanggal_pendakian_db)) {
+                                                    echo '-'; // Tampilkan '-' jika tanggal dari DB kosong atau tidak valid
+                                                } else {
+                                                    echo htmlspecialchars(date('d M Y', $timestamp)); // Format tanggal jika valid
+                                                }
+                                                ?>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($row['tanggal_pendakian'] ? date('d M Y', strtotime($row['tanggal_pendakian'])) : '-'); ?></td>
                                             <td><?php echo htmlspecialchars($row['kode_booking']); ?></td>
                                             <td><?php echo htmlspecialchars($row['nama_gunung']); ?></td>
                                             <td><?php echo date('d M Y', strtotime($row['tanggal_pemesanan'])); ?></td>
