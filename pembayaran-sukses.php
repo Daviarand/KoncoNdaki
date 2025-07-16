@@ -29,7 +29,7 @@ session_start();
     <div class="success-container">
         <h1>✅ Pembayaran Berhasil!</h1>
         <p>Terima kasih! Pemesanan Anda telah kami konfirmasi.</p>
-        <p>Anda akan segera dapat melihat detail tiket di dashboard Anda.</p>
+        <p>Anda akan segera dapat melihat detail tiket di email Anda.</p>
         <br>
         <a href="dashboard.php" class="btn-primary">Kembali ke Dashboard</a>
     </div>

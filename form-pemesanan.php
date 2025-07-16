@@ -1,7 +1,7 @@
 <?php
 session_start();
 // Pastikan kedua file ini ada dan path-nya benar
-require_once 'config/database.php'; 
+require_once 'config/database.php';
 require_once 'auth/check_auth.php'; // Script ini harus memastikan $_SESSION['user_id'] tersedia
 
 // Ambil data layanan dari database untuk ditampilkan di form
@@ -24,7 +24,7 @@ try {
 
 // Blok ini HANYA akan berjalan saat formulir di-submit dengan metode POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    
+
     // 1. Ambil & Sanitasi Data dari Form
     $user_id = $_SESSION['user_id'];
     $tiket_id = intval($_POST['tiket_id'] ?? 0);
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $harga_tiket_satuan = floatval($tiket['harga_tiket']);
         $subtotal_tiket = $harga_tiket_satuan * $jumlah_pendaki;
-        
+
         // 4. Hitung Harga Layanan Tambahan dari DATABASE
         $subtotal_layanan = 0;
         $layanan_data_to_insert = []; // Untuk menyimpan detail layanan yang akan di-insert
@@ -73,19 +73,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 // Untuk layanan per hari/malam, gunakan 1 hari/malam saja
                 if ($service['satuan'] === '/hari' || $service['satuan'] === '/malam') {
-                     $jumlah_item_layanan = 1; // 1 hari/malam
-                     $harga_total_per_layanan = $harga_layanan_per_item; // tidak dikali
+                    $jumlah_item_layanan = 1; // 1 hari/malam
+                    $harga_total_per_layanan = $harga_layanan_per_item; // tidak dikali
                 }
 
                 $subtotal_layanan += $harga_total_per_layanan;
                 $layanan_data_to_insert[] = [
                     'layanan_id' => $service['id'],
                     'jumlah' => $jumlah_item_layanan,
-                    'harga_saat_pesan' => $harga_total_per_layanan 
+                    'harga_saat_pesan' => $harga_total_per_layanan
                 ];
             }
         }
-        
+
         // 5. Hitung Total Harga di Server (Final & Aman)
         $total_harga = $subtotal_tiket + $subtotal_layanan;
 
@@ -98,8 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              VALUES (?, ?, ?, ?, DATE_ADD(?, INTERVAL 1 DAY), ?, ?, ?, ?, 'menunggu pembayaran', NOW())" // Asumsi pendakian 2 hari 1 malam
         );
         $stmt_pemesanan->execute([
-            $user_id, $tiket_id, $kode_booking, $tanggal_pendakian, $tanggal_pendakian, 
-            $jumlah_pendaki, $subtotal_tiket, $subtotal_layanan, $total_harga
+            $user_id,
+            $tiket_id,
+            $kode_booking,
+            $tanggal_pendakian,
+            $tanggal_pendakian,
+            $jumlah_pendaki,
+            $subtotal_tiket,
+            $subtotal_layanan,
+            $total_harga
         ]);
 
         // 8. Dapatkan ID dari pemesanan yang baru saja dibuat
@@ -121,7 +128,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Arahkan pengguna ke halaman dashboard atau pembayaran
         header("Location: proses_pembayaran.php?id=" . $pemesanan_id);
         exit;
-
     } catch (Exception $e) {
         // Jika terjadi error di salah satu langkah, batalkan semua query
         $pdo->rollBack();
@@ -132,6 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -141,6 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="styles/form-pemesanan.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar" role="navigation" aria-label="Main navigation">
@@ -255,13 +263,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </p>
                         </div>
                     </div>
-                    
+
                     <a href="dashboard.php" class="mobile-nav-link" role="menuitem">Home</a>
                     <a href="info-gunung.php" class="mobile-nav-link" role="menuitem">Info Gunung</a>
                     <a href="cara-pemesanan.php" class="mobile-nav-link" role="menuitem">Cara Pemesanan</a>
                     <a href="diskusi.php" class="mobile-nav-link" role="menuitem">Diskusi</a>
                     <a href="tentang.php" class="mobile-nav-link" role="menuitem">Tentang</a>
-                    
+
                     <div class="mobile-profile-menu">
                         <a href="profile.php" class="mobile-nav-link" role="menuitem">
                             <i class="fas fa-user-circle" aria-hidden="true"></i>
@@ -292,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
     </nav>
-    
+
     <section class="booking-form-section">
         <div class="container">
             <div class="booking-layout">
@@ -303,7 +311,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <form id="bookingForm" class="booking-form" method="POST" action="form-pemesanan.php">
                         <div class="form-step active" id="step-1">
-                            <div class="step-header"><h3><i class="fas fa-mountain"></i> Pilih Gunung</h3></div>
+                            <div class="step-header">
+                                <h3><i class="fas fa-mountain"></i> Pilih Gunung</h3>
+                            </div>
                             <div class="mountain-selection">
                                 <?php if (!empty($gunung_data)): ?>
                                     <?php foreach ($gunung_data as $gunung): ?>
@@ -329,17 +339,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <!-- Fallback data jika database kosong -->
-                                    <div class="mountain-option" data-mountain="bromo"><img src="images/Bromo.jpeg" alt="Gunung Bromo"><div class="mountain-info"><h4>Gunung Bromo</h4><p>Jawa Timur</p><span class="price">Rp 35.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="merapi"><img src="images/merapi.jpeg" alt="Gunung Merapi"><div class="mountain-info"><h4>Gunung Merapi</h4><p>Jawa Tengah</p><span class="price">Rp 25.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="semeru"><img src="images/semeru.jpeg" alt="Gunung Semeru"><div class="mountain-info"><h4>Gunung Semeru</h4><p>Jawa Timur</p><span class="price">Rp 45.000</span></div></div>
-                                    <div class="mountain-option" data-mountain="gede"><img src="images/gede.jpg" alt="Gunung Gede"><div class="mountain-info"><h4>Gunung Gede</h4><p>Jawa Barat</p><span class="price">Rp 30.000</span></div></div>
+                                    <div class="mountain-option" data-mountain="bromo"><img src="images/Bromo.jpeg" alt="Gunung Bromo">
+                                        <div class="mountain-info">
+                                            <h4>Gunung Bromo</h4>
+                                            <p>Jawa Timur</p><span class="price">Rp 35.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="mountain-option" data-mountain="merapi"><img src="images/merapi.jpeg" alt="Gunung Merapi">
+                                        <div class="mountain-info">
+                                            <h4>Gunung Merapi</h4>
+                                            <p>Jawa Tengah</p><span class="price">Rp 25.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="mountain-option" data-mountain="semeru"><img src="images/semeru.jpeg" alt="Gunung Semeru">
+                                        <div class="mountain-info">
+                                            <h4>Gunung Semeru</h4>
+                                            <p>Jawa Timur</p><span class="price">Rp 45.000</span>
+                                        </div>
+                                    </div>
+                                    <div class="mountain-option" data-mountain="gede"><img src="images/gede.jpg" alt="Gunung Gede">
+                                        <div class="mountain-info">
+                                            <h4>Gunung Gede</h4>
+                                            <p>Jawa Barat</p><span class="price">Rp 30.000</span>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep1"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep1" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
                         <div class="form-step" id="step-2">
-                            <div class="step-header"><h3><i class="fas fa-route"></i> Pilih Jalur & Tanggal</h3></div>
-                            <div class="route-selection" id="routeSelection"><p class="placeholder">Pilih gunung terlebih dahulu untuk melihat jalur yang tersedia.</p></div>
+                            <div class="step-header">
+                                <h3><i class="fas fa-route"></i> Pilih Jalur & Tanggal</h3>
+                            </div>
+                            <div class="route-selection" id="routeSelection">
+                                <p class="placeholder">Pilih gunung terlebih dahulu untuk melihat jalur yang tersedia.</p>
+                            </div>
                             <div class="date-selection">
                                 <div class="form-group"><label for="hikingDate">Tanggal Pendakian</label><input type="date" id="hikingDate" name="tanggal_pendakian" required></div>
                                 <div class="form-group"><label for="participants">Jumlah Pendaki</label><input type="number" id="participants" name="jumlah_pendaki" value="1" min="1" max="10" required></div>
@@ -347,7 +381,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep2"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep2" disabled>Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
                         <div class="form-step" id="step-3">
-                            <div class="step-header"><h3><i class="fas fa-plus-circle"></i> Layanan Tambahan</h3></div>
+                            <div class="step-header">
+                                <h3><i class="fas fa-plus-circle"></i> Layanan Tambahan</h3>
+                            </div>
                             <div class="services-grid">
                                 <?php if (!empty($layanan_data)): ?>
                                     <?php foreach ($layanan_data as $layanan): ?>
@@ -376,20 +412,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php endforeach; ?>
                                 <?php else: ?>
                                     <!-- Fallback data jika database kosong -->
-                                    <div class="service-card" data-service="guide"><div class="service-icon"><i class="fas fa-user-tie"></i></div><div class="service-info"><h4>Jasa Guide</h4><p>Pemandu berpengalaman</p><span class="service-price">Rp 150.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="guide" name="services[]" value="guide"><label for="guide" class="toggle-switch"></label></div></div>
-                                    <div class="service-card" data-service="porter"><div class="service-icon"><i class="fas fa-hiking"></i></div><div class="service-info"><h4>Jasa Porter</h4><p>Bantuan membawa barang</p><span class="service-price">Rp 100.000/hari</span></div><div class="service-toggle"><input type="checkbox" id="porter" name="services[]" value="porter"><label for="porter" class="toggle-switch"></label></div></div>
-                                    <div class="service-card" data-service="ojek"><div class="service-icon"><i class="fas fa-motorcycle"></i></div><div class="service-info"><h4>Jasa Ojek</h4><p>Transportasi ke pos</p><span class="service-price">Rp 50.000/orang</span></div><div class="service-toggle"><input type="checkbox" id="ojek" name="services[]" value="ojek"><label for="ojek" class="toggle-switch"></label></div></div>
-                                    <div class="service-card" data-service="basecamp"><div class="service-icon"><i class="fas fa-campground"></i></div><div class="service-info"><h4>Sewa Basecamp</h4><p>Tempat istirahat</p><span class="service-price">Rp 75.000/malam</span></div><div class="service-toggle"><input type="checkbox" id="basecamp" name="services[]" value="basecamp"><label for="basecamp" class="toggle-switch"></label></div></div>
+                                    <div class="service-card" data-service="guide">
+                                        <div class="service-icon"><i class="fas fa-user-tie"></i></div>
+                                        <div class="service-info">
+                                            <h4>Jasa Guide</h4>
+                                            <p>Pemandu berpengalaman</p><span class="service-price">Rp 150.000/hari</span>
+                                        </div>
+                                        <div class="service-toggle"><input type="checkbox" id="guide" name="services[]" value="guide"><label for="guide" class="toggle-switch"></label></div>
+                                    </div>
+                                    <div class="service-card" data-service="porter">
+                                        <div class="service-icon"><i class="fas fa-hiking"></i></div>
+                                        <div class="service-info">
+                                            <h4>Jasa Porter</h4>
+                                            <p>Bantuan membawa barang</p><span class="service-price">Rp 100.000/hari</span>
+                                        </div>
+                                        <div class="service-toggle"><input type="checkbox" id="porter" name="services[]" value="porter"><label for="porter" class="toggle-switch"></label></div>
+                                    </div>
+                                    <div class="service-card" data-service="ojek">
+                                        <div class="service-icon"><i class="fas fa-motorcycle"></i></div>
+                                        <div class="service-info">
+                                            <h4>Jasa Ojek</h4>
+                                            <p>Transportasi ke pos</p><span class="service-price">Rp 50.000/orang</span>
+                                        </div>
+                                        <div class="service-toggle"><input type="checkbox" id="ojek" name="services[]" value="ojek"><label for="ojek" class="toggle-switch"></label></div>
+                                    </div>
+                                    <div class="service-card" data-service="basecamp">
+                                        <div class="service-icon"><i class="fas fa-campground"></i></div>
+                                        <div class="service-info">
+                                            <h4>Sewa Basecamp</h4>
+                                            <p>Tempat istirahat</p><span class="service-price">Rp 75.000/malam</span>
+                                        </div>
+                                        <div class="service-toggle"><input type="checkbox" id="basecamp" name="services[]" value="basecamp"><label for="basecamp" class="toggle-switch"></label></div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep3"><i class="fas fa-arrow-left"></i> Kembali</button><button type="button" class="btn-next" id="nextStep3">Lanjutkan <i class="fas fa-arrow-right"></i></button></div>
                         </div>
                         <div class="form-step" id="step-4">
-                            <div class="step-header"><h3><i class="fas fa-credit-card"></i> Konfirmasi & Pembayaran</h3></div>
-                            <div class="booking-summary" id="bookingSummary"><p class="placeholder">Ringkasan akhir akan muncul di sini.</p></div>
+                            <div class="step-header">
+                                <h3><i class="fas fa-credit-card"></i> Konfirmasi & Pembayaran</h3>
+                            </div>
+                            <div class="booking-summary" id="bookingSummary">
+                                <p class="placeholder">Ringkasan akhir akan muncul di sini.</p>
+                            </div>
                             <div class="payment-methods">
                                 <h4>Metode Pembayaran</h4>
-                                <div class="payment-options"><div class="payment-option"><input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked><label for="bank_transfer"><i class="fas fa-university"></i> Transfer Bank</label></div></div>
+                                <div class="payment-options">
+                                    <div class="payment-option"><input type="radio" id="bank_transfer" name="payment_method" value="bank_transfer" checked><label for="bank_transfer"><i class="fas fa-university"></i> Transfer Bank</label></div>
+                                    <div class="payment-option"><input type="radio" id="ovo" name="payment_method" value="ovo"><label for="ovo"><i class="fas fa-wallet"></i> OVO</label></div>
+                                    <div class="payment-option"><input type="radio" id="dana" name="payment_method" value="dana"><label for="dana"><i class="fas fa-wallet"></i> DANA</label></div>
+                                    <div class="payment-option"><input type="radio" id="shopee_pay" name="payment_method" value="shopee_pay"><label for="shopee_pay"><i class="fas fa-shopping-bag"></i> Shopee Pay</label></div>
+                                    <div class="payment-option"><input type="radio" id="gopay" name="payment_method" value="gopay"><label for="gopay"><i class="fas fa-wallet"></i> Gopay</label></div>
+                                </div>
                             </div>
                             <div class="terms-agreement"><label class="checkbox-container"><input type="checkbox" id="agreeTerms" required><span class="checkmark"></span> Saya setuju dengan <a href="syarat-ketentuan.php" target="_blank">syarat & ketentuan</a></label></div>
                             <div class="form-actions"><button type="button" class="btn-back" id="backStep4"><i class="fas fa-arrow-left"></i> Kembali</button><button type="submit" class="btn-submit" id="submitBooking" disabled>Bayar Sekarang</button></div>
@@ -397,7 +471,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </form>
                 </div>
                 <div class="booking-sidebar">
-                    <div class="sidebar-card"><h3>Ringkasan Pemesanan</h3><div class="summary-content" id="sidebarSummary"><p class="placeholder">Pilih item untuk melihat ringkasan.</p></div></div>
+                    <div class="sidebar-card">
+                        <h3>Ringkasan Pemesanan</h3>
+                        <div class="summary-content" id="sidebarSummary">
+                            <p class="placeholder">Pilih item untuk melihat ringkasan.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -408,7 +487,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Data dari database untuk digunakan di JavaScript
         window.gunungData = <?php echo json_encode($gunung_data); ?>;
         window.layananData = <?php echo json_encode($layanan_data); ?>;
-        
+
         // Debug: Log data untuk memastikan ter-pass dengan benar
         console.log('Data Gunung dari Database:', window.gunungData);
         console.log('Data Layanan dari Database:', window.layananData);
@@ -416,4 +495,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="scripts/form-pemesanan.js"></script>
     <script src="scripts/tentang.js"></script>
 </body>
+
 </html>
