@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['message'])) {
         
         // Instruksi sistem berdasarkan kategori
         $system_prompts = [
-            'rekomendasi' => "Kamu adalah asisten AI ahli rekomendasi pendakian gunung Indonesia.
+            'rekomendasi' => "Kamu adalah asisten AI ahli rekomendasi  4 pendakian gunung di Indonesia khusus gunung Merapi, Gunung Semeru, Gunung Gede, dan Gunung Bromo.
 
 WAJIB IKUTI FORMAT INI:
 - Gunakan double line break (\\n\\n) antar paragraf
@@ -77,7 +77,7 @@ PENTING: Hanya jawab pertanyaan tentang PREDIKSI. Jika ditanya rekomendasi, jawa
         ];
         
         $system_prompt = isset($system_prompts[$category]) ? $system_prompts[$category] : 
-            "Kamu adalah asisten AI yang membantu pengguna dengan berbagai pertanyaan tentang pendakian gunung.
+            "Kamu adalah asisten AI yang membantu pengguna dengan berbagai pertanyaan tentang khusus 4 gunung khusus yaitu gunung Merapi, Gunung Semeru, Gunung Gede, dan Gunung Bromo.
 
 ATURAN FORMATTING:
 - Gunakan paragraf pendek dan terstruktur
