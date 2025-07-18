@@ -1296,16 +1296,23 @@ $daftarLayanan = $stmtDaftarLayanan->fetchAll(PDO::FETCH_ASSOC);
                                                 $tanggal_pendakian_db = $row['tanggal_pendakian'];
                                                 $timestamp = strtotime($tanggal_pendakian_db);
                                                 if ($timestamp === false || empty($tanggal_pendakian_db)) {
-                                                    echo '-'; // Tampilkan '-' jika tanggal dari DB kosong atau tidak valid
+                                                    echo '-';
                                                 } else {
-                                                    echo htmlspecialchars(date('d M Y', $timestamp)); // Format tanggal jika valid
+                                                    echo htmlspecialchars(date('d M Y', $timestamp));
                                                 }
                                                 ?>
                                             </td>
-                                            <td><?php echo htmlspecialchars($row['tanggal_pendakian'] ? date('d M Y', strtotime($row['tanggal_pendakian'])) : '-'); ?></td>
-                                            <td><?php echo htmlspecialchars($row['kode_booking']); ?></td>
-                                            <td><?php echo htmlspecialchars($row['nama_gunung']); ?></td>
-                                            <td><?php echo date('d M Y', strtotime($row['tanggal_pemesanan'])); ?></td>
+                                            <td>
+                                                <?php
+                                                $tanggal_pemesanan_db = $row['tanggal_pemesanan'];
+                                                $timestamp_pesan = strtotime($tanggal_pemesanan_db);
+                                                if ($timestamp_pesan === false || empty($tanggal_pemesanan_db)) {
+                                                    echo '-';
+                                                } else {
+                                                    echo htmlspecialchars(date('d M Y', $timestamp_pesan));
+                                                }
+                                                ?>
+                                            </td>
                                             <td>Rp <?php echo number_format($row['subtotal_tiket'], 0, ',', '.'); ?></td>
                                             <td>Rp <?php echo number_format($row['subtotal_layanan'], 0, ',', '.'); ?></td>
                                             <td>Rp <?php echo number_format($row['total_harga'], 0, ',', '.'); ?></td>

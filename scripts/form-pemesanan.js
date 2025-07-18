@@ -15,7 +15,7 @@ class BookingForm {
 
     this.mountainData = this.initializeMountainData()
     this.servicePrices = this.initializeServicePrices()
-    this.taxRate = 0.1 // Pajak 10%
+    this.taxRate = 0.1 // Admin Fee 10%
     this.hasUnsavedChanges = false
     this.init()
   }
@@ -439,7 +439,7 @@ class BookingForm {
       html +
       `
       <div class="summary-item total"><span>Subtotal:</span><strong>${this.formatCurrency(subtotal)}</strong></div>
-      <div class="summary-item total"><span>Pajak (10%):</span><strong>${this.formatCurrency(tax)}</strong></div>
+      <div class="summary-item total"><span>Admin Fee (10%):</span><strong>${this.formatCurrency(tax)}</strong></div>
       <div class="summary-item grand-total"><span>Total Pembayaran:</span><strong>${this.formatCurrency(total)}</strong></div>
     `
 
